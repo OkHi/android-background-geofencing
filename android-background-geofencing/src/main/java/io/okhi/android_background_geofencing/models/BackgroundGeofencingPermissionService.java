@@ -6,21 +6,17 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
-import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
 
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 
 public class BackgroundGeofencingPermissionService {
-    private Context context;
     private Activity activity;
     private RequestHandler requestHandler;
 
-    public BackgroundGeofencingPermissionService(Context context, Activity activity, RequestHandler requestHandler) {
-        this.context = context;
+    public BackgroundGeofencingPermissionService(Activity activity) {
         this.activity = activity;
-        this.requestHandler = requestHandler;
     }
 
     public static boolean isLocationPermissionGranted(Context context) {
@@ -28,11 +24,13 @@ public class BackgroundGeofencingPermissionService {
         return permission == PackageManager.PERMISSION_GRANTED;
     }
 
-    public void requestLocationPermission(String rationaleTitle, String rationaleMessage) {
-        if (isLocationPermissionGranted(context)) {
+    public void requestLocationPermission(String rationaleTitle, String rationaleMessage, final RequestHandler requestHandler) {
+        if (isLocationPermissionGranted(activity)) {
             requestHandler.onSuccess();
             return;
         }
+
+        this.requestHandler = requestHandler;
 
         final String[] permissions = new String[]{
                 Manifest.permission.ACCESS_FINE_LOCATION,
@@ -41,7 +39,7 @@ public class BackgroundGeofencingPermissionService {
         };
 
         if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_FINE_LOCATION)) {
-            new AlertDialog.Builder(context)
+            new AlertDialog.Builder(activity)
                     .setTitle(rationaleTitle)
                     .setMessage(rationaleMessage)
                     .setPositiveButton(Constant.PERMISSION_DIALOG_POSITIVE_BUTTON_TEXT, new DialogInterface.OnClickListener() {

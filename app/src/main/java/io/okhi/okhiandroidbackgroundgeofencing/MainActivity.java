@@ -36,7 +36,8 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        permissionService = new BackgroundGeofencingPermissionService(MainActivity.this, this, new RequestHandler() {
+        permissionService = new BackgroundGeofencingPermissionService( this);
+        permissionService.requestLocationPermission("Permission services required", "We need it pretty please?", new RequestHandler() {
             @Override
             public void onSuccess() {
                 Log.v("Kiano", "Permission granted");
@@ -47,7 +48,6 @@ public class MainActivity extends AppCompatActivity {
                 Log.v("Kiano", "Permission denied");
             }
         });
-        permissionService.requestLocationPermission("Permission services required", "We need it pretty please?");
     }
 
     @Override

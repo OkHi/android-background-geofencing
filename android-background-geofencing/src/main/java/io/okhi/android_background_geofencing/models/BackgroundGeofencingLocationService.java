@@ -3,6 +3,7 @@ package io.okhi.android_background_geofencing.models;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
 
@@ -45,6 +46,11 @@ public class BackgroundGeofencingLocationService {
             return false;
         }
         return locationMode != Settings.Secure.LOCATION_MODE_OFF;
+    }
+
+    public static void openLocationServicesSettings(Activity activity) {
+        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+        activity.startActivityForResult(intent, Constant.OPEN_LOCATION_SERVICES_SETTINGS_REQUEST_CODE, new Bundle());
     }
 
     private LocationSettingsRequest buildLocationSettingsRequest() {

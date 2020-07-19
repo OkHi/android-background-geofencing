@@ -1,10 +1,16 @@
 package io.okhi.android_background_geofencing;
 
+
 import android.content.Context;
-import android.widget.Toast;
+
+import io.okhi.android_background_geofencing.models.LocationService;
 
 public class AndroidBackgroundGeofencing {
-    public static void ping (Context context) {
-        Toast.makeText(context, "PONG", Toast.LENGTH_LONG).show();
+    public static boolean isLocationPermissionGranted(Context context) {
+        return LocationService.isLocationPermissionGranted(context);
+    }
+
+    public static boolean isLocationServicesEnabled(Context context) {
+        return LocationService.isLocationServicesEnabled(context);
     }
 }

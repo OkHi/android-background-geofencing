@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         permissionService = new BackgroundGeofencingPermissionService(this);
         locationService = new BackgroundGeofencingLocationService(this);
-        BackgroundGeofencingLocationService.openLocationServicesSettings(this);
+//        BackgroundGeofencingLocationService.openLocationServicesSettings(this);
     }
 
     @Override

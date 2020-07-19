@@ -15,39 +15,16 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofencingPermissi
 public class MainActivity extends AppCompatActivity {
 
     BackgroundGeofencingPermissionService permissionService;
+
     BackgroundGeofencingLocationService locationService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        if (!BackgroundGeofencingLocationService.isLocationServicesEnabled(getApplicationContext())) {
-            locationService = new BackgroundGeofencingLocationService(this);
-            locationService.requestEnableLocationServices(new RequestHandler() {
-                @Override
-                public void onSuccess() {
-                    Log.v("Kiano", "Services enabled");
-                }
-
-                @Override
-                public void onError() {
-                    Log.v("Kiano", "Services disabled");
-                }
-            });
-        }
-
-        permissionService = new BackgroundGeofencingPermissionService( this);
-        permissionService.requestLocationPermission("Permission services required", "We need it pretty please?", new RequestHandler() {
-            @Override
-            public void onSuccess() {
-                Log.v("Kiano", "Permission granted");
-            }
-
-            @Override
-            public void onError() {
-                Log.v("Kiano", "Permission denied");
-            }
-        });
+        permissionService = new BackgroundGeofencingPermissionService(this);
+        locationService = new BackgroundGeofencingLocationService(this);
+        BackgroundGeofencingLocationService.openLocationServicesSettings(this);
     }
 
     @Override

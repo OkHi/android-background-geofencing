@@ -1,16 +1,24 @@
 package io.okhi.android_background_geofencing.models;
 
-import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.pm.PackageManager;
-import android.os.Build;
+import android.content.Intent;
+import android.os.Handler;
 import android.provider.Settings;
-import android.text.TextUtils;
 
-import androidx.core.app.ActivityCompat;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.location.SettingsClient;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 
@@ -19,79 +27,80 @@ public class BackgroundGeofencingLocationService {
     private Context context;
     private Activity activity;
     private RequestHandler requestHandler;
+    private SettingsClient settingsClient;
+    private LocationSettingsRequest locationSettingsRequest = buildLocationSettingsRequest();
 
-    BackgroundGeofencingLocationService(Context context, Activity activity, RequestHandler requestHandler) {
-        this.context = context;
+    public BackgroundGeofencingLocationService(Activity activity) {
+        this.context = activity.getApplicationContext();
         this.activity = activity;
-        this.requestHandler = requestHandler;
+        this.settingsClient = LocationServices.getSettingsClient(context);
     }
-
-
 
     public static boolean isLocationServicesEnabled(Context context) {
         int locationMode = 0;
-        String locationProviders;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            try {
-                locationMode = Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.LOCATION_MODE);
-            } catch (Settings.SettingNotFoundException e) {
-                e.printStackTrace();
-                return false;
+        try {
+            locationMode = Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.LOCATION_MODE);
+        } catch (Settings.SettingNotFoundException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return locationMode != Settings.Secure.LOCATION_MODE_OFF;
+    }
+
+    private LocationSettingsRequest buildLocationSettingsRequest() {
+        LocationRequest locationRequest = new LocationRequest();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
+        builder.addLocationRequest(locationRequest);
+        return builder.build();
+    }
+
+    private void onLocationSettingsResponse(Task<LocationSettingsResponse> task) {
+        try {
+            LocationSettingsResponse response = task.getResult(ApiException.class);
+        } catch (ApiException exception) {
+            switch (exception.getStatusCode()) {
+                case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                    try {
+                        ResolvableApiException resolvable = (ResolvableApiException) exception;
+                        resolvable.startResolutionForResult(activity, Constant.ENABLE_LOCATION_SERVICES_REQUEST_CODE);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                default:
+                    break;
             }
-            return locationMode != Settings.Secure.LOCATION_MODE_OFF;
-        } else {
-            locationProviders = Settings.Secure.getString(context.getContentResolver(),
-                    Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
-            return !TextUtils.isEmpty(locationProviders);
         }
     }
 
-
-
-    public void requestLocationPermission(String rationaleTitle, String rationaleMessage) {
-        if (!BackgroundGeofencingPermissionService.isLocationPermissionGranted(context)) {
-            final String[] permissions = new String[]{
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-            };
-            if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_FINE_LOCATION)) {
-                // build an alert dialog to show rationale to the user
-                new AlertDialog.Builder(context)
-                        .setTitle(rationaleTitle)
-                        .setMessage(rationaleMessage)
-                        .setPositiveButton(Constant.PERMISSION_DIALOG_POSITIVE_BUTTON_TEXT, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                //Prompt the user once explanation has been shown
-                                ActivityCompat.requestPermissions(activity, permissions, Constant.LOCATION_PERMISSION_REQUEST_CODE);
-                            }
-                        })
-                        .setNegativeButton(Constant.PERMISSION_DIALOG_NEGATIVE_BUTTON_TEXT, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                requestHandler.onError();
-                            }
-                        })
-                        .setOnCancelListener(new DialogInterface.OnCancelListener() {
-                            @Override
-                            public void onCancel(DialogInterface dialog) {
-                                requestHandler.onError();
-                            }
-                        })
-                        .setOnDismissListener(new DialogInterface.OnDismissListener() {
-                            @Override
-                            public void onDismiss(DialogInterface dialog) {
-                                requestHandler.onError();
-                            }
-                        })
-                        .create()
-                        .show();
-            } else {
-                ActivityCompat.requestPermissions(activity, permissions, Constant.LOCATION_PERMISSION_REQUEST_CODE);
+    public void requestEnableLocationServices(RequestHandler handler) {
+        if (isLocationServicesEnabled(context)) {
+            handler.onSuccess();
+            return;
+        }
+        this.requestHandler = handler;
+        settingsClient.checkLocationSettings(locationSettingsRequest).addOnCompleteListener(new OnCompleteListener<LocationSettingsResponse>() {
+            @Override
+            public void onComplete(@NonNull Task<LocationSettingsResponse> task) {
+                onLocationSettingsResponse(task);
             }
-        } else {
-            requestHandler.onSuccess();
+        });
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        Handler handler = new Handler();
+        if (requestCode == Constant.ENABLE_LOCATION_SERVICES_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        requestHandler.onSuccess();
+                    }
+                }, Constant.SERVICE_WAIT_DELAY);
+            } else {
+                requestHandler.onError();
+            }
         }
     }
 }

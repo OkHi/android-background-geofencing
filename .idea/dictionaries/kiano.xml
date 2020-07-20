@@ -2,6 +2,7 @@
   <dictionary name="kiano">
     <words>
       <w>geofencing</w>
+      <w>webhook</w>
     </words>
   </dictionary>
 </component>

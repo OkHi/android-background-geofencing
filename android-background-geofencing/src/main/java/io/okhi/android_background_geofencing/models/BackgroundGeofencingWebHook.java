@@ -46,8 +46,6 @@ public class BackgroundGeofencingWebHook implements Serializable {
 
     public void save(Context context) {
         BackgroundGeofencingDB.saveWebHook(this, context);
-        BackgroundGeofencingWebHook hook = BackgroundGeofencingDB.getWebHook(context);
-        Log.v("KIANO", hook.url);
     }
 
     public Headers getHeaders() {

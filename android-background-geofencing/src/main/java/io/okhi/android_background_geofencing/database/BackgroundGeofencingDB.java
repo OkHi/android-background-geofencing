@@ -6,6 +6,7 @@ import android.util.Log;
 import com.snappydb.DB;
 import com.snappydb.DBFactory;
 
+import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
 
@@ -45,4 +46,7 @@ public class BackgroundGeofencingDB {
         return (BackgroundGeofencingWebHook) get(Constant.DB_WEBHOOK_CONFIGURATION_KEY, BackgroundGeofencingWebHook.class, context);
     }
 
+    public static void saveBackgroundGeofence(BackgroundGeofence geofence, Context context) {
+        save(Constant.DB_BACKGROUND_GEOFENCE_PREFIX_KEY + geofence.getId(), geofence, context);
+    }
 }

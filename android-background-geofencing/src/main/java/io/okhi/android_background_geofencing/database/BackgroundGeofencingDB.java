@@ -18,7 +18,7 @@ public class BackgroundGeofencingDB {
             DB db = DBFactory.open(context, Constant.DB_NAME);
             db.put(key, object);
             db.close();
-            Log.v(TAG, key + ": successfully saved");
+            Log.v(TAG, "Successfully saved: " + key);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -29,7 +29,7 @@ public class BackgroundGeofencingDB {
             DB db = DBFactory.open(context, Constant.DB_NAME);
             Object value = db.get(key, objectClass);
             db.close();
-            Log.v(TAG, key + ": successfully saved");
+            Log.v(TAG, "Successfully got: " + key);
             return value;
         } catch (Exception e) {
             e.printStackTrace();

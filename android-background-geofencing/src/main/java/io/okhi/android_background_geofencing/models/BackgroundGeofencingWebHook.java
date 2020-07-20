@@ -1,7 +1,6 @@
 package io.okhi.android_background_geofencing.models;
 
 import android.content.Context;
-import android.util.Log;
 
 import org.json.JSONObject;
 
@@ -10,7 +9,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import okhttp3.Headers;
 

@@ -3,6 +3,8 @@ package io.okhi.android_background_geofencing.models;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
 
+import java.util.concurrent.TimeUnit;
+
 public class Constant {
 
     // request codes
@@ -34,4 +36,20 @@ public class Constant {
     public static final boolean DEFAULT_GEOFENCE_REGISTER_ON_DEVICE_RESTART = true;
     public static final int DEFAULT_GEOFENCE_TRANSITION_TYPES = Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT | Geofence.GEOFENCE_TRANSITION_DWELL;
     public static final int DEFAULT_GEOFENCE_INITIAL_TRIGGER_TRANSITION_TYPES = GeofencingRequest.INITIAL_TRIGGER_ENTER | GeofencingRequest.INITIAL_TRIGGER_EXIT | GeofencingRequest.INITIAL_TRIGGER_DWELL;
+
+    // jobs
+    public static final int GEOFENCE_TRANSITION_JOB_ID = 5;
+    public static final String GEOFENCE_TRANSITION_EVENT_JSON_PAYLOAD = "GEOFENCE_TRANSITION_EVENT_JSON_PAYLOAD";
+    public static final String GEOFENCE_TRANSITION_UPLOAD_REQUEST = "GEOFENCE_TRANSITION_UPLOAD_REQUEST";
+
+    // TODO: change backoff delay to 45min
+    public static int GEOFENCE_UPLOAD_WORK_MAX_ATTEMPTS = 10;
+
+    public static int GEOFENCE_UPLOAD_WORK_BACK_OFF_DELAY = 16;
+    public static TimeUnit  GEOFENCE_UPLOAD_WORK_BACK_OFF_DELAY_TIME_UNIT = TimeUnit.MINUTES;
+
+    // TODO: change initial delay to 10min
+    public static final long GEOFENCE_UPLOAD_WORK_INITIAL_DELAY = 1;
+    public static final TimeUnit GEOFENCE_UPLOAD_WORK_INITIAL_DELAY_TIME_UNIT = TimeUnit.MINUTES;
+
 }

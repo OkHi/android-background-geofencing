@@ -16,11 +16,14 @@ import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransiti
 
 public class BackgroundGeofencing {
     public static void init(Context context) {
+        // remove any existing work to prevent db read conflicts
+        WorkManager.getInstance(context).cancelAllWork();
+
         // TODO: refactor this to static methods to get request work
         OneTimeWorkRequest failedGeofencesRestartWork = new OneTimeWorkRequest.Builder(BackgroundGeofenceRestartWorker.class)
                 .setConstraints(Constant.GEOFENCE_WORK_MANAGER_CONSTRAINTS)
                 .addTag(Constant.GEOFENCE_RESTART_WORK_TAG)
-                .setInitialDelay(30, TimeUnit.SECONDS)
+                .setInitialDelay(5, TimeUnit.MILLISECONDS)
                 .setBackoffCriteria(
                         BackoffPolicy.EXPONENTIAL,
                         Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY,
@@ -31,7 +34,7 @@ public class BackgroundGeofencing {
         OneTimeWorkRequest geofenceTransitionUploadWorkRequest = new OneTimeWorkRequest.Builder(BackgroundGeofenceTransitionUploadWorker.class)
                 .setConstraints(Constant.GEOFENCE_WORK_MANAGER_CONSTRAINTS)
                 .addTag(Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_TAG)
-                .setInitialDelay(30, TimeUnit.SECONDS)
+                .setInitialDelay(5, TimeUnit.MILLISECONDS)
                 .setBackoffCriteria(
                         BackoffPolicy.LINEAR,
                         Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY,

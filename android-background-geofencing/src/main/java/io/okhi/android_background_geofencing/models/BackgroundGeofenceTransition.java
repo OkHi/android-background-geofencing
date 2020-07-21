@@ -6,6 +6,7 @@ import android.os.Build;
 import android.util.Log;
 
 import androidx.work.BackoffPolicy;
+import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
@@ -158,11 +159,11 @@ public class BackgroundGeofenceTransition implements Serializable {
     }
 
     public boolean syncUpload(BackgroundGeofencingWebHook webHook) throws JSONException, IOException {
-        JSONObject meta = webHook.getMeta();
+        HashMap<String, Object> meta = webHook.getMeta();
         OkHttpClient client = getHttpClient(webHook);
         JSONObject payload = toJSONObject();
         if (meta != null) {
-            payload.put("meta", meta);
+            payload.put("meta", new JSONObject(meta));
         }
         RequestBody requestBody = RequestBody.create(payload.toString(), MediaType.parse("application/json"));
         Request request = new Request.Builder()
@@ -249,13 +250,12 @@ public class BackgroundGeofenceTransition implements Serializable {
                         Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY_TIME_UNIT
                 )
                 .build();
-        WorkManager.getInstance(context).enqueue(geofenceTransitionUploadWorkRequest);
-        Log.v(TAG, "Geofence transition upload enqueued successfully");
+        WorkManager.getInstance(context).enqueueUniqueWork(Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_NAME, ExistingWorkPolicy.KEEP, geofenceTransitionUploadWorkRequest);
     }
 
     public static void scheduleGeofenceTransitionUploadWork(GeofencingEvent geofencingEvent, Context context) {
         BackgroundGeofenceTransition transition = new BackgroundGeofenceTransition.BackgroundGeofenceTransitionBuilder(geofencingEvent).build();
-        Log.v(TAG, "Received a " + transition.getTransitionEvent() + "geofence event");
+        Log.v(TAG, "Received a " + transition.getTransitionEvent() + " geofence event");
         transition.save(context);
         schedule(context, Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY, Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY_TIME_UNIT);
     }

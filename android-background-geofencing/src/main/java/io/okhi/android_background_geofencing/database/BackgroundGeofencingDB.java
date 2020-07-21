@@ -8,6 +8,7 @@ import com.snappydb.DBFactory;
 
 import java.util.ArrayList;
 
+import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
@@ -103,5 +104,38 @@ public class BackgroundGeofencingDB {
 
     public static BackgroundGeofence getBackgroundGeofence(String geofenceId, Context context) {
         return (BackgroundGeofence) get(Constant.DB_BACKGROUND_GEOFENCE_PREFIX_KEY + geofenceId, BackgroundGeofence.class, context);
+    }
+
+    public static ArrayList<BackgroundGeofence> getAllGeofences(Context context) {
+        ArrayList<BackgroundGeofence> geofences = new ArrayList<>();
+        String[] keys = getKeys(Constant.DB_BACKGROUND_GEOFENCE_PREFIX_KEY, context);
+        if (keys != null) {
+            for (String key: keys) {
+                BackgroundGeofence geofence = (BackgroundGeofence) get(key, BackgroundGeofence.class, context);
+                if (geofence != null) {
+                    if (geofence.hasExpired()) {
+                        removeGeofence(geofence.getId(), context);
+                    } else {
+                        geofences.add(geofence);
+                    }
+                }
+            }
+        }
+        return geofences;
+    }
+
+    private static void removeGeofence(String id, Context context) {
+        remove(Constant.DB_BACKGROUND_GEOFENCE_PREFIX_KEY + id, context);
+    }
+
+    public static ArrayList<BackgroundGeofence> getAllFailingGeofences(Context context) {
+        ArrayList<BackgroundGeofence> geofences = getAllGeofences(context);
+        ArrayList<BackgroundGeofence> failingGeofences = getAllGeofences(context);
+        for(BackgroundGeofence geofence: geofences) {
+            if (geofence.isFailing()) {
+                failingGeofences.add(geofence);
+            }
+        }
+        return failingGeofences;
     }
 }

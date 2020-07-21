@@ -138,4 +138,16 @@ public class BackgroundGeofencingDB {
         }
         return failingGeofences;
     }
+
+    // TODO: edge case we don't get a single geofence event, need to track registration date within geofences
+    public static long getLastGeofenceTransitionEventTimestamp(Context context) {
+        long timestamp = -1;
+        ArrayList<BackgroundGeofenceTransition> transitions = getAllGeofenceTransitions(context);
+        for (BackgroundGeofenceTransition transition: transitions) {
+            if (timestamp < transition.getTransitionDate()) {
+                timestamp = transition.getTransitionDate();
+            }
+        }
+        return timestamp;
+    }
 }

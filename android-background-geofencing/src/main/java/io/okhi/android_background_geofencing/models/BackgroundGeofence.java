@@ -38,7 +38,7 @@ public class BackgroundGeofence implements Serializable {
     private int loiteringDelay;
     private int transitionTypes;
     private int initialTriggerTransitionTypes;
-    private boolean registerOnDeviceRestart;
+    private long registrationTimestamp;
 
     private PendingIntent geofencePendingIntent;
 
@@ -63,7 +63,7 @@ public class BackgroundGeofence implements Serializable {
         this.expirationTimestamp = builder.expirationTimestamp;
         this.notificationResponsiveness = builder.notificationResponsiveness;
         this.loiteringDelay = builder.loiteringDelay;
-        this.registerOnDeviceRestart = builder.registerOnDeviceRestart;
+        this.registrationTimestamp = System.currentTimeMillis();
         this.transitionTypes = builder.transitionTypes;
         this.initialTriggerTransitionTypes = builder.initialTriggerTransitionTypes;
     }

@@ -238,6 +238,10 @@ public class BackgroundGeofenceTransition implements Serializable {
         BackgroundGeofenceTransition transition = new BackgroundGeofenceTransition.BackgroundGeofenceTransitionBuilder(geofencingEvent).build();
         Log.v(TAG, "Received a " + transition.getTransitionEvent() + "geofence event");
         transition.save(context);
+        scheduleGeofenceTransitionUploadWork(context);
+    }
+
+    public static void scheduleGeofenceTransitionUploadWork(Context context) {
         OneTimeWorkRequest geofenceTransitionUploadWorkRequest = new OneTimeWorkRequest.Builder(BackgroundGeofenceTransitionUploadWorker.class)
                 .setConstraints(Constant.GEOFENCE_WORK_MANAGER_CONSTRAINTS)
                 .addTag(Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_TAG)

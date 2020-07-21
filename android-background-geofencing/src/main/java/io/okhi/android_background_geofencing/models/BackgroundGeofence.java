@@ -72,8 +72,8 @@ public class BackgroundGeofence implements Serializable {
         private String id;
         private double lat;
         private double lng;
-        private long expirationTimestamp;
         private float radius = Constant.DEFAULT_GEOFENCE_RADIUS;
+        private long expirationTimestamp = Constant.DEFAULT_GEOFENCE_EXPIRATION;
         private long expiration = Constant.DEFAULT_GEOFENCE_EXPIRATION;
         private int notificationResponsiveness = Constant.DEFAULT_GEOFENCE_NOTIFICATION_RESPONSIVENESS;
         private int loiteringDelay = Constant.DEFAULT_GEOFENCE_LOITERING_DELAY;
@@ -230,5 +230,9 @@ public class BackgroundGeofence implements Serializable {
                 )
                 .build();
         WorkManager.getInstance(context).enqueue(failedGeofencesRestartWork);
+    }
+
+    public boolean hasExpired() {
+        return expirationTimestamp > 0 && System.currentTimeMillis() > expirationTimestamp;
     }
 }

@@ -1,5 +1,6 @@
 package io.okhi.android_background_geofencing.models;
 
+import android.content.Context;
 import android.location.Location;
 import android.os.Build;
 
@@ -10,70 +11,114 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class BackgroundGeofenceTransition {
-    private final GeofencingEvent geofenceTransitionEvent;
-    private final HashMap<Integer, String> GeofenceTransitionEventNameMap = generateGeofenceTransitionHashMap();
+import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 
-    private HashMap<Integer, String> generateGeofenceTransitionHashMap() {
-        HashMap<Integer, String> map = new HashMap<>();
-        map.put(Geofence.GEOFENCE_TRANSITION_EXIT, "exit");
-        map.put(Geofence.GEOFENCE_TRANSITION_DWELL, "dwell");
-        map.put(Geofence.GEOFENCE_TRANSITION_ENTER, "enter");
-        return map;
+public class BackgroundGeofenceTransition implements Serializable {
+
+    private ArrayList<String> ids;
+    private long transitionDate;
+    private String geoPointProvider;
+    private double lat;
+    private double lon;
+    private double gpsAccuracy;
+    private String transitionEvent;
+    private String geoPointSource;
+    private String deviceOSName;
+    private String deviceOSVersion;
+    private String deviceManufacturer;
+    private String deviceModel;
+    private HashMap<String, Double> geoPoint;
+
+    BackgroundGeofenceTransition() {}
+
+    private BackgroundGeofenceTransition(BackgroundGeofenceTransitionBuilder builder) {
+        ids = builder.ids;
+        transitionDate = builder.transitionDate;
+        geoPointProvider = builder.geoPointProvider;
+        lat = builder.lat;
+        lon = builder.lon;
+        geoPoint = new HashMap<>();
+        geoPoint.put("lat", lat);
+        geoPoint.put("lon", lon);
+        gpsAccuracy = builder.gpsAccuracy;
+        transitionEvent = builder.transitionEvent;
+        geoPointSource = builder.geoPointSource;
+        deviceOSName = builder.deviceOSName;
+        deviceOSVersion = builder.deviceOSVersion;
+        deviceManufacturer = builder.deviceManufacturer;
+        deviceModel = builder.deviceModel;
     }
 
-    public BackgroundGeofenceTransition(GeofencingEvent geofencingEvent) {
-        this.geofenceTransitionEvent = geofencingEvent;
+    public void save(Context context) {
+        BackgroundGeofencingDB.saveGeofenceTransitionEvent(this, context);
     }
 
-    public String toJSON() throws JSONException {
+    public static class BackgroundGeofenceTransitionBuilder {
+        private ArrayList<String> ids = new ArrayList<>();
+        private long transitionDate;
+        private String geoPointProvider;
+        private double lat;
+        private double lon;
+        private double gpsAccuracy;
+        private String transitionEvent;
+        private String geoPointSource;
+        private String deviceOSName;
+        private String deviceOSVersion;
+        private String deviceManufacturer;
+        private String deviceModel;
+        private final HashMap<Integer, String> GeofenceTransitionEventNameMap = generateGeofenceTransitionHashMap();
+        private HashMap<Integer, String> generateGeofenceTransitionHashMap() {
+            HashMap<Integer, String> map = new HashMap<>();
+            map.put(Geofence.GEOFENCE_TRANSITION_EXIT, "exit");
+            map.put(Geofence.GEOFENCE_TRANSITION_DWELL, "dwell");
+            map.put(Geofence.GEOFENCE_TRANSITION_ENTER, "enter");
+            return map;
+        }
+
+        public BackgroundGeofenceTransitionBuilder(GeofencingEvent geofencingEvent) {
+            // get ids
+            for (Geofence geofence : geofencingEvent.getTriggeringGeofences()) {
+                ids.add(geofence.getRequestId());
+            }
+            // triggering location
+            Location location = geofencingEvent.getTriggeringLocation();
+            // get transition date
+            transitionDate = location.getTime();
+            // get gps provider
+            geoPointProvider = location.getProvider();
+            // get actual geopoint
+            lat = location.getLatitude();
+            lon = location.getLongitude();
+            // get accuracy
+            gpsAccuracy = location.getAccuracy();
+            // get transition event name
+            transitionEvent = GeofenceTransitionEventNameMap.get(geofencingEvent.getGeofenceTransition());
+            // set source as geofence
+            geoPointSource = "geofence";
+            // get device information
+            deviceOSName = "android";
+            deviceOSVersion = Build.VERSION.RELEASE;
+            deviceManufacturer = Build.MANUFACTURER;
+            deviceModel = Build.MODEL;
+        }
+
+        public BackgroundGeofenceTransition build(){
+            return new BackgroundGeofenceTransition(this);
+        }
+    }
+
+    public String toJSONString() throws JSONException {
 
         JSONObject payload = new JSONObject();
         JSONArray transits = new JSONArray();
         JSONObject transit = new JSONObject();
 
-        // generate triggering ids
-        ArrayList<String> geofenceTriggeringIds = new ArrayList<>();
-        for (Geofence geofence : geofenceTransitionEvent.getTriggeringGeofences()) {
-            geofenceTriggeringIds.add(geofence.getRequestId());
-        }
-
-        // triggering location
-        Location location = geofenceTransitionEvent.getTriggeringLocation();
-
-        // get transition date
-        long transitionDate = location.getTime();
-
-        // get gps provider
-        String geoPointProvider = location.getProvider();
-
-        // get actual geopoint
-        double lat = location.getLatitude();
-        double lon = location.getLongitude();
-        HashMap<String, Double> geoPoint = new HashMap<>();
-        geoPoint.put("lat", lat);
-        geoPoint.put("lon", lon);
-
-        // get accuracy
-        double gpsAccuracy = location.getAccuracy();
-
-        // get transition event name
-        String transitionEvent = GeofenceTransitionEventNameMap.get(geofenceTransitionEvent.getGeofenceTransition());
-
-        // set geopoint source
-        String geoPointSource = "geofence";
-
-        // get device info
-        String deviceOSName = "android";
-        String deviceOSVersion = Build.VERSION.RELEASE;
-        String deviceManufacturer = Build.MANUFACTURER;
-        String deviceModel = Build.MODEL;
-
         // build transit
-        transit.put("ids", new JSONArray(geofenceTriggeringIds));
+        transit.put("ids", new JSONArray(ids));
         transit.put("transition_date", transitionDate);
         transit.put("geopoint_provider", geoPointProvider);
         transit.put("geo_point", new JSONObject(geoPoint));
@@ -92,5 +137,57 @@ public class BackgroundGeofenceTransition {
         payload.put("transits", transits);
 
         return payload.toString();
+    }
+
+    public String getTransitionEvent() {
+        return transitionEvent;
+    }
+
+    public String getGeoPointSource() {
+        return geoPointSource;
+    }
+
+    public String getGeoPointProvider() {
+        return geoPointProvider;
+    }
+
+    public String getDeviceOSVersion() {
+        return deviceOSVersion;
+    }
+
+    public String getDeviceOSName() {
+        return deviceOSName;
+    }
+
+    public String getDeviceModel() {
+        return deviceModel;
+    }
+
+    public String getDeviceManufacturer() {
+        return deviceManufacturer;
+    }
+
+    public long getTransitionDate() {
+        return transitionDate;
+    }
+
+    public HashMap<String, Double> getGeoPoint() {
+        return geoPoint;
+    }
+
+    public double getLat() {
+        return lat;
+    }
+
+    public double getLon() {
+        return lon;
+    }
+
+    public ArrayList<String> getIds() {
+        return ids;
+    }
+
+    public double getGpsAccuracy() {
+        return gpsAccuracy;
     }
 }

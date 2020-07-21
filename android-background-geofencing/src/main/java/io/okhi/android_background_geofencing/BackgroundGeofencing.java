@@ -27,6 +27,7 @@ public class BackgroundGeofencing {
                         Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY_TIME_UNIT
                 )
                 .build();
+
         OneTimeWorkRequest geofenceTransitionUploadWorkRequest = new OneTimeWorkRequest.Builder(BackgroundGeofenceTransitionUploadWorker.class)
                 .setConstraints(Constant.GEOFENCE_WORK_MANAGER_CONSTRAINTS)
                 .addTag(Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_TAG)
@@ -37,7 +38,8 @@ public class BackgroundGeofencing {
                         Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY_TIME_UNIT
                 )
                 .build();
-        WorkManager.getInstance(context).beginUniqueWork(Constant.GEOFENCE_INIT_WORK_NAME, ExistingWorkPolicy.KEEP, geofenceTransitionUploadWorkRequest)
+
+        WorkManager.getInstance(context).beginUniqueWork(Constant.GEOFENCE_INIT_WORK_NAME, ExistingWorkPolicy.REPLACE, geofenceTransitionUploadWorkRequest)
                 .then(failedGeofencesRestartWork)
                 .enqueue();
     }

@@ -250,7 +250,7 @@ public class BackgroundGeofenceTransition implements Serializable {
                         Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY_TIME_UNIT
                 )
                 .build();
-        WorkManager.getInstance(context).enqueueUniqueWork(Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_NAME, ExistingWorkPolicy.KEEP, geofenceTransitionUploadWorkRequest);
+        WorkManager.getInstance(context).enqueueUniqueWork(Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_NAME, ExistingWorkPolicy.REPLACE, geofenceTransitionUploadWorkRequest);
     }
 
     public static void scheduleGeofenceTransitionUploadWork(GeofencingEvent geofencingEvent, Context context) {

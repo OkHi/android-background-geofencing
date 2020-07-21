@@ -234,7 +234,7 @@ public class BackgroundGeofence implements Serializable {
                         Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY_TIME_UNIT
                 )
                 .build();
-        WorkManager.getInstance(context).enqueueUniqueWork(Constant.GEOFENCE_RESTART_WORK_NAME, ExistingWorkPolicy.KEEP, failedGeofencesRestartWork);
+        WorkManager.getInstance(context).enqueueUniqueWork(Constant.GEOFENCE_RESTART_WORK_NAME, ExistingWorkPolicy.REPLACE, failedGeofencesRestartWork);
     }
 
     public boolean hasExpired() {

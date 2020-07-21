@@ -234,18 +234,15 @@ public class BackgroundGeofenceTransition implements Serializable {
         return gpsAccuracy;
     }
 
-    public static void scheduleGeofenceTransitionUploadWork(GeofencingEvent geofencingEvent, Context context) {
-        BackgroundGeofenceTransition transition = new BackgroundGeofenceTransition.BackgroundGeofenceTransitionBuilder(geofencingEvent).build();
-        Log.v(TAG, "Received a " + transition.getTransitionEvent() + "geofence event");
-        transition.save(context);
-        scheduleGeofenceTransitionUploadWork(context);
+    public static void scheduleGeofenceTransitionUploadWork(Context context, int duration, TimeUnit unit) {
+        schedule(context, duration, unit);
     }
 
-    public static void scheduleGeofenceTransitionUploadWork(Context context) {
+    private static void schedule(Context context, long duration, TimeUnit unit) {
         OneTimeWorkRequest geofenceTransitionUploadWorkRequest = new OneTimeWorkRequest.Builder(BackgroundGeofenceTransitionUploadWorker.class)
                 .setConstraints(Constant.GEOFENCE_WORK_MANAGER_CONSTRAINTS)
                 .addTag(Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_TAG)
-                .setInitialDelay(Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY, Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY_TIME_UNIT)
+                .setInitialDelay(duration, unit)
                 .setBackoffCriteria(
                         BackoffPolicy.LINEAR,
                         Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY,
@@ -254,5 +251,16 @@ public class BackgroundGeofenceTransition implements Serializable {
                 .build();
         WorkManager.getInstance(context).enqueue(geofenceTransitionUploadWorkRequest);
         Log.v(TAG, "Geofence transition upload enqueued successfully");
+    }
+
+    public static void scheduleGeofenceTransitionUploadWork(GeofencingEvent geofencingEvent, Context context) {
+        BackgroundGeofenceTransition transition = new BackgroundGeofenceTransition.BackgroundGeofenceTransitionBuilder(geofencingEvent).build();
+        Log.v(TAG, "Received a " + transition.getTransitionEvent() + "geofence event");
+        transition.save(context);
+        schedule(context, Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY, Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY_TIME_UNIT);
+    }
+
+    public static void scheduleGeofenceTransitionUploadWork(Context context) {
+        schedule(context, Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY, Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY_TIME_UNIT);
     }
 }

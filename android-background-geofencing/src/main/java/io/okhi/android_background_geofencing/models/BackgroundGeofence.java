@@ -20,6 +20,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
@@ -218,11 +219,19 @@ public class BackgroundGeofence implements Serializable {
         }
     }
 
+    public static void scheduleGeofenceRestartWork(Context context, long duration, TimeUnit unit) {
+        schedule(context, duration, unit);
+    }
+
     public static void scheduleGeofenceRestartWork(Context context) {
+        schedule(context, Constant.GEOFENCE_RESTART_WORK_DELAY, Constant.GEOFENCE_RESTART_WORK_DELAY_TIME_UNIT);
+    }
+
+    private static void schedule(Context context, long duration, TimeUnit unit) {
         OneTimeWorkRequest failedGeofencesRestartWork = new OneTimeWorkRequest.Builder(BackgroundGeofenceRestartWorker.class)
                 .setConstraints(Constant.GEOFENCE_WORK_MANAGER_CONSTRAINTS)
                 .addTag(Constant.GEOFENCE_RESTART_WORK_TAG)
-                .setInitialDelay(Constant.GEOFENCE_RESTART_WORK_DELAY, Constant.GEOFENCE_RESTART_WORK_DELAY_TIME_UNIT)
+                .setInitialDelay(duration, unit)
                 .setBackoffCriteria(
                         BackoffPolicy.EXPONENTIAL,
                         Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY,

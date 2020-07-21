@@ -3,6 +3,11 @@ package io.okhi.android_background_geofencing.models;
 import android.content.Context;
 import android.location.Location;
 import android.os.Build;
+import android.util.Log;
+
+import androidx.work.BackoffPolicy;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
 
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingEvent;
@@ -18,6 +23,7 @@ import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
+import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -39,6 +45,8 @@ public class BackgroundGeofenceTransition implements Serializable {
     private String deviceManufacturer;
     private String deviceModel;
     private HashMap<String, Double> geoPoint;
+
+    private static String TAG = "GeofenceTransition";
 
     BackgroundGeofenceTransition() {}
 
@@ -224,5 +232,23 @@ public class BackgroundGeofenceTransition implements Serializable {
 
     public double getGpsAccuracy() {
         return gpsAccuracy;
+    }
+
+    public static void scheduleGeofenceTransitionUploadWork(GeofencingEvent geofencingEvent, Context context) {
+        BackgroundGeofenceTransition transition = new BackgroundGeofenceTransition.BackgroundGeofenceTransitionBuilder(geofencingEvent).build();
+        Log.v(TAG, "Received a " + transition.getTransitionEvent() + "geofence event");
+        transition.save(context);
+        OneTimeWorkRequest geofenceTransitionUploadWorkRequest = new OneTimeWorkRequest.Builder(BackgroundGeofenceTransitionUploadWorker.class)
+                .setConstraints(Constant.GEOFENCE_WORK_MANAGER_CONSTRAINTS)
+                .addTag(Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_TAG)
+                .setInitialDelay(Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY, Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY_TIME_UNIT)
+                .setBackoffCriteria(
+                        BackoffPolicy.LINEAR,
+                        Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY,
+                        Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY_TIME_UNIT
+                )
+                .build();
+        WorkManager.getInstance(context).enqueue(geofenceTransitionUploadWorkRequest);
+        Log.v(TAG, "Geofence transition upload enqueued successfully");
     }
 }

@@ -7,7 +7,7 @@ import android.util.Log;
 
 public class DeviceRebootBroadcastReceiver extends BroadcastReceiver {
     public static final String TAG = "DeviceRebootReceiver";
-    
+
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.v(TAG, "Device reboot detected");

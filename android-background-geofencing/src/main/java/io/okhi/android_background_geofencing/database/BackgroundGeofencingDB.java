@@ -6,6 +6,8 @@ import android.util.Log;
 import com.snappydb.DB;
 import com.snappydb.DBFactory;
 
+import java.util.ArrayList;
+
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
@@ -39,6 +41,29 @@ public class BackgroundGeofencingDB {
         return null;
     }
 
+    private static String[] getKeys(String prefix, Context context) {
+        try {
+            DB db = DBFactory.open(context, Constant.DB_NAME);
+            String[] key = db.findKeys(prefix);
+            db.close();
+            return key;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static void remove(String key, Context context) {
+        try {
+            DB db = DBFactory.open(context, Constant.DB_NAME);
+            db.del(key);
+            db.close();
+            Log.v(TAG, "Successfully removed: " + key);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void saveWebHook(BackgroundGeofencingWebHook webHook, Context context) {
         save(Constant.DB_WEBHOOK_CONFIGURATION_KEY, webHook, context);
     }
@@ -57,5 +82,22 @@ public class BackgroundGeofencingDB {
         if (existingTransition == null) {
             save(key, transition, context);
         }
+    }
+
+    public static ArrayList<BackgroundGeofenceTransition> getAllGeofenceTransitions(Context context) {
+        ArrayList<BackgroundGeofenceTransition> transitions = new ArrayList<>();
+        String[] keys = getKeys(Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY, context);
+        if (keys != null) {
+            for(String key: keys) {
+                BackgroundGeofenceTransition transition = (BackgroundGeofenceTransition) get(key, BackgroundGeofenceTransition.class, context);
+                transitions.add(transition);
+            }
+        }
+        return transitions;
+    }
+
+    public static void removeGeofenceTransition(BackgroundGeofenceTransition transition, Context context) {
+        String key = Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY + transition.getTransitionDate();
+        remove(key, context);
     }
 }

@@ -51,8 +51,7 @@ public class Constant {
     public static final TimeUnit GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY_TIME_UNIT = TimeUnit.MINUTES;
     public static final long GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY = 30;
     public static final TimeUnit GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY_TIME_UNIT = TimeUnit.MINUTES;
-
-    public static int GEOFENCE_UPLOAD_WORK_MAX_ATTEMPTS = 10;
+    public static int GEOFENCE_TRANSITION_UPLOAD_WORK_MAX_ATTEMPTS = 10;
 
     public static int GEOFENCE_UPLOAD_WORK_BACK_OFF_DELAY = 16;
     public static TimeUnit  GEOFENCE_UPLOAD_WORK_BACK_OFF_DELAY_TIME_UNIT = TimeUnit.MINUTES;

@@ -7,6 +7,7 @@ import com.snappydb.DB;
 import com.snappydb.DBFactory;
 
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
 
@@ -48,5 +49,13 @@ public class BackgroundGeofencingDB {
 
     public static void saveBackgroundGeofence(BackgroundGeofence geofence, Context context) {
         save(Constant.DB_BACKGROUND_GEOFENCE_PREFIX_KEY + geofence.getId(), geofence, context);
+    }
+
+    public static void saveGeofenceTransitionEvent(BackgroundGeofenceTransition transition, Context context) {
+        String key = Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY + transition.getTransitionDate();
+        BackgroundGeofenceTransition existingTransition = (BackgroundGeofenceTransition) get(key, BackgroundGeofenceTransition.class, context);
+        if (existingTransition == null) {
+            save(key, transition, context);
+        }
     }
 }

@@ -1,7 +1,12 @@
 package io.okhi.android_background_geofencing.models;
 
+import androidx.work.Constraints;
+import androidx.work.NetworkType;
+
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
+
+import java.util.concurrent.TimeUnit;
 
 public class Constant {
 
@@ -20,11 +25,12 @@ public class Constant {
     public static final String PERMISSION_DIALOG_NEGATIVE_BUTTON_TEXT = "CANCEL";
 
     // db
+    // TODO: implement strategy to dump the current db if we bump up the version
     public static final String DB_NAME_VERSION = "v1";
     public static final String DB_NAME = "BACKGROUND_GEOFENCING_DB:" + Constant.DB_NAME_VERSION;
     public static final String DB_WEBHOOK_CONFIGURATION_KEY = "WEBHOOK_CONFIGURATION_KEY";
-    public static final String DB_BACKGROUND_GEOFENCE_STRUCTURE_VERSION = "v1:";
-    public static final String DB_BACKGROUND_GEOFENCE_PREFIX_KEY = "BACKGROUND_GEOFENCE:" + DB_BACKGROUND_GEOFENCE_STRUCTURE_VERSION;
+    public static final String DB_BACKGROUND_GEOFENCE_PREFIX_KEY = "BACKGROUND_GEOFENCE:";
+    public static final String DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY = "BACKGROUND_GEOFENCE_TRANSITION:";
 
     // geofence defaults
     public static final long DEFAULT_GEOFENCE_EXPIRATION = Geofence.NEVER_EXPIRE;
@@ -34,4 +40,45 @@ public class Constant {
     public static final boolean DEFAULT_GEOFENCE_REGISTER_ON_DEVICE_RESTART = true;
     public static final int DEFAULT_GEOFENCE_TRANSITION_TYPES = Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT | Geofence.GEOFENCE_TRANSITION_DWELL;
     public static final int DEFAULT_GEOFENCE_INITIAL_TRIGGER_TRANSITION_TYPES = GeofencingRequest.INITIAL_TRIGGER_ENTER | GeofencingRequest.INITIAL_TRIGGER_EXIT | GeofencingRequest.INITIAL_TRIGGER_DWELL;
+
+    // jobs
+    public static final int GEOFENCE_TRANSITION_JOB_ID = 5;
+    public static final String GEOFENCE_TRANSITION_EVENT_JSON_PAYLOAD = "GEOFENCE_TRANSITION_EVENT_JSON_PAYLOAD";
+    public static final String GEOFENCE_TRANSITION_UPLOAD_REQUEST = "GEOFENCE_TRANSITION_UPLOAD_REQUEST";
+
+
+
+    // TODO: change backoff delay to 45min
+    public static final String GEOFENCE_TRANSITION_UPLOAD_WORK_TAG = "GEOFENCE_TRANSITION_UPLOAD_WORK_TAG";
+    public static final long GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY = 5;
+    public static final TimeUnit GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY_TIME_UNIT = TimeUnit.MINUTES;
+    public static final long GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY = 45;
+    public static final TimeUnit GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY_TIME_UNIT = TimeUnit.MINUTES;
+    public static final long GEOFENCE_TRANSITION_TIME_STAMP_THRESHOLD = 12 * 60 * 60 * 1000;
+    public static int GEOFENCE_TRANSITION_UPLOAD_WORK_MAX_ATTEMPTS = 5;
+
+    public static final String GEOFENCE_RESTART_WORK_TAG = "GEOFENCE_RESTART_WORK_TAG";
+    public static final long GEOFENCE_RESTART_WORK_DELAY = 1;
+    public static final TimeUnit GEOFENCE_RESTART_WORK_DELAY_TIME_UNIT = TimeUnit.HOURS;
+    public static final long GEOFENCE_RESTART_WORK_BACKOFF_DELAY = 1;
+    public static final TimeUnit GEOFENCE_RESTART_WORK_BACKOFF_DELAY_TIME_UNIT = TimeUnit.HOURS;
+    public static int GEOFENCE_RESTART_WORK__MAX_ATTEMPTS = 4;
+
+    public static int GEOFENCE_UPLOAD_WORK_BACK_OFF_DELAY = 16;
+    public static TimeUnit  GEOFENCE_UPLOAD_WORK_BACK_OFF_DELAY_TIME_UNIT = TimeUnit.MINUTES;
+
+    // TODO: change initial delay to 10min
+    public static final long GEOFENCE_UPLOAD_WORK_INITIAL_DELAY = 1;
+    public static final TimeUnit GEOFENCE_UPLOAD_WORK_INITIAL_DELAY_TIME_UNIT = TimeUnit.MINUTES;
+
+    // periodic worker settings
+    public static final long GEOFENCE_PERIODIC_WORK_TIME_INTERVAL = 16;
+    public static final TimeUnit GEOFENCE_PERIODIC_WORK_TIME_UNIT = TimeUnit.MINUTES;
+    public static final String GEOFENCE_PERIODIC_WORK_TAG = "GEOFENCE_PERIODIC_WORKER_TAG";
+    public static final String GEOFENCE_PERIODIC_WORK_NAME = "GEOFENCE_PERIODIC_WORKER";
+
+    public static Constraints GEOFENCE_WORK_MANAGER_CONSTRAINTS = new Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .setRequiresBatteryNotLow(true)
+            .build();
 }

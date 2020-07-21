@@ -3,12 +3,15 @@ package io.okhi.android_background_geofencing.models;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.work.BackoffPolicy;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
 
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingClient;
+import com.google.android.gms.location.GeofencingEvent;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -16,10 +19,13 @@ import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.receivers.BackgroundGeofenceBroadcastReceiver;
+import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
 
 public class BackgroundGeofence implements Serializable {
 
@@ -33,10 +39,11 @@ public class BackgroundGeofence implements Serializable {
     private int loiteringDelay;
     private int transitionTypes;
     private int initialTriggerTransitionTypes;
-    private boolean registerOnDeviceRestart;
+    private long registrationTimestamp;
 
     private PendingIntent geofencePendingIntent;
-    private boolean failing = false;
+
+    private boolean isFailing = false;
 
     public static int TRANSITION_ENTER = Geofence.GEOFENCE_TRANSITION_ENTER;
     public static int TRANSITION_EXIT = Geofence.GEOFENCE_TRANSITION_EXIT;
@@ -57,7 +64,7 @@ public class BackgroundGeofence implements Serializable {
         this.expirationTimestamp = builder.expirationTimestamp;
         this.notificationResponsiveness = builder.notificationResponsiveness;
         this.loiteringDelay = builder.loiteringDelay;
-        this.registerOnDeviceRestart = builder.registerOnDeviceRestart;
+        this.registrationTimestamp = System.currentTimeMillis();
         this.transitionTypes = builder.transitionTypes;
         this.initialTriggerTransitionTypes = builder.initialTriggerTransitionTypes;
     }
@@ -66,8 +73,8 @@ public class BackgroundGeofence implements Serializable {
         private String id;
         private double lat;
         private double lng;
-        private long expirationTimestamp;
         private float radius = Constant.DEFAULT_GEOFENCE_RADIUS;
+        private long expirationTimestamp = Constant.DEFAULT_GEOFENCE_EXPIRATION;
         private long expiration = Constant.DEFAULT_GEOFENCE_EXPIRATION;
         private int notificationResponsiveness = Constant.DEFAULT_GEOFENCE_NOTIFICATION_RESPONSIVENESS;
         private int loiteringDelay = Constant.DEFAULT_GEOFENCE_LOITERING_DELAY;
@@ -185,5 +192,56 @@ public class BackgroundGeofence implements Serializable {
 
     public String getId() {
         return id;
+    }
+
+    public boolean isFailing() {
+        return isFailing;
+    }
+
+    public static void setIsFailing(GeofencingEvent event, Boolean isFailing, Context context) {
+        List<Geofence> geofences = event.getTriggeringGeofences();
+        for(Geofence geofence: geofences) {
+            setIsFailing(geofence.getRequestId(), isFailing, context);
+        }
+    }
+
+    public static void setIsFailing(String geofenceId, Boolean isFailing, Context context) {
+        BackgroundGeofence geofence = BackgroundGeofencingDB.getBackgroundGeofence(geofenceId, context);
+        if (geofence != null) {
+            geofence.setIsFailing(isFailing, context);
+        }
+    }
+
+    public void setIsFailing(Boolean isFailing, Context context) {
+        if (isFailing != this.isFailing) {
+            this.isFailing = isFailing;
+            save(context);
+        }
+    }
+
+    public static void scheduleGeofenceRestartWork(Context context, long duration, TimeUnit unit) {
+        schedule(context, duration, unit);
+    }
+
+    public static void scheduleGeofenceRestartWork(Context context) {
+        schedule(context, Constant.GEOFENCE_RESTART_WORK_DELAY, Constant.GEOFENCE_RESTART_WORK_DELAY_TIME_UNIT);
+    }
+
+    private static void schedule(Context context, long duration, TimeUnit unit) {
+        OneTimeWorkRequest failedGeofencesRestartWork = new OneTimeWorkRequest.Builder(BackgroundGeofenceRestartWorker.class)
+                .setConstraints(Constant.GEOFENCE_WORK_MANAGER_CONSTRAINTS)
+                .addTag(Constant.GEOFENCE_RESTART_WORK_TAG)
+                .setInitialDelay(duration, unit)
+                .setBackoffCriteria(
+                        BackoffPolicy.EXPONENTIAL,
+                        Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY,
+                        Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY_TIME_UNIT
+                )
+                .build();
+        WorkManager.getInstance(context).enqueue(failedGeofencesRestartWork);
+    }
+
+    public boolean hasExpired() {
+        return expirationTimestamp > 0 && System.currentTimeMillis() > expirationTimestamp;
     }
 }

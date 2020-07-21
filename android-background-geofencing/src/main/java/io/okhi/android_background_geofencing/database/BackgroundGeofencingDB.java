@@ -100,4 +100,8 @@ public class BackgroundGeofencingDB {
         String key = Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY + transition.getTransitionDate();
         remove(key, context);
     }
+
+    public static BackgroundGeofence getBackgroundGeofence(String geofenceId, Context context) {
+        return (BackgroundGeofence) get(Constant.DB_BACKGROUND_GEOFENCE_PREFIX_KEY + geofenceId, BackgroundGeofence.class, context);
+    }
 }

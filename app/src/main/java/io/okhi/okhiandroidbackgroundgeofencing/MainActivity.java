@@ -7,9 +7,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 
+import java.util.ArrayList;
+
+import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingLocationService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingPermissionService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingPlayService;
@@ -18,36 +24,43 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 public class MainActivity extends AppCompatActivity {
 
     BackgroundGeofencingPermissionService permissionService;
-
     BackgroundGeofencingLocationService locationService;
-
     BackgroundGeofencingPlayService playService;
-
     BackgroundGeofencingWebHook webHook;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        final Button button = findViewById(R.id.button1);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                permissionService.requestLocationPermission("We need permission", "Pretty please", new RequestHandler() {
+                    @Override
+                    public void onSuccess() {
+                        startGeofence();
+                    }
+
+                    @Override
+                    public void onError() {
+
+                    }
+                });
+            }
+        });
         permissionService = new BackgroundGeofencingPermissionService(this);
         locationService = new BackgroundGeofencingLocationService(this);
         playService = new BackgroundGeofencingPlayService(this);
         webHook = new BackgroundGeofencingWebHook("https://google.com");
         webHook.save(this);
-        permissionService.requestLocationPermission("We need permission", "Pretty please", new RequestHandler() {
-            @Override
-            public void onSuccess() {
-                startGeofence();
-            }
-
-            @Override
-            public void onError() {
-
-            }
-        });
     }
 
     private void startGeofence() {
-        BackgroundGeofence backgroundGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("kiano", -1.313456, 36.9887).build();
+        BackgroundGeofence backgroundGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("kianohome", -1.3146948, 36.8359575)
+                .setNotificationResponsiveness(300000)
+                .setLoiteringDelay(900000)
+                .build();
         backgroundGeofence.start(getApplicationContext(), new RequestHandler() {
             @Override
             public void onSuccess() {
@@ -73,4 +86,6 @@ public class MainActivity extends AppCompatActivity {
         locationService.onActivityResult(requestCode, resultCode, data);
         playService.onActivityResult(requestCode, resultCode, data);
     }
+
+
 }

@@ -11,11 +11,18 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class BackgroundGeofenceTransition implements Serializable {
 
@@ -112,7 +119,10 @@ public class BackgroundGeofenceTransition implements Serializable {
     }
 
     public String toJSONString() throws JSONException {
+        return toJSONObject().toString();
+    }
 
+    public JSONObject toJSONObject() throws JSONException {
         JSONObject payload = new JSONObject();
         JSONArray transits = new JSONArray();
         JSONObject transit = new JSONObject();
@@ -136,7 +146,32 @@ public class BackgroundGeofenceTransition implements Serializable {
         // build payload
         payload.put("transits", transits);
 
-        return payload.toString();
+        return payload;
+    }
+
+    public boolean syncUpload(BackgroundGeofencingWebHook webHook) throws JSONException, IOException {
+        JSONObject meta = webHook.getMeta();
+        OkHttpClient client = getHttpClient(webHook);
+        JSONObject payload = toJSONObject();
+        if (meta != null) {
+            payload.put("meta", meta);
+        }
+        RequestBody requestBody = RequestBody.create(payload.toString(), MediaType.parse("application/json"));
+        Request request = new Request.Builder()
+                .url(webHook.getUrl())
+                .headers(webHook.getHeaders())
+                .post(requestBody)
+                .build();
+        Response response = client.newCall(request).execute();
+        return response.isSuccessful();
+    }
+
+    private OkHttpClient getHttpClient(BackgroundGeofencingWebHook webHook) {
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(webHook.getTimeout(), TimeUnit.MILLISECONDS)
+                .writeTimeout(webHook.getTimeout(), TimeUnit.MILLISECONDS)
+                .readTimeout(webHook.getTimeout(), TimeUnit.MILLISECONDS).build();
+        return client;
     }
 
     public String getTransitionEvent() {

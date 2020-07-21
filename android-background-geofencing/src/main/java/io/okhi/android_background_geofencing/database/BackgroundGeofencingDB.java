@@ -8,11 +8,12 @@ import com.snappydb.DBFactory;
 
 import java.util.ArrayList;
 
-import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
+
+// TODO: implement strategy to dump the current db if we bump up the version
 
 public class BackgroundGeofencingDB {
 
@@ -37,7 +38,7 @@ public class BackgroundGeofencingDB {
             Log.v(TAG, "Successfully got: " + key);
             return value;
         } catch (Exception e) {
-            e.printStackTrace();
+//            e.printStackTrace();
         }
         return null;
     }

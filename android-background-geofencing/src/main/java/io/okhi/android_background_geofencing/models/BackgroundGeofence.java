@@ -6,6 +6,7 @@ import android.content.Intent;
 
 import androidx.annotation.NonNull;
 import androidx.work.BackoffPolicy;
+import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
@@ -40,8 +41,6 @@ public class BackgroundGeofence implements Serializable {
     private int transitionTypes;
     private int initialTriggerTransitionTypes;
     private long registrationTimestamp;
-
-    private PendingIntent geofencePendingIntent;
 
     private boolean isFailing = false;
 
@@ -141,11 +140,8 @@ public class BackgroundGeofence implements Serializable {
     }
 
     private PendingIntent getGeofencePendingIntent(Context context) {
-        if (geofencePendingIntent != null) {
-            return geofencePendingIntent;
-        }
         Intent intent = new Intent(context, BackgroundGeofenceBroadcastReceiver.class);
-        geofencePendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent geofencePendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         return geofencePendingIntent;
     }
 
@@ -238,7 +234,7 @@ public class BackgroundGeofence implements Serializable {
                         Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY_TIME_UNIT
                 )
                 .build();
-        WorkManager.getInstance(context).enqueue(failedGeofencesRestartWork);
+        WorkManager.getInstance(context).enqueueUniqueWork(Constant.GEOFENCE_RESTART_WORK_NAME, ExistingWorkPolicy.REPLACE, failedGeofencesRestartWork);
     }
 
     public boolean hasExpired() {

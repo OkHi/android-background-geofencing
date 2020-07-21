@@ -7,10 +7,10 @@ import android.util.Log;
 
 import java.util.ArrayList;
 
+import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
-import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 
 public class DeviceRebootBroadcastReceiver extends BroadcastReceiver {
     public static final String TAG = "DeviceRebootReceiver";
@@ -35,10 +35,6 @@ public class DeviceRebootBroadcastReceiver extends BroadcastReceiver {
                 }
             });
         }
-        // schedule to restart any failing geofences
-        BackgroundGeofence.scheduleGeofenceRestartWork(context);
-
-        // schedule to upload any stored geofence transitions
-        BackgroundGeofenceTransition.scheduleGeofenceTransitionUploadWork(context);
+        BackgroundGeofencing.init(context);
     }
 }

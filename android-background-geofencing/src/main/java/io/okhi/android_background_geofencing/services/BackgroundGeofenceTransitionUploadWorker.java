@@ -61,6 +61,7 @@ public class BackgroundGeofenceTransitionUploadWorker extends Worker {
                 return Result.retry();
             }
         } catch (IOException e) {
+            e.printStackTrace();
             // retry if we get an IO exception
             return Result.retry();
         } catch (Exception e) {

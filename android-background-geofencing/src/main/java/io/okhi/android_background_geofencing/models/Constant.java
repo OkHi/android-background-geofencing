@@ -46,6 +46,12 @@ public class Constant {
 
 
     // TODO: change backoff delay to 45min
+    public static final String GEOFENCE_TRANSITION_UPLOAD_WORK_TAG = "GEOFENCE_TRANSITION_UPLOAD_WORK_TAG";
+    public static final long GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY = 5;
+    public static final TimeUnit GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY_TIME_UNIT = TimeUnit.MINUTES;
+    public static final long GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY = 30;
+    public static final TimeUnit GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY_TIME_UNIT = TimeUnit.MINUTES;
+
     public static int GEOFENCE_UPLOAD_WORK_MAX_ATTEMPTS = 10;
 
     public static int GEOFENCE_UPLOAD_WORK_BACK_OFF_DELAY = 16;

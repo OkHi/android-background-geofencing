@@ -1,5 +1,8 @@
 package io.okhi.android_background_geofencing.models;
 
+import androidx.work.Constraints;
+import androidx.work.NetworkType;
+
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
 
@@ -49,9 +52,16 @@ public class Constant {
     public static final String GEOFENCE_TRANSITION_UPLOAD_WORK_TAG = "GEOFENCE_TRANSITION_UPLOAD_WORK_TAG";
     public static final long GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY = 5;
     public static final TimeUnit GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY_TIME_UNIT = TimeUnit.MINUTES;
-    public static final long GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY = 30;
+    public static final long GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY = 45;
     public static final TimeUnit GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY_TIME_UNIT = TimeUnit.MINUTES;
-    public static int GEOFENCE_TRANSITION_UPLOAD_WORK_MAX_ATTEMPTS = 10;
+    public static int GEOFENCE_TRANSITION_UPLOAD_WORK_MAX_ATTEMPTS = 5;
+
+    public static final String GEOFENCE_RESTART_WORK_TAG = "GEOFENCE_RESTART_WORK_TAG";
+    public static final long GEOFENCE_RESTART_WORK_DELAY = 1;
+    public static final TimeUnit GEOFENCE_RESTART_WORK_DELAY_TIME_UNIT = TimeUnit.HOURS;
+    public static final long GEOFENCE_RESTART_WORK_BACKOFF_DELAY = 1;
+    public static final TimeUnit GEOFENCE_RESTART_WORK_BACKOFF_DELAY_TIME_UNIT = TimeUnit.HOURS;
+    public static int GEOFENCE_RESTART_WORK__MAX_ATTEMPTS = 4;
 
     public static int GEOFENCE_UPLOAD_WORK_BACK_OFF_DELAY = 16;
     public static TimeUnit  GEOFENCE_UPLOAD_WORK_BACK_OFF_DELAY_TIME_UNIT = TimeUnit.MINUTES;
@@ -65,4 +75,9 @@ public class Constant {
     public static final TimeUnit GEOFENCE_PERIODIC_WORK_TIME_UNIT = TimeUnit.MINUTES;
     public static final String GEOFENCE_PERIODIC_WORK_TAG = "GEOFENCE_PERIODIC_WORKER_TAG";
     public static final String GEOFENCE_PERIODIC_WORK_NAME = "GEOFENCE_PERIODIC_WORKER";
+
+    public static Constraints GEOFENCE_WORK_MANAGER_CONSTRAINTS = new Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .setRequiresBatteryNotLow(true)
+            .build();
 }

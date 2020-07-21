@@ -10,8 +10,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
-import java.util.ArrayList;
+import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
@@ -32,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        BackgroundGeofencing.init(this);
         final Button button = findViewById(R.id.button1);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -52,7 +57,11 @@ public class MainActivity extends AppCompatActivity {
         permissionService = new BackgroundGeofencingPermissionService(this);
         locationService = new BackgroundGeofencingLocationService(this);
         playService = new BackgroundGeofencingPlayService(this);
-        webHook = new BackgroundGeofencingWebHook("https://google.com");
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("foo", "bar");
+        HashMap<String, Object> meta = new HashMap<>();
+        meta.put("meta", "critic");
+        webHook = new BackgroundGeofencingWebHook("https://e3bd1f79c643.ngrok.io/transition", 10000, headers, meta);
         webHook.save(this);
     }
 

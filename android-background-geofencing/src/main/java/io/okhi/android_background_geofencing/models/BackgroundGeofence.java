@@ -6,9 +6,17 @@ import android.content.Intent;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.work.BackoffPolicy;
+import androidx.work.Constraints;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingClient;
+import com.google.android.gms.location.GeofencingEvent;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -16,10 +24,14 @@ import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.receivers.BackgroundGeofenceBroadcastReceiver;
+import io.okhi.android_background_geofencing.services.BackgroundGeofencePeriodicWorker;
+import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
+import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
 
 public class BackgroundGeofence implements Serializable {
 
@@ -36,7 +48,8 @@ public class BackgroundGeofence implements Serializable {
     private boolean registerOnDeviceRestart;
 
     private PendingIntent geofencePendingIntent;
-    private boolean failing = false;
+
+    private boolean isFailing = false;
 
     public static int TRANSITION_ENTER = Geofence.GEOFENCE_TRANSITION_ENTER;
     public static int TRANSITION_EXIT = Geofence.GEOFENCE_TRANSITION_EXIT;
@@ -185,5 +198,44 @@ public class BackgroundGeofence implements Serializable {
 
     public String getId() {
         return id;
+    }
+
+    public boolean isFailing() {
+        return isFailing;
+    }
+
+    public static void setIsFailing(GeofencingEvent event, Boolean isFailing, Context context) {
+        List<Geofence> geofences = event.getTriggeringGeofences();
+        for(Geofence geofence: geofences) {
+            setIsFailing(geofence.getRequestId(), isFailing, context);
+        }
+    }
+
+    public static void setIsFailing(String geofenceId, Boolean isFailing, Context context) {
+        BackgroundGeofence geofence = BackgroundGeofencingDB.getBackgroundGeofence(geofenceId, context);
+        if (geofence != null) {
+            geofence.setIsFailing(isFailing, context);
+        }
+    }
+
+    public void setIsFailing(Boolean isFailing, Context context) {
+        if (isFailing != this.isFailing) {
+            this.isFailing = isFailing;
+            save(context);
+        }
+    }
+
+    public static void scheduleGeofenceRestartWork(Context context) {
+        OneTimeWorkRequest failedGeofencesRestartWork = new OneTimeWorkRequest.Builder(BackgroundGeofenceRestartWorker.class)
+                .setConstraints(Constant.GEOFENCE_WORK_MANAGER_CONSTRAINTS)
+                .addTag(Constant.GEOFENCE_RESTART_WORK_TAG)
+                .setInitialDelay(Constant.GEOFENCE_RESTART_WORK_DELAY, Constant.GEOFENCE_RESTART_WORK_DELAY_TIME_UNIT)
+                .setBackoffCriteria(
+                        BackoffPolicy.EXPONENTIAL,
+                        Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY,
+                        Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY_TIME_UNIT
+                )
+                .build();
+        WorkManager.getInstance(context).enqueue(failedGeofencesRestartWork);
     }
 }

@@ -22,11 +22,6 @@ public class BackgroundGeofenceTransitionUploadWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        // check if we've hit our max attempts
-        if (getRunAttemptCount() > Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_MAX_ATTEMPTS) {
-            return Result.failure();
-        }
-
         // get webhook configuration
         BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(getApplicationContext());
 

@@ -25,7 +25,7 @@ public class BackgroundGeofencing {
                 .addTag(Constant.GEOFENCE_RESTART_WORK_TAG)
                 .setInitialDelay(5, TimeUnit.MILLISECONDS)
                 .setBackoffCriteria(
-                        BackoffPolicy.EXPONENTIAL,
+                        BackoffPolicy.LINEAR,
                         Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY,
                         Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY_TIME_UNIT
                 )

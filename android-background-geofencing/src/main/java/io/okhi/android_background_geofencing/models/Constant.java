@@ -48,10 +48,9 @@ public class Constant {
     public static final String GEOFENCE_TRANSITION_UPLOAD_WORK_NAME = "GEOFENCE_TRANSITION_UPLOAD_WORK_NAME";
     public static final long GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY = 15;
     public static final TimeUnit GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY_TIME_UNIT = TimeUnit.SECONDS;
-    public static final long GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY = 45; // TODO: change to 45
-    public static final TimeUnit GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY_TIME_UNIT = TimeUnit.MINUTES;
+    public static final long GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY = 1; // TODO: change to 1
+    public static final TimeUnit GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY_TIME_UNIT = TimeUnit.HOURS;
     public static final long GEOFENCE_TRANSITION_TIME_STAMP_THRESHOLD = 12 * 60 * 60 * 1000;
-    public static int GEOFENCE_TRANSITION_UPLOAD_WORK_MAX_ATTEMPTS = 5;
 
     // work manager constants - geofence restart work
     public static final String GEOFENCE_RESTART_WORK_TAG = "GEOFENCE_RESTART_WORK_TAG";

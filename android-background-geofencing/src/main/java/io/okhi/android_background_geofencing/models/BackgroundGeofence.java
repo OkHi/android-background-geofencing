@@ -229,7 +229,7 @@ public class BackgroundGeofence implements Serializable {
                 .addTag(Constant.GEOFENCE_RESTART_WORK_TAG)
                 .setInitialDelay(duration, unit)
                 .setBackoffCriteria(
-                        BackoffPolicy.EXPONENTIAL,
+                        BackoffPolicy.LINEAR,
                         Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY,
                         Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY_TIME_UNIT
                 )

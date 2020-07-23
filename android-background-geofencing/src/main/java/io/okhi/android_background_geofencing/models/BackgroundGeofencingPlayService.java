@@ -16,6 +16,7 @@ public class BackgroundGeofencingPlayService {
     private RequestHandler requestHandler;
     private GoogleApiAvailability googleAPI = GoogleApiAvailability.getInstance();
     private Activity activity;
+    private BackgroundGeofencingException exception = new BackgroundGeofencingException(BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE, "Google play services is currently unavailable");
 
     public BackgroundGeofencingPlayService(Activity activity) {
         this.activity = activity;
@@ -36,13 +37,13 @@ public class BackgroundGeofencingPlayService {
                 dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialogInterface) {
-                        requestHandler.onError();
+                        requestHandler.onError(exception);
                     }
                 });
                 dialog.show();
             } else {
                 // device not supported
-                requestHandler.onError();
+                requestHandler.onError(exception);
             }
         } else {
             requestHandler.onSuccess();
@@ -58,7 +59,7 @@ public class BackgroundGeofencingPlayService {
                     if (isGooglePlayServicesAvailable(activity)) {
                         requestHandler.onSuccess();
                     } else {
-                        requestHandler.onError();
+                        requestHandler.onError(exception);
                     }
                 }
             }, Constant.SERVICE_WAIT_DELAY);

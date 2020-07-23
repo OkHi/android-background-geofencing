@@ -14,6 +14,7 @@ import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 public class BackgroundGeofencingPermissionService {
     private Activity activity;
     private RequestHandler requestHandler;
+    private BackgroundGeofencingException exception = new BackgroundGeofencingException(BackgroundGeofencingException.PERMISSION_DENIED_CODE, "Location permission denied");
 
     public BackgroundGeofencingPermissionService(Activity activity) {
         this.activity = activity;
@@ -52,13 +53,13 @@ public class BackgroundGeofencingPermissionService {
                     .setNegativeButton(Constant.PERMISSION_DIALOG_NEGATIVE_BUTTON_TEXT, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            requestHandler.onError();
+                            requestHandler.onError(exception);
                         }
                     })
                     .setOnCancelListener(new DialogInterface.OnCancelListener() {
                         @Override
                         public void onCancel(DialogInterface dialog) {
-                            requestHandler.onError();
+                            requestHandler.onError(exception);
                         }
                     })
                     .create()
@@ -74,7 +75,7 @@ public class BackgroundGeofencingPermissionService {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 requestHandler.onSuccess();
             } else {
-                requestHandler.onError();
+                requestHandler.onError(exception);
             }
         }
     }

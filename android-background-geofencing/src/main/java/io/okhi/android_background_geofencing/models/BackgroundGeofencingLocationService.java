@@ -30,6 +30,7 @@ public class BackgroundGeofencingLocationService {
     private RequestHandler requestHandler;
     private SettingsClient settingsClient;
     private LocationSettingsRequest locationSettingsRequest = buildLocationSettingsRequest();
+    private BackgroundGeofencingException exception = new BackgroundGeofencingException(BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE, "Location services are currently unavailable");
 
     public BackgroundGeofencingLocationService(Activity activity) {
         this.context = activity.getApplicationContext();
@@ -64,13 +65,14 @@ public class BackgroundGeofencingLocationService {
     private void onLocationSettingsResponse(Task<LocationSettingsResponse> task) {
         try {
             LocationSettingsResponse response = task.getResult(ApiException.class);
-        } catch (ApiException exception) {
-            switch (exception.getStatusCode()) {
+        } catch (ApiException e) {
+            switch (e.getStatusCode()) {
                 case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                     try {
-                        ResolvableApiException resolvable = (ResolvableApiException) exception;
+                        ResolvableApiException resolvable = (ResolvableApiException) e;
                         resolvable.startResolutionForResult(activity, Constant.ENABLE_LOCATION_SERVICES_REQUEST_CODE);
-                    } catch (Exception e) {
+                    } catch (Exception error) {
+                        requestHandler.onError(exception);
                         e.printStackTrace();
                     }
                     break;
@@ -105,7 +107,7 @@ public class BackgroundGeofencingLocationService {
                     }
                 }, Constant.SERVICE_WAIT_DELAY);
             } else {
-                requestHandler.onError();
+                requestHandler.onError(exception);
             }
         }
     }

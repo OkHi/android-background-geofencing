@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
+import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingLocationService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingPermissionService;
 import io.okhi.android_background_geofencing.models.Constant;
@@ -67,7 +68,7 @@ public class BackgroundGeofenceRestartWorker extends Worker {
                         BackgroundGeofence.setIsFailing(geofence.getId(), false, context);
                     }
                     @Override
-                    public void onError() {
+                    public void onError(BackgroundGeofencingException e) {
                         Log.v(TAG, "Failed to restart: " + geofence.getId());
                         BackgroundGeofence.setIsFailing(geofence.getId(), true, context);
                     }

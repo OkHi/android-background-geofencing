@@ -172,7 +172,7 @@ public class BackgroundGeofence implements Serializable {
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                requestHandler.onError();
+                requestHandler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.UNKNOWN_EXCEPTION, e.getMessage()));
                 e.printStackTrace();
             }
         });

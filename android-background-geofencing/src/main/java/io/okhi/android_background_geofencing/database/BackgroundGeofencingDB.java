@@ -79,10 +79,12 @@ public class BackgroundGeofencingDB {
     }
 
     public static void saveGeofenceTransitionEvent(BackgroundGeofenceTransition transition, Context context) {
-        String key = Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY + transition.getTransitionDate();
-        BackgroundGeofenceTransition existingTransition = (BackgroundGeofenceTransition) get(key, BackgroundGeofenceTransition.class, context);
+        String geofenceTransitionKey = Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY + transition.getTransitionDate();
+        String lastGeofenceTransition = Constant.DB_BACKGROUND_GEOFENCE_LAST_TRANSITION_KEY;
+        BackgroundGeofenceTransition existingTransition = (BackgroundGeofenceTransition) get(geofenceTransitionKey, BackgroundGeofenceTransition.class, context);
         if (existingTransition == null) {
-            save(key, transition, context);
+            save(geofenceTransitionKey, transition, context);
+            save(lastGeofenceTransition, transition, context);
         }
     }
 
@@ -142,13 +144,14 @@ public class BackgroundGeofencingDB {
 
     // TODO: edge case we don't get a single geofence event, need to track registration date within geofences
     public static long getLastGeofenceTransitionEventTimestamp(Context context) {
-        long timestamp = -1;
-        ArrayList<BackgroundGeofenceTransition> transitions = getAllGeofenceTransitions(context);
-        for (BackgroundGeofenceTransition transition: transitions) {
-            if (timestamp < transition.getTransitionDate()) {
-                timestamp = transition.getTransitionDate();
-            }
+        BackgroundGeofenceTransition transition = (BackgroundGeofenceTransition) get(Constant.DB_BACKGROUND_GEOFENCE_LAST_TRANSITION_KEY, BackgroundGeofenceTransition.class, context);
+        if (transition == null) {
+            return -1;
         }
-        return timestamp;
+        return transition.getTransitionDate();
+    }
+
+    public static void removeLastGeofenceTransitionEvent(Context context) {
+        remove(Constant.DB_BACKGROUND_GEOFENCE_LAST_TRANSITION_KEY, context);
     }
 }

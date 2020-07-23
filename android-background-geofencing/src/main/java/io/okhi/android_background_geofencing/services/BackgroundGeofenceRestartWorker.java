@@ -34,7 +34,7 @@ public class BackgroundGeofenceRestartWorker extends Worker {
         ArrayList<BackgroundGeofence> failedGeofences = new ArrayList<>();
         boolean isLocationServicesEnabled = BackgroundGeofencingLocationService.isLocationServicesEnabled(getApplicationContext());
         boolean isLocationPermissionGranted = BackgroundGeofencingPermissionService.isLocationPermissionGranted(getApplicationContext());
-
+        
         for (BackgroundGeofence geofence: geofences) {
             if (geofence.isFailing()) {
                 failedGeofences.add(geofence);
@@ -45,13 +45,20 @@ public class BackgroundGeofenceRestartWorker extends Worker {
             return Result.success();
         }
 
-        if (!isLocationServicesEnabled || !isLocationPermissionGranted) {
+        if (!isLocationServicesEnabled) {
             return Result.retry();
         }
 
+        if (!isLocationPermissionGranted) {
+            return Result.failure();
+        }
+
         if (!isWithinThreshold) {
+            Log.v(TAG, "We haven't seen geofences in: " + Constant.GEOFENCE_TRANSITION_TIME_STAMP_THRESHOLD +"ms attempting ALL restart");
             restartGeofences(geofences, getApplicationContext());
+            BackgroundGeofencingDB.removeLastGeofenceTransitionEvent(getApplicationContext());
         } else {
+            Log.v(TAG, "We have failing geofences, attempting to restart SOME");
             restartGeofences(failedGeofences, getApplicationContext());
         }
 

@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
         headers.put("foo", "bar");
         HashMap<String, Object> meta = new HashMap<>();
         meta.put("meta", "critic");
-        webHook = new BackgroundGeofencingWebHook("https://e3bd1f79c643.ngrok.io/transition", 10000, headers, meta);
+        webHook = new BackgroundGeofencingWebHook("https://3eddcfcf8f83.ngrok.io/transition", 10000, headers, meta);
         webHook.save(this);
     }
 

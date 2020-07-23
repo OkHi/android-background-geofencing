@@ -20,6 +20,7 @@ import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
+import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingLocationService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingPermissionService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingPlayService;
@@ -48,8 +49,7 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onError() {
-
+                    public void onError(BackgroundGeofencingException e) {
                     }
                 });
             }
@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onError() {
+            public void onError(BackgroundGeofencingException e) {
                 Log.v("KIANO", "😭");
             }
         });

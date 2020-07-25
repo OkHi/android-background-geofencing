@@ -15,6 +15,7 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingLocationService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingPermissionService;
+import io.okhi.android_background_geofencing.models.BackgroundGeofencingPlayService;
 import io.okhi.android_background_geofencing.models.Constant;
 
 public class BackgroundGeofenceRestartWorker extends Worker {
@@ -34,7 +35,8 @@ public class BackgroundGeofenceRestartWorker extends Worker {
         ArrayList<BackgroundGeofence> failedGeofences = new ArrayList<>();
         boolean isLocationServicesEnabled = BackgroundGeofencingLocationService.isLocationServicesEnabled(getApplicationContext());
         boolean isLocationPermissionGranted = BackgroundGeofencingPermissionService.isLocationPermissionGranted(getApplicationContext());
-        
+        boolean isGooglePlayServicesAvailable = BackgroundGeofencingPlayService.isGooglePlayServicesAvailable(getApplicationContext());
+
         for (BackgroundGeofence geofence: geofences) {
             if (geofence.isFailing()) {
                 failedGeofences.add(geofence);
@@ -45,7 +47,7 @@ public class BackgroundGeofenceRestartWorker extends Worker {
             return Result.success();
         }
 
-        if (!isLocationServicesEnabled) {
+        if (!isLocationServicesEnabled || !isGooglePlayServicesAvailable) {
             return Result.retry();
         }
 

@@ -259,4 +259,12 @@ public class BackgroundGeofence implements Serializable {
     public boolean hasExpired() {
         return expirationTimestamp > 0 && System.currentTimeMillis() > expirationTimestamp;
     }
+
+    public static void stop(Context context, String id) {
+        GeofencingClient geofencingClient = LocationServices.getGeofencingClient(context);
+        List<String> ids = new ArrayList<String>();
+        ids.add(id);
+        geofencingClient.removeGeofences(ids);
+        BackgroundGeofencingDB.removeBackgroundGeofence(id, context);
+    }
 }

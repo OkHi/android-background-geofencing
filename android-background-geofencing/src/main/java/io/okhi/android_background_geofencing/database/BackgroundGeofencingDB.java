@@ -154,4 +154,8 @@ public class BackgroundGeofencingDB {
     public static void removeLastGeofenceTransitionEvent(Context context) {
         remove(Constant.DB_BACKGROUND_GEOFENCE_LAST_TRANSITION_KEY, context);
     }
+
+    public static void removeBackgroundGeofence(String id, Context context) {
+        remove(Constant.DB_BACKGROUND_GEOFENCE_PREFIX_KEY + id, context);
+    }
 }

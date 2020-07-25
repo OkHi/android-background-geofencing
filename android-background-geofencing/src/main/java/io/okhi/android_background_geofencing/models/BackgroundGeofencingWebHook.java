@@ -2,6 +2,8 @@ package io.okhi.android_background_geofencing.models;
 
 import android.content.Context;
 
+import org.json.JSONObject;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -14,7 +16,7 @@ public class BackgroundGeofencingWebHook implements Serializable {
     private String url;
     private long timeout = Constant.DEFAULT_WEBHOOK_TIMEOUT;
     private HashMap<String, String> headers;
-    private HashMap<String, Object> meta;
+    private JSONObject meta;
 
     BackgroundGeofencingWebHook() {}
 
@@ -33,7 +35,7 @@ public class BackgroundGeofencingWebHook implements Serializable {
         this.headers = headers;
     }
 
-    public BackgroundGeofencingWebHook(String url, int timeout, HashMap<String, String> headers, HashMap<String, Object> meta) {
+    public BackgroundGeofencingWebHook(String url, int timeout, HashMap<String, String> headers, JSONObject meta) {
         this.url = url;
         this.timeout = timeout;
         this.headers = headers;
@@ -63,7 +65,7 @@ public class BackgroundGeofencingWebHook implements Serializable {
         return headerBuilder.build();
     }
 
-    public HashMap<String, Object> getMeta() {
+    public JSONObject getMeta() {
         return meta;
     }
 

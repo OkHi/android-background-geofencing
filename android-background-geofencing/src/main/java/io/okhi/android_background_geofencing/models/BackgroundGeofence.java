@@ -93,8 +93,10 @@ public class BackgroundGeofence implements Serializable {
         }
 
         public BackgroundGeofenceBuilder setExpiration(long expiration){
-            this.expiration = expiration;
-            this.expirationTimestamp = System.currentTimeMillis() + expiration;
+            if (expiration > 0) {
+                this.expiration = expiration;
+                this.expirationTimestamp = System.currentTimeMillis() + expiration;
+            }
             return this;
         }
 

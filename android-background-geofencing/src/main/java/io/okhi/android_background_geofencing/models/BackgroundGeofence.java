@@ -150,6 +150,25 @@ public class BackgroundGeofence implements Serializable {
     }
 
     private void start(final boolean silently, final Context context, final RequestHandler requestHandler) {
+        boolean isLocationServicesEnabled = BackgroundGeofencingLocationService.isLocationServicesEnabled(context);
+        boolean isLocationPermissionGranted = BackgroundGeofencingPermissionService.isLocationPermissionGranted(context);
+        boolean isGooglePlayServicesAvailable = BackgroundGeofencingPlayService.isGooglePlayServicesAvailable(context);
+
+        if (!isLocationServicesEnabled) {
+            requestHandler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE, "Location services are unavailable"));
+            return;
+        }
+
+        if (!isGooglePlayServicesAvailable) {
+            requestHandler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE, "Google play services are unavailable"));
+            return;
+        }
+
+        if (!isLocationPermissionGranted) {
+            requestHandler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.PERMISSION_DENIED_CODE, "Location permissions aren't granted"));
+            return;
+        }
+
         GeofencingClient geofencingClient = LocationServices.getGeofencingClient(context);
         ArrayList<Geofence> geofenceList = new ArrayList<>();
         Geofence geofence = new Geofence.Builder()
@@ -239,5 +258,13 @@ public class BackgroundGeofence implements Serializable {
 
     public boolean hasExpired() {
         return expirationTimestamp > 0 && System.currentTimeMillis() > expirationTimestamp;
+    }
+
+    public static void stop(Context context, String id) {
+        GeofencingClient geofencingClient = LocationServices.getGeofencingClient(context);
+        List<String> ids = new ArrayList<String>();
+        ids.add(id);
+        geofencingClient.removeGeofences(ids);
+        BackgroundGeofencingDB.removeBackgroundGeofence(id, context);
     }
 }

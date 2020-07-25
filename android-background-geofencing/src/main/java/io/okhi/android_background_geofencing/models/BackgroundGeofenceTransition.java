@@ -159,11 +159,11 @@ public class BackgroundGeofenceTransition implements Serializable {
     }
 
     public boolean syncUpload(BackgroundGeofencingWebHook webHook) throws JSONException, IOException {
-        HashMap<String, Object> meta = webHook.getMeta();
+        JSONObject meta = webHook.getMeta();
         OkHttpClient client = getHttpClient(webHook);
         JSONObject payload = toJSONObject();
         if (meta != null) {
-            payload.put("meta", new JSONObject(meta));
+            payload.put("meta", meta);
         }
         RequestBody requestBody = RequestBody.create(payload.toString(), MediaType.parse("application/json"));
         Request request = new Request.Builder()

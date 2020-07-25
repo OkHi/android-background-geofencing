@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -59,8 +60,12 @@ public class MainActivity extends AppCompatActivity {
         playService = new BackgroundGeofencingPlayService(this);
         HashMap<String, String> headers = new HashMap<>();
         headers.put("foo", "bar");
-        HashMap<String, Object> meta = new HashMap<>();
-        meta.put("meta", "critic");
+        JSONObject meta = new JSONObject();
+        try {
+            meta.put("meta", "critic");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         webHook = new BackgroundGeofencingWebHook("https://3eddcfcf8f83.ngrok.io/transition", 10000, headers, meta);
         webHook.save(this);
     }

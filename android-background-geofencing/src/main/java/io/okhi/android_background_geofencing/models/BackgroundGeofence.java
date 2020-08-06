@@ -281,4 +281,8 @@ public class BackgroundGeofence implements Serializable {
     public double getLng() {
         return lng;
     }
+
+    public int getLoiteringDelay() {
+        return loiteringDelay;
+    }
 }

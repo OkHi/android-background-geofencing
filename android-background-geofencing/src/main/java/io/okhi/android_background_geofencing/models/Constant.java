@@ -66,4 +66,10 @@ public class Constant {
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .setRequiresBatteryNotLow(true)
             .build();
+
+    // location updates
+    public static final long LOCATION_REQUEST_EXPIRATION_DURATION = 10000;
+
+    // init
+    public static final String INIT_GEOFENCE_TRANSITION_SOURCE_NAME = "appOpen";
 }

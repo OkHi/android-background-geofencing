@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
     private void startGeofence() {
         BackgroundGeofence backgroundGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("kianohome", -1.3146948, 36.8359575)
                 .setNotificationResponsiveness(300000)
-                .setLoiteringDelay(900000)
+                .setLoiteringDelay(60000)
                 .build();
         backgroundGeofence.start(getApplicationContext(), new RequestHandler() {
             @Override

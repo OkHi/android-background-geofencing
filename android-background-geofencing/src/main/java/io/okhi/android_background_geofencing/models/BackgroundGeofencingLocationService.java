@@ -3,8 +3,10 @@ package io.okhi.android_background_geofencing.models;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 
 import androidx.annotation.NonNull;
@@ -12,16 +14,22 @@ import androidx.annotation.Nullable;
 
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
+import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 
 public class BackgroundGeofencingLocationService {
 
@@ -110,5 +118,34 @@ public class BackgroundGeofencingLocationService {
                 requestHandler.onError(exception);
             }
         }
+    }
+
+    public static void getCurrentLocation(Context context, final ResultHandler<Location> handler) {
+        boolean isLocationPermissionGranted = BackgroundGeofencingPermissionService.isLocationPermissionGranted(context);
+        final BackgroundGeofencingException exception = new BackgroundGeofencingException(BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE, "Last location is unavailable");
+        if (!isLocationPermissionGranted) {
+            handler.onError(exception);
+        } else {
+            final FusedLocationProviderClient client = LocationServices.getFusedLocationProviderClient(context);
+            LocationCallback locationCallback = new LocationCallback() {
+                @Override
+                public void onLocationResult(LocationResult locationResult) {
+                    if (locationResult == null) {
+                        handler.onError(exception);
+                        return;
+                    }
+                    handler.onSuccess(locationResult.getLastLocation());
+                    client.removeLocationUpdates(this);
+                }
+            };
+            client.requestLocationUpdates(getLocationRequest(), locationCallback, Looper.getMainLooper());
+        }
+    }
+
+    private static LocationRequest getLocationRequest() {
+        LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setExpirationDuration(Constant.LOCATION_REQUEST_EXPIRATION_DURATION);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        return locationRequest;
     }
 }

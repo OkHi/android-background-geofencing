@@ -268,6 +268,7 @@ public class BackgroundGeofence implements Serializable {
         ids.add(id);
         geofencingClient.removeGeofences(ids);
         BackgroundGeofencingDB.removeBackgroundGeofence(id, context);
+        BackgroundGeofencingDB.removeGeofenceEnterTimestamp(id, context);
     }
 
     public float getRadius() {

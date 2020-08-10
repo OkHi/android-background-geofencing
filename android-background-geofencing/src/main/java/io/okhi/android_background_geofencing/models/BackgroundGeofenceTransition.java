@@ -5,6 +5,7 @@ import android.location.Location;
 import android.os.Build;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.work.BackoffPolicy;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
@@ -51,7 +52,7 @@ public class BackgroundGeofenceTransition implements Serializable {
 
     BackgroundGeofenceTransition() {}
 
-    private BackgroundGeofenceTransition(BackgroundGeofenceTransitionBuilder builder) {
+    private BackgroundGeofenceTransition(Builder builder) {
         ids = builder.ids;
         transitionDate = builder.transitionDate;
         geoPointProvider = builder.geoPointProvider;
@@ -73,7 +74,7 @@ public class BackgroundGeofenceTransition implements Serializable {
         BackgroundGeofencingDB.saveGeofenceTransitionEvent(this, context);
     }
 
-    public static class BackgroundGeofenceTransitionBuilder {
+    public static class Builder {
         private ArrayList<String> ids = new ArrayList<>();
         private long transitionDate;
         private String geoPointProvider;
@@ -82,10 +83,10 @@ public class BackgroundGeofenceTransition implements Serializable {
         private double gpsAccuracy;
         private String transitionEvent;
         private String geoPointSource;
-        private String deviceOSName;
-        private String deviceOSVersion;
-        private String deviceManufacturer;
-        private String deviceModel;
+        private String deviceOSName = "android";
+        private String deviceOSVersion = Build.VERSION.RELEASE;
+        private String deviceManufacturer = Build.MANUFACTURER;
+        private String deviceModel = Build.MODEL;
         private final HashMap<Integer, String> GeofenceTransitionEventNameMap = generateGeofenceTransitionHashMap();
         private HashMap<Integer, String> generateGeofenceTransitionHashMap() {
             HashMap<Integer, String> map = new HashMap<>();
@@ -95,7 +96,7 @@ public class BackgroundGeofenceTransition implements Serializable {
             return map;
         }
 
-        public BackgroundGeofenceTransitionBuilder(GeofencingEvent geofencingEvent) {
+        public Builder(GeofencingEvent geofencingEvent) {
             // get ids
             for (Geofence geofence : geofencingEvent.getTriggeringGeofences()) {
                 ids.add(geofence.getRequestId());
@@ -115,14 +116,49 @@ public class BackgroundGeofenceTransition implements Serializable {
             transitionEvent = GeofenceTransitionEventNameMap.get(geofencingEvent.getGeofenceTransition());
             // set source as geofence
             geoPointSource = "geofence";
-            // get device information
-            deviceOSName = "android";
-            deviceOSVersion = Build.VERSION.RELEASE;
-            deviceManufacturer = Build.MANUFACTURER;
-            deviceModel = Build.MODEL;
+        }
+
+        Builder(ArrayList<String> ids) {
+            this.ids = ids;
+        }
+
+        Builder setTransitionDate(@NonNull long transitionDate) {
+            this.transitionDate = transitionDate;
+            return this;
+        }
+
+        Builder setLat(@NonNull double lat) {
+            this.lat = lat;
+            return this;
+        }
+
+        Builder setLon(@NonNull double lon) {
+            this.lon = lon;
+            return this;
+        }
+
+        Builder setGpsAccuracy(@NonNull float gpsAccuracy) {
+            this.gpsAccuracy = gpsAccuracy;
+            return this;
+        }
+
+        Builder setTransitionEvent(@NonNull String transitionEvent) {
+            this.transitionEvent = transitionEvent;
+            return this;
+        }
+
+        Builder setGeoPointSource(@NonNull String geoPointSource) {
+            this.geoPointSource = geoPointSource;
+            return this;
+        }
+
+        Builder setGeoPointProvider(@NonNull String geoPointProvider) {
+            this.geoPointProvider = geoPointProvider;
+            return this;
         }
 
         public BackgroundGeofenceTransition build(){
+            // TODO: validate if all necessary fields aren't null
             return new BackgroundGeofenceTransition(this);
         }
     }
@@ -172,15 +208,19 @@ public class BackgroundGeofenceTransition implements Serializable {
                 .post(requestBody)
                 .build();
         Response response = client.newCall(request).execute();
-        return response.isSuccessful();
+        if (response.isSuccessful()) {
+            return true;
+        } else {
+            response.close();
+            return false;
+        }
     }
 
     private OkHttpClient getHttpClient(BackgroundGeofencingWebHook webHook) {
-        OkHttpClient client = new OkHttpClient.Builder()
+        return new OkHttpClient.Builder()
                 .connectTimeout(webHook.getTimeout(), TimeUnit.MILLISECONDS)
                 .writeTimeout(webHook.getTimeout(), TimeUnit.MILLISECONDS)
                 .readTimeout(webHook.getTimeout(), TimeUnit.MILLISECONDS).build();
-        return client;
     }
 
     public String getTransitionEvent() {
@@ -254,7 +294,7 @@ public class BackgroundGeofenceTransition implements Serializable {
     }
 
     public static void scheduleGeofenceTransitionUploadWork(GeofencingEvent geofencingEvent, Context context) {
-        BackgroundGeofenceTransition transition = new BackgroundGeofenceTransition.BackgroundGeofenceTransitionBuilder(geofencingEvent).build();
+        BackgroundGeofenceTransition transition = new Builder(geofencingEvent).build();
         Log.v(TAG, "Received a " + transition.getTransitionEvent() + " geofence event");
         transition.save(context);
         schedule(context, Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY, Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY_TIME_UNIT);
@@ -262,5 +302,107 @@ public class BackgroundGeofenceTransition implements Serializable {
 
     public static void scheduleGeofenceTransitionUploadWork(Context context) {
         schedule(context, Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY, Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY_TIME_UNIT);
+    }
+
+    public static ArrayList<BackgroundGeofenceTransition> generateTransitions(String geoPointSource, Location location, ArrayList<BackgroundGeofence> geofences, Context context) {
+        ArrayList<String> enterIds = new ArrayList<>();
+        ArrayList<String> exitIds = new ArrayList<>();
+        ArrayList<String> dwellIds = new ArrayList<>();
+        ArrayList<BackgroundGeofenceTransition> transitions = new ArrayList<>();
+        for(BackgroundGeofence geofence: geofences) {
+            if (isEnter(location, geofence)) {
+                if (isDwell(geofence, context)) {
+                    dwellIds.add(geofence.getId());
+                    removeGeofenceEnterTimestamp(geofence, context);
+                } else {
+                    saveGeofenceEnterTimestamp(geofence, context);
+                    enterIds.add(geofence.getId());
+                }
+            } else {
+                exitIds.add(geofence.getId());
+                removeGeofenceEnterTimestamp(geofence, context);
+            }
+        }
+        if (!enterIds.isEmpty()) {
+            BackgroundGeofenceTransition enterTransition = new Builder(enterIds)
+                    .setTransitionDate(location.getTime())
+                    .setGeoPointProvider(location.getProvider())
+                    .setLat(location.getLatitude())
+                    .setLon(location.getLongitude())
+                    .setGpsAccuracy(location.getAccuracy())
+                    .setTransitionEvent("enter")
+                    .setGeoPointSource(geoPointSource)
+                    .build();
+            transitions.add(enterTransition);
+        }
+        if (!exitIds.isEmpty()) {
+            BackgroundGeofenceTransition enterTransition = new Builder(exitIds)
+                    .setTransitionDate(location.getTime())
+                    .setGeoPointProvider(location.getProvider())
+                    .setLat(location.getLatitude())
+                    .setLon(location.getLongitude())
+                    .setGpsAccuracy(location.getAccuracy())
+                    .setTransitionEvent("exit")
+                    .setGeoPointSource(geoPointSource)
+                    .build();
+            transitions.add(enterTransition);
+        }
+        if (!dwellIds.isEmpty()) {
+            BackgroundGeofenceTransition dwellTransition = new Builder(dwellIds)
+                    .setTransitionDate(location.getTime())
+                    .setGeoPointProvider(location.getProvider())
+                    .setLat(location.getLatitude())
+                    .setLon(location.getLongitude())
+                    .setGpsAccuracy(location.getAccuracy())
+                    .setTransitionEvent("dwell")
+                    .setGeoPointSource(geoPointSource)
+                    .build();
+            transitions.add(dwellTransition);
+        }
+        return transitions;
+    }
+
+    private static void removeGeofenceEnterTimestamp(BackgroundGeofence geofence, Context context) {
+        BackgroundGeofencingDB.removeGeofenceEnterTimestamp(geofence, context);
+    }
+
+    private static void saveGeofenceEnterTimestamp(BackgroundGeofence geofence, Context context) {
+        BackgroundGeofencingDB.saveGeofenceEnterTimestamp(geofence, context);
+    }
+
+    private static boolean isDwell(BackgroundGeofence geofence, Context context) {
+        long timestamp = BackgroundGeofencingDB.getGeofenceEnterTimestamp(geofence, context);
+        if (timestamp > 0) {
+            return System.currentTimeMillis() - timestamp >= geofence.getLoiteringDelay();
+        }
+        return false;
+    }
+
+    private static boolean isEnter(Location location, BackgroundGeofence geofence) {
+        double distance = distance(location.getLatitude(), geofence.getLat(), location.getLongitude(), geofence.getLng(), 0.0, 0.0);
+        return distance < geofence.getRadius();
+    }
+
+    /**
+     * Calculate distance between two points in latitude and longitude taking
+     * into account height difference. If you are not interested in height
+     * difference pass 0.0. Uses Haversine method as its base.
+     * https://stackoverflow.com/questions/3694380/calculating-distance-between-two-points-using-latitude-longitude
+     * lat1, lon1 Start point lat2, lon2 End point el1 Start altitude in meters
+     * el2 End altitude in meters
+     * @returns Distance in Meters
+     */
+    private static double distance(double lat1, double lat2, double lon1, double lon2, double el1, double el2) {
+        final int R = 6371; // Radius of the earth
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double distance = R * c * 1000; // convert to meters
+        double height = el1 - el2;
+        distance = Math.pow(distance, 2) + Math.pow(height, 2);
+        return Math.sqrt(distance);
     }
 }

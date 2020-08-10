@@ -66,14 +66,14 @@ public class MainActivity extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        webHook = new BackgroundGeofencingWebHook("https://3eddcfcf8f83.ngrok.io/transition", 10000, headers, meta);
+        webHook = new BackgroundGeofencingWebHook("https://4e349223119a.ngrok.io/transition", 10000, headers, meta);
         webHook.save(this);
     }
 
     private void startGeofence() {
         BackgroundGeofence backgroundGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("kianohome", -1.3146948, 36.8359575)
                 .setNotificationResponsiveness(300000)
-                .setLoiteringDelay(900000)
+                .setLoiteringDelay(60000)
                 .build();
         backgroundGeofence.start(getApplicationContext(), new RequestHandler() {
             @Override

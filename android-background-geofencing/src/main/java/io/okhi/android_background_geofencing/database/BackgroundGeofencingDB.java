@@ -158,4 +158,41 @@ public class BackgroundGeofencingDB {
     public static void removeBackgroundGeofence(String id, Context context) {
         remove(Constant.DB_BACKGROUND_GEOFENCE_PREFIX_KEY + id, context);
     }
+
+    public static void saveGeofenceEnterTimestamp(BackgroundGeofence geofence, Context context) {
+        try {
+            String key = Constant.DB_INIT_ENTER_GEOFENCE_PREFIX_KEY + geofence.getId();
+            DB db = DBFactory.open(context, Constant.DB_NAME);
+            db.putLong(key, System.currentTimeMillis());
+            db.close();
+            Log.v(TAG, "Successfully saved: " + key);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static long getGeofenceEnterTimestamp(BackgroundGeofence geofence, Context context) {
+        long timestamp = -1;
+        try {
+            String key = Constant.DB_INIT_ENTER_GEOFENCE_PREFIX_KEY + geofence.getId();
+            DB db = DBFactory.open(context, Constant.DB_NAME);
+            timestamp = db.getLong(key);
+            db.close();
+            Log.v(TAG, "Successfully got: " + key);
+        } catch (Exception e) {
+//            e.printStackTrace();
+        } finally {
+            return timestamp;
+        }
+    }
+
+    public static void removeGeofenceEnterTimestamp(BackgroundGeofence geofence, Context context) {
+        String key = Constant.DB_INIT_ENTER_GEOFENCE_PREFIX_KEY + geofence.getId();
+        remove(key, context);
+    }
+
+    public static void removeGeofenceEnterTimestamp(String geofenceId, Context context) {
+        String key = Constant.DB_INIT_ENTER_GEOFENCE_PREFIX_KEY + geofenceId;
+        remove(key, context);
+    }
 }

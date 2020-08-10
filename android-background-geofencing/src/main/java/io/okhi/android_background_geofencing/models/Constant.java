@@ -31,6 +31,7 @@ public class Constant {
     public static final String DB_BACKGROUND_GEOFENCE_PREFIX_KEY = "BACKGROUND_GEOFENCE:";
     public static final String DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY = "BACKGROUND_GEOFENCE_TRANSITION:";
     public static final String DB_BACKGROUND_GEOFENCE_LAST_TRANSITION_KEY = "BACKGROUND_GEOFENCE_LAST_TRANSITION";
+    public static final String DB_INIT_ENTER_GEOFENCE_PREFIX_KEY = "INIT_ENTER_GEOFENCE:";
 
     // geofence defaults
     public static final long DEFAULT_GEOFENCE_EXPIRATION = Geofence.NEVER_EXPIRE;
@@ -66,4 +67,10 @@ public class Constant {
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .setRequiresBatteryNotLow(true)
             .build();
+
+    // location updates
+    public static final long LOCATION_REQUEST_EXPIRATION_DURATION = 10000;
+
+    // init
+    public static final String INIT_GEOFENCE_TRANSITION_SOURCE_NAME = "appOpen";
 }

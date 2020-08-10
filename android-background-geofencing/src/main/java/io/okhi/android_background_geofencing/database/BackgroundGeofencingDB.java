@@ -190,4 +190,9 @@ public class BackgroundGeofencingDB {
         String key = Constant.DB_INIT_ENTER_GEOFENCE_PREFIX_KEY + geofence.getId();
         remove(key, context);
     }
+
+    public static void removeGeofenceEnterTimestamp(String geofenceId, Context context) {
+        String key = Constant.DB_INIT_ENTER_GEOFENCE_PREFIX_KEY + geofenceId;
+        remove(key, context);
+    }
 }

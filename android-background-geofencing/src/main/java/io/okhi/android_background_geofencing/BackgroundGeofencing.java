@@ -25,6 +25,7 @@ import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransiti
 
 public class BackgroundGeofencing {
     public static void init(final Context context) {
+        WorkManager.getInstance(context).cancelAllWork();
         BackgroundGeofencingWebHook webhook = BackgroundGeofencingDB.getWebHook(context);
         if (webhook != null) {
             performInitWork(context, new RequestHandler() {

@@ -66,19 +66,34 @@ public class MainActivity extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        webHook = new BackgroundGeofencingWebHook("https://4e349223119a.ngrok.io/transition", 10000, headers, meta);
+        webHook = new BackgroundGeofencingWebHook("https://359dd17431b2.ngrok.io/transition", 10000, headers, meta);
         webHook.save(this);
     }
 
     private void startGeofence() {
-        BackgroundGeofence backgroundGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("kianohome", -1.3146948, 36.8359575)
+        BackgroundGeofence homeGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("home", -1.3148501, 36.8363831)
                 .setNotificationResponsiveness(300000)
                 .setLoiteringDelay(60000)
                 .build();
-        backgroundGeofence.start(getApplicationContext(), new RequestHandler() {
+        final BackgroundGeofence workGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("work", -1.313339237582541, 36.842414181487776)
+                .setNotificationResponsiveness(300000)
+                .setLoiteringDelay(60000)
+                .build();
+        homeGeofence.start(getApplicationContext(), new RequestHandler() {
             @Override
             public void onSuccess() {
-                Log.v("KIANO", "🕺");
+                Log.v("MainActivity", "Home geofence started");
+                workGeofence.start(getApplicationContext(), new RequestHandler() {
+                    @Override
+                    public void onSuccess() {
+                        Log.v("MainActivity", "Work geofence started");
+                    }
+
+                    @Override
+                    public void onError(BackgroundGeofencingException exception) {
+
+                    }
+                });
             }
 
             @Override

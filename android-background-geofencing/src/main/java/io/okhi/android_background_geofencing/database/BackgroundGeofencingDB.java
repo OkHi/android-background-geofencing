@@ -79,7 +79,7 @@ public class BackgroundGeofencingDB {
     }
 
     public static void saveGeofenceTransitionEvent(BackgroundGeofenceTransition transition, Context context) {
-        String geofenceTransitionKey = Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY + transition.getTransitionDate();
+        String geofenceTransitionKey = Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY + transition.getUUID();
         String lastGeofenceTransition = Constant.DB_BACKGROUND_GEOFENCE_LAST_TRANSITION_KEY;
         BackgroundGeofenceTransition existingTransition = (BackgroundGeofenceTransition) get(geofenceTransitionKey, BackgroundGeofenceTransition.class, context);
         if (existingTransition == null) {
@@ -101,7 +101,7 @@ public class BackgroundGeofencingDB {
     }
 
     public static void removeGeofenceTransition(BackgroundGeofenceTransition transition, Context context) {
-        String key = Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY + transition.getTransitionDate();
+        String key = Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY + transition.getUUID();
         remove(key, context);
     }
 

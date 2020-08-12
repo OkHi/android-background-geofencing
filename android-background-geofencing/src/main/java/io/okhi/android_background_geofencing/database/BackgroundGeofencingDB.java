@@ -101,7 +101,7 @@ public class BackgroundGeofencingDB {
     }
 
     public static void removeGeofenceTransition(BackgroundGeofenceTransition transition, Context context) {
-        String key = Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY + transition.getTransitionDate();
+        String key = Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY + transition.getUUID();
         remove(key, context);
     }
 

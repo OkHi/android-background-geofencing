@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
@@ -47,7 +48,7 @@ public class BackgroundGeofenceTransition implements Serializable {
     private String deviceManufacturer;
     private String deviceModel;
     private HashMap<String, Double> geoPoint;
-
+    private String uuid = UUID.randomUUID().toString();
     private static String TAG = "GeofenceTransition";
 
     BackgroundGeofenceTransition() {}
@@ -273,6 +274,10 @@ public class BackgroundGeofenceTransition implements Serializable {
 
     public double getGpsAccuracy() {
         return gpsAccuracy;
+    }
+
+    public String getUUID() {
+        return uuid;
     }
 
     public static void scheduleGeofenceTransitionUploadWork(Context context, int duration, TimeUnit unit) {

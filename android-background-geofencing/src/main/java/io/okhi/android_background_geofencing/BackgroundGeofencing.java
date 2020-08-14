@@ -24,10 +24,11 @@ import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartW
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
 
 public class BackgroundGeofencing {
-    public static void init(final Context context) {
+
+    public static void init(final Context context, boolean triggerAppOpenGeofenceTransition) {
         WorkManager.getInstance(context).cancelAllWork();
         BackgroundGeofencingWebHook webhook = BackgroundGeofencingDB.getWebHook(context);
-        if (webhook != null) {
+        if (webhook != null && triggerAppOpenGeofenceTransition) {
             performInitWork(context, new RequestHandler() {
                 @Override
                 public void onSuccess() {
@@ -42,6 +43,10 @@ public class BackgroundGeofencing {
         } else {
             performBackgroundWork(context);
         }
+    }
+
+    public static void init(final Context context) {
+        init(context, true);
     }
 
     private static void performInitWork(final Context context, final RequestHandler handler) {

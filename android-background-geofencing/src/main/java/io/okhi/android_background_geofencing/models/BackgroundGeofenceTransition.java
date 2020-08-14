@@ -51,7 +51,8 @@ public class BackgroundGeofenceTransition implements Serializable {
     private String uuid = UUID.randomUUID().toString();
     private static String TAG = "GeofenceTransition";
 
-    BackgroundGeofenceTransition() {}
+    BackgroundGeofenceTransition() {
+    }
 
     private BackgroundGeofenceTransition(Builder builder) {
         ids = builder.ids;
@@ -89,6 +90,7 @@ public class BackgroundGeofenceTransition implements Serializable {
         private String deviceManufacturer = Build.MANUFACTURER;
         private String deviceModel = Build.MODEL;
         private final HashMap<Integer, String> GeofenceTransitionEventNameMap = generateGeofenceTransitionHashMap();
+
         private HashMap<Integer, String> generateGeofenceTransitionHashMap() {
             HashMap<Integer, String> map = new HashMap<>();
             map.put(Geofence.GEOFENCE_TRANSITION_EXIT, "exit");
@@ -123,22 +125,22 @@ public class BackgroundGeofenceTransition implements Serializable {
             this.ids = ids;
         }
 
-        Builder setTransitionDate(@NonNull long transitionDate) {
+        Builder setTransitionDate(long transitionDate) {
             this.transitionDate = transitionDate;
             return this;
         }
 
-        Builder setLat(@NonNull double lat) {
+        Builder setLat(double lat) {
             this.lat = lat;
             return this;
         }
 
-        Builder setLon(@NonNull double lon) {
+        Builder setLon(double lon) {
             this.lon = lon;
             return this;
         }
 
-        Builder setGpsAccuracy(@NonNull float gpsAccuracy) {
+        Builder setGpsAccuracy(float gpsAccuracy) {
             this.gpsAccuracy = gpsAccuracy;
             return this;
         }
@@ -158,7 +160,7 @@ public class BackgroundGeofenceTransition implements Serializable {
             return this;
         }
 
-        public BackgroundGeofenceTransition build(){
+        public BackgroundGeofenceTransition build() {
             // TODO: validate if all necessary fields aren't null
             return new BackgroundGeofenceTransition(this);
         }
@@ -314,7 +316,7 @@ public class BackgroundGeofenceTransition implements Serializable {
         ArrayList<String> exitIds = new ArrayList<>();
         ArrayList<String> dwellIds = new ArrayList<>();
         ArrayList<BackgroundGeofenceTransition> transitions = new ArrayList<>();
-        for(BackgroundGeofence geofence: geofences) {
+        for (BackgroundGeofence geofence : geofences) {
             if (isEnter(location, geofence)) {
                 if (isDwell(geofence, context)) {
                     dwellIds.add(geofence.getId());
@@ -395,6 +397,7 @@ public class BackgroundGeofenceTransition implements Serializable {
      * https://stackoverflow.com/questions/3694380/calculating-distance-between-two-points-using-latitude-longitude
      * lat1, lon1 Start point lat2, lon2 End point el1 Start altitude in meters
      * el2 End altitude in meters
+     *
      * @returns Distance in Meters
      */
     private static double distance(double lat1, double lat2, double lon1, double lon2, double el1, double el2) {

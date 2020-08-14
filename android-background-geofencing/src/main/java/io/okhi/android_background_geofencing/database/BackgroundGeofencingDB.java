@@ -15,6 +15,7 @@ import io.okhi.android_background_geofencing.models.Constant;
 
 // TODO: implement strategy to dump the current db if we bump up the version
 
+@SuppressWarnings("rawtypes")
 public class BackgroundGeofencingDB {
 
     private static String TAG = "BackgroundGeofencingDB";
@@ -92,7 +93,7 @@ public class BackgroundGeofencingDB {
         ArrayList<BackgroundGeofenceTransition> transitions = new ArrayList<>();
         String[] keys = getKeys(Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY, context);
         if (keys != null) {
-            for(String key: keys) {
+            for (String key : keys) {
                 BackgroundGeofenceTransition transition = (BackgroundGeofenceTransition) get(key, BackgroundGeofenceTransition.class, context);
                 transitions.add(transition);
             }
@@ -113,7 +114,7 @@ public class BackgroundGeofencingDB {
         ArrayList<BackgroundGeofence> geofences = new ArrayList<>();
         String[] keys = getKeys(Constant.DB_BACKGROUND_GEOFENCE_PREFIX_KEY, context);
         if (keys != null) {
-            for (String key: keys) {
+            for (String key : keys) {
                 BackgroundGeofence geofence = (BackgroundGeofence) get(key, BackgroundGeofence.class, context);
                 if (geofence != null) {
                     if (geofence.hasExpired()) {
@@ -134,7 +135,7 @@ public class BackgroundGeofencingDB {
     public static ArrayList<BackgroundGeofence> getAllFailingGeofences(Context context) {
         ArrayList<BackgroundGeofence> geofences = getAllGeofences(context);
         ArrayList<BackgroundGeofence> failingGeofences = getAllGeofences(context);
-        for(BackgroundGeofence geofence: geofences) {
+        for (BackgroundGeofence geofence : geofences) {
             if (geofence.isFailing()) {
                 failingGeofences.add(geofence);
             }
@@ -181,9 +182,8 @@ public class BackgroundGeofencingDB {
             Log.v(TAG, "Successfully got: " + key);
         } catch (Exception e) {
 //            e.printStackTrace();
-        } finally {
-            return timestamp;
         }
+        return timestamp;
     }
 
     public static void removeGeofenceEnterTimestamp(BackgroundGeofence geofence, Context context) {

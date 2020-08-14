@@ -37,7 +37,7 @@ public class BackgroundGeofenceRestartWorker extends Worker {
         boolean isLocationPermissionGranted = BackgroundGeofencingPermissionService.isLocationPermissionGranted(getApplicationContext());
         boolean isGooglePlayServicesAvailable = BackgroundGeofencingPlayService.isGooglePlayServicesAvailable(getApplicationContext());
 
-        for (BackgroundGeofence geofence: geofences) {
+        for (BackgroundGeofence geofence : geofences) {
             if (geofence.isFailing()) {
                 failedGeofences.add(geofence);
             }
@@ -56,7 +56,7 @@ public class BackgroundGeofenceRestartWorker extends Worker {
         }
 
         if (!isWithinThreshold) {
-            Log.v(TAG, "We haven't seen geofences in: " + Constant.GEOFENCE_TRANSITION_TIME_STAMP_THRESHOLD +"ms attempting ALL restart");
+            Log.v(TAG, "We haven't seen geofences in: " + Constant.GEOFENCE_TRANSITION_TIME_STAMP_THRESHOLD + "ms attempting ALL restart");
             restartGeofences(geofences, getApplicationContext());
             BackgroundGeofencingDB.removeLastGeofenceTransitionEvent(getApplicationContext());
         } else {
@@ -69,13 +69,14 @@ public class BackgroundGeofenceRestartWorker extends Worker {
 
     private void restartGeofences(ArrayList<BackgroundGeofence> geofences, final Context context) {
         if (geofences != null && !geofences.isEmpty()) {
-            for(final BackgroundGeofence geofence: geofences) {
+            for (final BackgroundGeofence geofence : geofences) {
                 geofence.restart(context, new RequestHandler() {
                     @Override
                     public void onSuccess() {
                         Log.v(TAG, "Successfully restarted: " + geofence.getId());
                         BackgroundGeofence.setIsFailing(geofence.getId(), false, context);
                     }
+
                     @Override
                     public void onError(BackgroundGeofencingException e) {
                         Log.v(TAG, "Failed to restart: " + geofence.getId());

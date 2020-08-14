@@ -1,8 +1,10 @@
 package io.okhi.android_background_geofencing.models;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
@@ -11,6 +13,7 @@ import android.provider.Settings;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.ResolvableApiException;
@@ -47,7 +50,7 @@ public class BackgroundGeofencingLocationService {
     }
 
     public static boolean isLocationServicesEnabled(Context context) {
-        int locationMode = 0;
+        int locationMode;
         try {
             locationMode = Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.LOCATION_MODE);
         } catch (Settings.SettingNotFoundException e) {
@@ -74,18 +77,14 @@ public class BackgroundGeofencingLocationService {
         try {
             LocationSettingsResponse response = task.getResult(ApiException.class);
         } catch (ApiException e) {
-            switch (e.getStatusCode()) {
-                case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                    try {
-                        ResolvableApiException resolvable = (ResolvableApiException) e;
-                        resolvable.startResolutionForResult(activity, Constant.ENABLE_LOCATION_SERVICES_REQUEST_CODE);
-                    } catch (Exception error) {
-                        requestHandler.onError(exception);
-                        e.printStackTrace();
-                    }
-                    break;
-                default:
-                    break;
+            if (e.getStatusCode() == LocationSettingsStatusCodes.RESOLUTION_REQUIRED) {
+                try {
+                    ResolvableApiException resolvable = (ResolvableApiException) e;
+                    resolvable.startResolutionForResult(activity, Constant.ENABLE_LOCATION_SERVICES_REQUEST_CODE);
+                } catch (Exception error) {
+                    requestHandler.onError(exception);
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -138,6 +137,10 @@ public class BackgroundGeofencingLocationService {
                     client.removeLocationUpdates(this);
                 }
             };
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                handler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.PERMISSION_DENIED_CODE, "Location permission denied"));
+                return;
+            }
             client.requestLocationUpdates(getLocationRequest(), locationCallback, Looper.getMainLooper());
         }
     }

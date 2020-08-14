@@ -12,13 +12,15 @@ import java.util.Map;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import okhttp3.Headers;
 
+@SuppressWarnings("rawtypes")
 public class BackgroundGeofencingWebHook implements Serializable {
     private String url;
     private long timeout = Constant.DEFAULT_WEBHOOK_TIMEOUT;
     private HashMap<String, String> headers;
     private JSONObject meta;
 
-    BackgroundGeofencingWebHook() {}
+    BackgroundGeofencingWebHook() {
+    }
 
     public BackgroundGeofencingWebHook(String url) {
         this.url = url;
@@ -49,11 +51,9 @@ public class BackgroundGeofencingWebHook implements Serializable {
     public Headers getHeaders() {
         Headers.Builder headerBuilder = new Headers.Builder();
         if (headers != null) {
-            Iterator hIterator = headers.entrySet().iterator();
-            while (hIterator.hasNext()) {
-                Map.Entry mapElement = (Map.Entry)hIterator.next();
-                String key = (String) mapElement.getKey();
-                String value = (String) mapElement.getValue();
+            for (Map.Entry<String, String> stringStringEntry : headers.entrySet()) {
+                String key = (String) ((Map.Entry) stringStringEntry).getKey();
+                String value = (String) ((Map.Entry) stringStringEntry).getValue();
                 if (key.toLowerCase().equals("content-type")) {
                     headers.remove(key);
                 } else {

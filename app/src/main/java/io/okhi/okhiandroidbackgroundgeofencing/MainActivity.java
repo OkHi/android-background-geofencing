@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        webHook = new BackgroundGeofencingWebHook("https://359dd17431b2.ngrok.io/transition", 10000, headers, meta);
+        webHook = new BackgroundGeofencingWebHook("https://9c0eae60deaa.ngrok.io/transition", 10000, headers, meta);
         webHook.save(this);
     }
 

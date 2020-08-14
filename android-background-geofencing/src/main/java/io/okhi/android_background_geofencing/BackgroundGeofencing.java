@@ -18,21 +18,28 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingLocationService;
+import io.okhi.android_background_geofencing.models.BackgroundGeofencingPermissionService;
+import io.okhi.android_background_geofencing.models.BackgroundGeofencingPlayService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
 
 public class BackgroundGeofencing {
-    public static void init(final Context context) {
+
+    public static void init(final Context context, boolean triggerAppOpenGeofenceTransition) {
         WorkManager.getInstance(context).cancelAllWork();
         BackgroundGeofencingWebHook webhook = BackgroundGeofencingDB.getWebHook(context);
-        if (webhook != null) {
+        boolean isLocationPermissionGranted = BackgroundGeofencingPermissionService.isLocationPermissionGranted(context);
+        boolean isLocationServicesEnabled = BackgroundGeofencingLocationService.isLocationServicesEnabled(context);
+        boolean isGooglePlayServicesAvailable = BackgroundGeofencingPlayService.isGooglePlayServicesAvailable(context);
+        if (webhook != null && triggerAppOpenGeofenceTransition && isLocationPermissionGranted && isLocationServicesEnabled && isGooglePlayServicesAvailable) {
             performInitWork(context, new RequestHandler() {
                 @Override
                 public void onSuccess() {
                     performBackgroundWork(context);
                 }
+
                 @Override
                 public void onError(BackgroundGeofencingException exception) {
                     performBackgroundWork(context);
@@ -43,12 +50,17 @@ public class BackgroundGeofencing {
         }
     }
 
+    public static void init(final Context context) {
+        init(context, true);
+    }
+
     private static void performInitWork(final Context context, final RequestHandler handler) {
         BackgroundGeofencingLocationService.getCurrentLocation(context, new ResultHandler<Location>() {
             @Override
             public void onSuccess(Location location) {
                 triggerInitGeofenceEvents(location, context, handler);
             }
+
             @Override
             public void onError(BackgroundGeofencingException exception) {
                 handler.onError(exception);
@@ -58,20 +70,18 @@ public class BackgroundGeofencing {
 
     private static void triggerInitGeofenceEvents(Location location, Context context, RequestHandler handler) {
         ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(context);
-        if (geofences.isEmpty()) {
-            handler.onSuccess();
-        } else {
+        if (!geofences.isEmpty()) {
             ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofenceTransition.generateTransitions(
                     Constant.INIT_GEOFENCE_TRANSITION_SOURCE_NAME,
                     location,
                     geofences,
                     context
             );
-            for (BackgroundGeofenceTransition transition: transitions) {
+            for (BackgroundGeofenceTransition transition : transitions) {
                 transition.save(context);
             }
-            handler.onSuccess();
         }
+        handler.onSuccess();
     }
 
     private static void performBackgroundWork(Context context) {

@@ -33,7 +33,7 @@ public class BackgroundGeofencingPlayService {
         int result = googleAPI.isGooglePlayServicesAvailable(activity.getApplicationContext());
         if (result != ConnectionResult.SUCCESS) {
             if (googleAPI.isUserResolvableError(result)) {
-                Dialog dialog = googleAPI.getErrorDialog(activity,result,Constant.ENABLE_GOOGLE_PLAY_SERVICES_REQUEST_CODE);
+                Dialog dialog = googleAPI.getErrorDialog(activity, result, Constant.ENABLE_GOOGLE_PLAY_SERVICES_REQUEST_CODE);
                 dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialogInterface) {

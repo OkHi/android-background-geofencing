@@ -33,12 +33,6 @@ public class BackgroundGeofencingPermissionService {
 
         this.requestHandler = requestHandler;
 
-        final String[] permissions = new String[]{
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-        };
-
         if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_FINE_LOCATION)) {
             new AlertDialog.Builder(activity)
                     .setTitle(rationaleTitle)
@@ -47,7 +41,7 @@ public class BackgroundGeofencingPermissionService {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             //Prompt the user once explanation has been shown
-                            ActivityCompat.requestPermissions(activity, permissions, Constant.LOCATION_PERMISSION_REQUEST_CODE);
+                            ActivityCompat.requestPermissions(activity, getPermissions(), Constant.LOCATION_PERMISSION_REQUEST_CODE);
                         }
                     })
                     .setNegativeButton(Constant.PERMISSION_DIALOG_NEGATIVE_BUTTON_TEXT, new DialogInterface.OnClickListener() {
@@ -65,12 +59,12 @@ public class BackgroundGeofencingPermissionService {
                     .create()
                     .show();
         } else {
-            ActivityCompat.requestPermissions(activity, permissions, Constant.LOCATION_PERMISSION_REQUEST_CODE);
+            ActivityCompat.requestPermissions(activity, getPermissions(), Constant.LOCATION_PERMISSION_REQUEST_CODE);
         }
 
     }
 
-    public void onRequestPermissionsResult(int requestCode, String [] permissions, int [] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == Constant.LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 requestHandler.onSuccess();
@@ -78,5 +72,19 @@ public class BackgroundGeofencingPermissionService {
                 requestHandler.onError(exception);
             }
         }
+    }
+
+    private String[] getPermissions() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            return new String[]{
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+            };
+        }
+        return new String[]{
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+        };
     }
 }

@@ -60,9 +60,7 @@ public class BackgroundGeofencing {
 
     private static void triggerInitGeofenceEvents(Location location, Context context, RequestHandler handler) {
         ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(context);
-        if (geofences.isEmpty()) {
-            handler.onSuccess();
-        } else {
+        if   (!geofences.isEmpty()) {
             ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofenceTransition.generateTransitions(
                     Constant.INIT_GEOFENCE_TRANSITION_SOURCE_NAME,
                     location,
@@ -72,8 +70,8 @@ public class BackgroundGeofencing {
             for (BackgroundGeofenceTransition transition : transitions) {
                 transition.save(context);
             }
-            handler.onSuccess();
         }
+        handler.onSuccess();
     }
 
     private static void performBackgroundWork(Context context) {

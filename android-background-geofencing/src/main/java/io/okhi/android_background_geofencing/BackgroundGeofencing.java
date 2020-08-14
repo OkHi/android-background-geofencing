@@ -33,6 +33,7 @@ public class BackgroundGeofencing {
                 public void onSuccess() {
                     performBackgroundWork(context);
                 }
+
                 @Override
                 public void onError(BackgroundGeofencingException exception) {
                     performBackgroundWork(context);
@@ -49,6 +50,7 @@ public class BackgroundGeofencing {
             public void onSuccess(Location location) {
                 triggerInitGeofenceEvents(location, context, handler);
             }
+
             @Override
             public void onError(BackgroundGeofencingException exception) {
                 handler.onError(exception);
@@ -67,7 +69,7 @@ public class BackgroundGeofencing {
                     geofences,
                     context
             );
-            for (BackgroundGeofenceTransition transition: transitions) {
+            for (BackgroundGeofenceTransition transition : transitions) {
                 transition.save(context);
             }
             handler.onSuccess();

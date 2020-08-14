@@ -1,5 +1,6 @@
 package io.okhi.android_background_geofencing.models;
 
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -52,7 +53,8 @@ public class BackgroundGeofence implements Serializable {
     public static int INITIAL_TRIGGER_EXIT = GeofencingRequest.INITIAL_TRIGGER_EXIT;
     public static int INITIAL_TRIGGER_DWELL = GeofencingRequest.INITIAL_TRIGGER_DWELL;
 
-    BackgroundGeofence() {}
+    BackgroundGeofence() {
+    }
 
     private BackgroundGeofence(BackgroundGeofenceBuilder builder) {
         this.id = builder.id;
@@ -87,12 +89,12 @@ public class BackgroundGeofence implements Serializable {
             this.lng = lng;
         }
 
-        public BackgroundGeofenceBuilder setRadius(float radius){
+        public BackgroundGeofenceBuilder setRadius(float radius) {
             this.radius = radius;
             return this;
         }
 
-        public BackgroundGeofenceBuilder setExpiration(long expiration){
+        public BackgroundGeofenceBuilder setExpiration(long expiration) {
             if (expiration > 0) {
                 this.expiration = expiration;
                 this.expirationTimestamp = System.currentTimeMillis() + expiration;
@@ -100,17 +102,17 @@ public class BackgroundGeofence implements Serializable {
             return this;
         }
 
-        public BackgroundGeofenceBuilder setNotificationResponsiveness(int notificationResponsiveness){
+        public BackgroundGeofenceBuilder setNotificationResponsiveness(int notificationResponsiveness) {
             this.notificationResponsiveness = notificationResponsiveness;
             return this;
         }
 
-        public BackgroundGeofenceBuilder setLoiteringDelay(int loiteringDelay){
+        public BackgroundGeofenceBuilder setLoiteringDelay(int loiteringDelay) {
             this.loiteringDelay = loiteringDelay;
             return this;
         }
 
-        public BackgroundGeofenceBuilder setConfiguration(boolean registerOnDeviceRestart){
+        public BackgroundGeofenceBuilder setConfiguration(boolean registerOnDeviceRestart) {
             this.registerOnDeviceRestart = registerOnDeviceRestart;
             return this;
         }
@@ -125,7 +127,7 @@ public class BackgroundGeofence implements Serializable {
             return this;
         }
 
-        public BackgroundGeofence build(){
+        public BackgroundGeofence build() {
             return new BackgroundGeofence(this);
         }
     }
@@ -143,14 +145,14 @@ public class BackgroundGeofence implements Serializable {
 
     private PendingIntent getGeofencePendingIntent(Context context) {
         Intent intent = new Intent(context, BackgroundGeofenceBroadcastReceiver.class);
-        PendingIntent geofencePendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        return geofencePendingIntent;
+        return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     private void save(Context context) {
         BackgroundGeofencingDB.saveBackgroundGeofence(this, context);
     }
 
+    @SuppressLint("MissingPermission")
     private void start(final boolean silently, final Context context, final RequestHandler requestHandler) {
         boolean isLocationServicesEnabled = BackgroundGeofencingLocationService.isLocationServicesEnabled(context);
         boolean isLocationPermissionGranted = BackgroundGeofencingPermissionService.isLocationPermissionGranted(context);
@@ -217,7 +219,7 @@ public class BackgroundGeofence implements Serializable {
 
     public static void setIsFailing(GeofencingEvent event, Boolean isFailing, Context context) {
         List<Geofence> geofences = event.getTriggeringGeofences();
-        for(Geofence geofence: geofences) {
+        for (Geofence geofence : geofences) {
             setIsFailing(geofence.getRequestId(), isFailing, context);
         }
     }
@@ -264,7 +266,7 @@ public class BackgroundGeofence implements Serializable {
 
     public static void stop(Context context, String id) {
         GeofencingClient geofencingClient = LocationServices.getGeofencingClient(context);
-        List<String> ids = new ArrayList<String>();
+        List<String> ids = new ArrayList<>();
         ids.add(id);
         geofencingClient.removeGeofences(ids);
         BackgroundGeofencingDB.removeBackgroundGeofence(id, context);

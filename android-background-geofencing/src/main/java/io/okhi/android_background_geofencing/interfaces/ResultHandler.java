@@ -4,5 +4,6 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofencingExceptio
 
 public interface ResultHandler<T> {
     void onSuccess(T result);
+
     void onError(BackgroundGeofencingException exception);
 }

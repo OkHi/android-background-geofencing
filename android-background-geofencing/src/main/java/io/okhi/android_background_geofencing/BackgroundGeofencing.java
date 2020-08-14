@@ -18,6 +18,8 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingLocationService;
+import io.okhi.android_background_geofencing.models.BackgroundGeofencingPermissionService;
+import io.okhi.android_background_geofencing.models.BackgroundGeofencingPlayService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
@@ -28,7 +30,10 @@ public class BackgroundGeofencing {
     public static void init(final Context context, boolean triggerAppOpenGeofenceTransition) {
         WorkManager.getInstance(context).cancelAllWork();
         BackgroundGeofencingWebHook webhook = BackgroundGeofencingDB.getWebHook(context);
-        if (webhook != null && triggerAppOpenGeofenceTransition) {
+        boolean isLocationPermissionGranted = BackgroundGeofencingPermissionService.isLocationPermissionGranted(context);
+        boolean isLocationServicesEnabled = BackgroundGeofencingLocationService.isLocationServicesEnabled(context);
+        boolean isGooglePlayServicesAvailable = BackgroundGeofencingPlayService.isGooglePlayServicesAvailable(context);
+        if (webhook != null && triggerAppOpenGeofenceTransition && isLocationPermissionGranted && isLocationServicesEnabled && isGooglePlayServicesAvailable) {
             performInitWork(context, new RequestHandler() {
                 @Override
                 public void onSuccess() {

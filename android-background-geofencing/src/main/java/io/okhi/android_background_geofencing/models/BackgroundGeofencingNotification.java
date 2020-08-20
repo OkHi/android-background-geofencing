@@ -9,9 +9,10 @@ import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class BackgroundGeofencingNotification {
+public class BackgroundGeofencingNotification implements Serializable {
     private String title;
     private String text;
     private int channelImportance;
@@ -21,7 +22,7 @@ public class BackgroundGeofencingNotification {
 
     BackgroundGeofencingNotification() {}
 
-    BackgroundGeofencingNotification(
+    public BackgroundGeofencingNotification(
             @NonNull String title,
             @NonNull String text,
             @NonNull String channelId,

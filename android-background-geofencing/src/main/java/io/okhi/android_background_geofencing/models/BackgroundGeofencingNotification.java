@@ -19,6 +19,7 @@ public class BackgroundGeofencingNotification implements Serializable {
     private String channelId;
     private String channelName;
     private String channelDescription;
+    private int icon = 0;
 
     BackgroundGeofencingNotification() {}
 
@@ -38,10 +39,29 @@ public class BackgroundGeofencingNotification implements Serializable {
         this.channelImportance = channelImportance;
     }
 
+    public BackgroundGeofencingNotification(
+            @NonNull String title,
+            @NonNull String text,
+            @NonNull String channelId,
+            @NonNull String channelName,
+            @NonNull String channelDescription,
+            int channelImportance,
+            int icon
+    ) {
+        this.title = title;
+        this.text = text;
+        this.channelId = channelId;
+        this.channelName = channelName;
+        this.channelDescription = channelDescription;
+        this.channelImportance = channelImportance;
+        this.icon = icon;
+    }
+
     public Notification getNotification(Context context) {
         return new NotificationCompat.Builder(context, channelId)
                 .setContentTitle(title)
                 .setContentText(text)
+                .setSmallIcon(icon)
                 .build();
     }
 

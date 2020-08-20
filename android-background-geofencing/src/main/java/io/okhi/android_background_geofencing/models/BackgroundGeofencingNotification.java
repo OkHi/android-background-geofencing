@@ -20,7 +20,7 @@ public class BackgroundGeofencingNotification {
     private String channelDescription;
 
     BackgroundGeofencingNotification() {}
-    
+
     BackgroundGeofencingNotification(
             @NonNull String title,
             @NonNull String text,

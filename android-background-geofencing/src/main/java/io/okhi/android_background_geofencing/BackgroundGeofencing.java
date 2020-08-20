@@ -3,6 +3,7 @@ package io.okhi.android_background_geofencing;
 import android.content.Context;
 import android.location.Location;
 
+import androidx.annotation.NonNull;
 import androidx.work.BackoffPolicy;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
@@ -18,6 +19,7 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingLocationService;
+import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingPermissionService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingPlayService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
@@ -27,8 +29,19 @@ import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransiti
 
 public class BackgroundGeofencing {
 
-    public static void init(final Context context, boolean triggerAppOpenGeofenceTransition) {
+    public static void init(final Context context, @NonNull BackgroundGeofencingNotification notification) {
+        init(context, true, notification);
+    }
+
+    public static void init(final Context context) {
+        init(context, true, null);
+    }
+
+    public static void init(final Context context, boolean triggerAppOpenGeofenceTransition, BackgroundGeofencingNotification notification) {
         WorkManager.getInstance(context).cancelAllWork();
+        if (notification != null) {
+            BackgroundGeofencingDB.saveNotification(notification, context);
+        }
         BackgroundGeofencingWebHook webhook = BackgroundGeofencingDB.getWebHook(context);
         boolean isLocationPermissionGranted = BackgroundGeofencingPermissionService.isLocationPermissionGranted(context);
         boolean isLocationServicesEnabled = BackgroundGeofencingLocationService.isLocationServicesEnabled(context);
@@ -48,10 +61,6 @@ public class BackgroundGeofencing {
         } else {
             performBackgroundWork(context);
         }
-    }
-
-    public static void init(final Context context) {
-        init(context, true);
     }
 
     private static void performInitWork(final Context context, final RequestHandler handler) {

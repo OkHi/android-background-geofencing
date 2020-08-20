@@ -2,9 +2,12 @@ package io.okhi.okhiandroidbackgroundgeofencing;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.NotificationManager;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -13,16 +16,14 @@ import android.widget.Button;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import io.okhi.android_background_geofencing.BackgroundGeofencing;
-import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
-import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingLocationService;
+import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingPermissionService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingPlayService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
@@ -34,11 +35,19 @@ public class MainActivity extends AppCompatActivity {
     BackgroundGeofencingPlayService playService;
     BackgroundGeofencingWebHook webHook;
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        BackgroundGeofencing.init(this);
+        BackgroundGeofencing.init(this, new BackgroundGeofencingNotification(
+                "My notification title",
+                "My notification text",
+                "OkHi_Channel_id",
+                "OkHi Channel",
+                "My channel description",
+                NotificationManager.IMPORTANCE_DEFAULT
+        ));
         final Button button = findViewById(R.id.button1);
         button.setOnClickListener(new View.OnClickListener() {
             @Override

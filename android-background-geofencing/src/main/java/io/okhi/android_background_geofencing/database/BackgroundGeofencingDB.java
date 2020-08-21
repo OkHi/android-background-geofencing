@@ -10,6 +10,7 @@ import java.util.ArrayList;
 
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
+import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
 
@@ -194,5 +195,15 @@ public class BackgroundGeofencingDB {
     public static void removeGeofenceEnterTimestamp(String geofenceId, Context context) {
         String key = Constant.DB_INIT_ENTER_GEOFENCE_PREFIX_KEY + geofenceId;
         remove(key, context);
+    }
+
+    public static void saveNotification(BackgroundGeofencingNotification notification, Context context) {
+        String key = Constant.DB_NOTIFICATION_CONFIGURATION_KEY;
+        save(key, notification, context);
+    }
+
+    public static BackgroundGeofencingNotification getNotification(Context context) {
+        String key = Constant.DB_NOTIFICATION_CONFIGURATION_KEY;
+        return (BackgroundGeofencingNotification) get(key, BackgroundGeofencingNotification.class, context);
     }
 }

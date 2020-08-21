@@ -67,7 +67,7 @@ public class BackgroundGeofenceRestartWorker extends Worker {
         return Result.retry();
     }
 
-    private void restartGeofences(ArrayList<BackgroundGeofence> geofences, final Context context) {
+    public static void restartGeofences(ArrayList<BackgroundGeofence> geofences, final Context context) {
         if (geofences != null && !geofences.isEmpty()) {
             for (final BackgroundGeofence geofence : geofences) {
                 geofence.restart(context, new RequestHandler() {

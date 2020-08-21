@@ -47,6 +47,7 @@ public class BackgroundGeofenceTransition implements Serializable {
     private String deviceOSVersion;
     private String deviceManufacturer;
     private String deviceModel;
+    private long locationDate;
     private HashMap<String, Double> geoPoint;
     private String uuid = UUID.randomUUID().toString();
     private static String TAG = "GeofenceTransition";
@@ -70,6 +71,7 @@ public class BackgroundGeofenceTransition implements Serializable {
         deviceOSVersion = builder.deviceOSVersion;
         deviceManufacturer = builder.deviceManufacturer;
         deviceModel = builder.deviceModel;
+        locationDate = builder.locationDate;
     }
 
     public void save(Context context) {
@@ -90,6 +92,7 @@ public class BackgroundGeofenceTransition implements Serializable {
         private String deviceManufacturer = Build.MANUFACTURER;
         private String deviceModel = Build.MODEL;
         private final HashMap<Integer, String> GeofenceTransitionEventNameMap = generateGeofenceTransitionHashMap();
+        private long locationDate;
 
         private HashMap<Integer, String> generateGeofenceTransitionHashMap() {
             HashMap<Integer, String> map = new HashMap<>();
@@ -107,7 +110,7 @@ public class BackgroundGeofenceTransition implements Serializable {
             // triggering location
             Location location = geofencingEvent.getTriggeringLocation();
             // get transition date
-            transitionDate = location.getTime();
+            locationDate = location.getTime();
             // get gps provider
             geoPointProvider = location.getProvider();
             // get actual geopoint
@@ -160,8 +163,14 @@ public class BackgroundGeofenceTransition implements Serializable {
             return this;
         }
 
+        Builder setLocationDate(long date) {
+            this.locationDate = date;
+            return this;
+        }
+
         public BackgroundGeofenceTransition build() {
             // TODO: validate if all necessary fields aren't null
+            transitionDate = System.currentTimeMillis();
             return new BackgroundGeofenceTransition(this);
         }
     }
@@ -178,6 +187,7 @@ public class BackgroundGeofenceTransition implements Serializable {
         // build transit
         transit.put("ids", new JSONArray(ids));
         transit.put("transition_date", transitionDate);
+        transit.put("location_date", locationDate);
         transit.put("geopoint_provider", geoPointProvider);
         transit.put("geo_point", new JSONObject(geoPoint));
         transit.put("gps_accuracy", gpsAccuracy);
@@ -300,13 +310,6 @@ public class BackgroundGeofenceTransition implements Serializable {
         WorkManager.getInstance(context).enqueueUniqueWork(Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_NAME, ExistingWorkPolicy.REPLACE, geofenceTransitionUploadWorkRequest);
     }
 
-    public static void scheduleGeofenceTransitionUploadWork(GeofencingEvent geofencingEvent, Context context) {
-        BackgroundGeofenceTransition transition = new Builder(geofencingEvent).build();
-        Log.v(TAG, "Received a " + transition.getTransitionEvent() + " geofence event");
-        transition.save(context);
-        schedule(context, Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY, Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY_TIME_UNIT);
-    }
-
     public static void scheduleGeofenceTransitionUploadWork(Context context) {
         schedule(context, Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY, Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY_TIME_UNIT);
     }
@@ -332,7 +335,7 @@ public class BackgroundGeofenceTransition implements Serializable {
         }
         if (!enterIds.isEmpty()) {
             BackgroundGeofenceTransition enterTransition = new Builder(enterIds)
-                    .setTransitionDate(location.getTime())
+                    .setLocationDate(location.getTime())
                     .setGeoPointProvider(location.getProvider())
                     .setLat(location.getLatitude())
                     .setLon(location.getLongitude())
@@ -344,7 +347,7 @@ public class BackgroundGeofenceTransition implements Serializable {
         }
         if (!exitIds.isEmpty()) {
             BackgroundGeofenceTransition enterTransition = new Builder(exitIds)
-                    .setTransitionDate(location.getTime())
+                    .setLocationDate(location.getTime())
                     .setGeoPointProvider(location.getProvider())
                     .setLat(location.getLatitude())
                     .setLon(location.getLongitude())
@@ -356,7 +359,7 @@ public class BackgroundGeofenceTransition implements Serializable {
         }
         if (!dwellIds.isEmpty()) {
             BackgroundGeofenceTransition dwellTransition = new Builder(dwellIds)
-                    .setTransitionDate(location.getTime())
+                    .setLocationDate(location.getTime())
                     .setGeoPointProvider(location.getProvider())
                     .setLat(location.getLatitude())
                     .setLon(location.getLongitude())

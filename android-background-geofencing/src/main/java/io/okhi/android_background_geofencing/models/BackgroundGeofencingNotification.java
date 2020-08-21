@@ -29,22 +29,6 @@ public class BackgroundGeofencingNotification implements Serializable {
             @NonNull String channelId,
             @NonNull String channelName,
             @NonNull String channelDescription,
-            int channelImportance
-    ) {
-        this.title = title;
-        this.text = text;
-        this.channelId = channelId;
-        this.channelName = channelName;
-        this.channelDescription = channelDescription;
-        this.channelImportance = channelImportance;
-    }
-
-    public BackgroundGeofencingNotification(
-            @NonNull String title,
-            @NonNull String text,
-            @NonNull String channelId,
-            @NonNull String channelName,
-            @NonNull String channelDescription,
             int channelImportance,
             int icon
     ) {

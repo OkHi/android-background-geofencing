@@ -32,6 +32,7 @@ public class Constant {
     public static final String DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY = "BACKGROUND_GEOFENCE_TRANSITION:";
     public static final String DB_BACKGROUND_GEOFENCE_LAST_TRANSITION_KEY = "BACKGROUND_GEOFENCE_LAST_TRANSITION";
     public static final String DB_INIT_ENTER_GEOFENCE_PREFIX_KEY = "INIT_ENTER_GEOFENCE:";
+    public static final String DB_NOTIFICATION_CONFIGURATION_KEY = "NOTIFICATION_CONFIGURATION_KEY";
 
     // geofence defaults
     public static final long DEFAULT_GEOFENCE_EXPIRATION = Geofence.NEVER_EXPIRE;

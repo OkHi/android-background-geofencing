@@ -41,12 +41,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         BackgroundGeofencing.init(this, new BackgroundGeofencingNotification(
-                "My notification title",
-                "My notification text",
+                "Hi Kiano",
+                "Don't mind us",
                 "OkHi_Channel_id",
                 "OkHi Channel",
                 "My channel description",
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_DEFAULT,
+                R.mipmap.ic_launcher
         ));
         final Button button = findViewById(R.id.button1);
         button.setOnClickListener(new View.OnClickListener() {
@@ -75,18 +76,20 @@ public class MainActivity extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        webHook = new BackgroundGeofencingWebHook("https://9c0eae60deaa.ngrok.io/transition", 10000, headers, meta);
+        webHook = new BackgroundGeofencingWebHook("https://33290cdfb3f2.ngrok.io/transition", 10000, headers, meta);
         webHook.save(this);
     }
 
     private void startGeofence() {
         BackgroundGeofence homeGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("home", -1.3148501, 36.8363831)
-                .setNotificationResponsiveness(300000)
+                .setNotificationResponsiveness(5)
                 .setLoiteringDelay(60000)
+                .setInitialTriggerTransitionTypes(0)
                 .build();
         final BackgroundGeofence workGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("work", -1.313339237582541, 36.842414181487776)
-                .setNotificationResponsiveness(300000)
+                .setNotificationResponsiveness(5)
                 .setLoiteringDelay(60000)
+                .setInitialTriggerTransitionTypes(0)
                 .build();
         homeGeofence.start(getApplicationContext(), new RequestHandler() {
             @Override

@@ -18,6 +18,7 @@ import java.util.List;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceForegroundService;
 
@@ -30,7 +31,7 @@ public class BackgroundGeofenceBroadcastReceiver extends BroadcastReceiver {
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
         boolean isNotificationAvailable = BackgroundGeofencingDB.getNotification(context) != null;
         boolean isNetworkAvailable = isNetworkAvailable(context);
-        boolean isInBackground = !isAppOnForeground(context);
+        boolean isInBackground = !BackgroundGeofenceUtil.isAppOnForeground(context);
         if (geofencingEvent.hasError()) {
             BackgroundGeofence.setIsFailing(geofencingEvent, true, context);
         } else {
@@ -56,24 +57,6 @@ public class BackgroundGeofenceBroadcastReceiver extends BroadcastReceiver {
         } else {
             BackgroundGeofenceTransition.scheduleGeofenceTransitionUploadWork(context);
         }
-    }
-
-    private boolean isAppOnForeground(Context context) {
-        ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        List<ActivityManager.RunningAppProcessInfo> appProcesses =
-                activityManager.getRunningAppProcesses();
-        if (appProcesses == null) {
-            return false;
-        }
-        final String packageName = context.getPackageName();
-        for (ActivityManager.RunningAppProcessInfo appProcess : appProcesses) {
-            if (appProcess.importance ==
-                    ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND &&
-                    appProcess.processName.equals(packageName)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public static boolean isNetworkAvailable(Context context) {

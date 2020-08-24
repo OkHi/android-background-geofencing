@@ -7,6 +7,9 @@ import com.snappydb.DB;
 import com.snappydb.DBFactory;
 
 import java.util.ArrayList;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
@@ -20,20 +23,26 @@ import io.okhi.android_background_geofencing.models.Constant;
 public class BackgroundGeofencingDB {
 
     private static String TAG = "BackgroundGeofencingDB";
+    private static Lock lock = new ReentrantLock();
+    private static Condition condition = lock.newCondition();
 
     private static void save(String key, Object object, Context context) {
         try {
+            lock.lock();
             DB db = DBFactory.open(context, Constant.DB_NAME);
             db.put(key, object);
             db.close();
             Log.v(TAG, "Successfully saved: " + key);
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            lock.unlock();
         }
     }
 
     private static Object get(String key, Class objectClass, Context context) {
         try {
+            lock.lock();
             DB db = DBFactory.open(context, Constant.DB_NAME);
             Object value = db.get(key, objectClass);
             db.close();
@@ -41,12 +50,15 @@ public class BackgroundGeofencingDB {
             return value;
         } catch (Exception e) {
 //            e.printStackTrace();
+        } finally {
+            lock.unlock();
         }
         return null;
     }
 
     private static String[] getKeys(String prefix, Context context) {
         try {
+            lock.lock();
             DB db = DBFactory.open(context, Constant.DB_NAME);
             String[] key = db.findKeys(prefix);
             db.close();
@@ -54,18 +66,55 @@ public class BackgroundGeofencingDB {
         } catch (Exception e) {
             e.printStackTrace();
             return null;
+        } finally {
+            lock.unlock();
         }
     }
 
     private static void remove(String key, Context context) {
         try {
+            lock.lock();
             DB db = DBFactory.open(context, Constant.DB_NAME);
             db.del(key);
             db.close();
             Log.v(TAG, "Successfully removed: " + key);
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            lock.unlock();
         }
+    }
+
+    public static void saveGeofenceEnterTimestamp(BackgroundGeofence geofence, Context context) {
+        try {
+            lock.lock();
+            String key = Constant.DB_INIT_ENTER_GEOFENCE_PREFIX_KEY + geofence.getId();
+            DB db = DBFactory.open(context, Constant.DB_NAME);
+            db.putLong(key, System.currentTimeMillis());
+            db.close();
+            Log.v(TAG, "Successfully saved: " + key);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public static long getGeofenceEnterTimestamp(BackgroundGeofence geofence, Context context) {
+        long timestamp = -1;
+        try {
+            lock.lock();
+            String key = Constant.DB_INIT_ENTER_GEOFENCE_PREFIX_KEY + geofence.getId();
+            DB db = DBFactory.open(context, Constant.DB_NAME);
+            timestamp = db.getLong(key);
+            db.close();
+            Log.v(TAG, "Successfully got: " + key);
+        } catch (Exception e) {
+//            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+        return timestamp;
     }
 
     public static void saveWebHook(BackgroundGeofencingWebHook webHook, Context context) {
@@ -159,32 +208,6 @@ public class BackgroundGeofencingDB {
 
     public static void removeBackgroundGeofence(String id, Context context) {
         remove(Constant.DB_BACKGROUND_GEOFENCE_PREFIX_KEY + id, context);
-    }
-
-    public static void saveGeofenceEnterTimestamp(BackgroundGeofence geofence, Context context) {
-        try {
-            String key = Constant.DB_INIT_ENTER_GEOFENCE_PREFIX_KEY + geofence.getId();
-            DB db = DBFactory.open(context, Constant.DB_NAME);
-            db.putLong(key, System.currentTimeMillis());
-            db.close();
-            Log.v(TAG, "Successfully saved: " + key);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static long getGeofenceEnterTimestamp(BackgroundGeofence geofence, Context context) {
-        long timestamp = -1;
-        try {
-            String key = Constant.DB_INIT_ENTER_GEOFENCE_PREFIX_KEY + geofence.getId();
-            DB db = DBFactory.open(context, Constant.DB_NAME);
-            timestamp = db.getLong(key);
-            db.close();
-            Log.v(TAG, "Successfully got: " + key);
-        } catch (Exception e) {
-//            e.printStackTrace();
-        }
-        return timestamp;
     }
 
     public static void removeGeofenceEnterTimestamp(BackgroundGeofence geofence, Context context) {

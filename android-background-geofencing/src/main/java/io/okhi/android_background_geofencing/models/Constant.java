@@ -69,6 +69,10 @@ public class Constant {
             .setRequiresBatteryNotLow(true)
             .build();
 
+    public static Constraints GEOFENCE_WORK_MANAGER_INIT_CONSTRAINTS = new Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build();
+
     // location updates
     public static final long LOCATION_REQUEST_EXPIRATION_DURATION = 10000;
 

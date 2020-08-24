@@ -38,7 +38,7 @@ public class DeviceRebootBroadcastReceiver extends BroadcastReceiver {
                     }
                 });
             }
-            BackgroundGeofencing.init(context, false, null);
+            BackgroundGeofencing.init(context);
         }
     }
 }

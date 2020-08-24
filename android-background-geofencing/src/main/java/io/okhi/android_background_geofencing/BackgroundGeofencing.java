@@ -104,7 +104,7 @@ public class BackgroundGeofencing {
                 )
                 .build();
         OneTimeWorkRequest geofenceTransitionUploadWorkRequest = new OneTimeWorkRequest.Builder(BackgroundGeofenceTransitionUploadWorker.class)
-                .setConstraints(Constant.GEOFENCE_WORK_MANAGER_CONSTRAINTS)
+                .setConstraints(Constant.GEOFENCE_WORK_MANAGER_INIT_CONSTRAINTS)
                 .addTag(Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_TAG)
                 .setInitialDelay(5, TimeUnit.MILLISECONDS)
                 .setBackoffCriteria(

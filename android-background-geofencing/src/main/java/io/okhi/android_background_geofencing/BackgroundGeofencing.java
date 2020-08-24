@@ -17,6 +17,7 @@ import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingLocationService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
@@ -29,15 +30,11 @@ import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransiti
 
 public class BackgroundGeofencing {
 
-    public static void init(final Context context, @NonNull BackgroundGeofencingNotification notification) {
-        init(context, true, notification);
-    }
-
     public static void init(final Context context) {
-        init(context, true, null);
+        init(context, null);
     }
 
-    public static void init(final Context context, boolean triggerAppOpenGeofenceTransition, BackgroundGeofencingNotification notification) {
+    public static void init(final Context context, BackgroundGeofencingNotification notification) {
         WorkManager.getInstance(context).cancelAllWork();
         if (notification != null) {
             BackgroundGeofencingDB.saveNotification(notification, context);
@@ -46,7 +43,8 @@ public class BackgroundGeofencing {
         boolean isLocationPermissionGranted = BackgroundGeofencingPermissionService.isLocationPermissionGranted(context);
         boolean isLocationServicesEnabled = BackgroundGeofencingLocationService.isLocationServicesEnabled(context);
         boolean isGooglePlayServicesAvailable = BackgroundGeofencingPlayService.isGooglePlayServicesAvailable(context);
-        if (webhook != null && triggerAppOpenGeofenceTransition && isLocationPermissionGranted && isLocationServicesEnabled && isGooglePlayServicesAvailable) {
+        boolean isAppOnForeground = BackgroundGeofenceUtil.isAppOnForeground(context);
+        if (webhook != null && isLocationPermissionGranted && isLocationServicesEnabled && isGooglePlayServicesAvailable && isAppOnForeground) {
             performInitWork(context, new RequestHandler() {
                 @Override
                 public void onSuccess() {

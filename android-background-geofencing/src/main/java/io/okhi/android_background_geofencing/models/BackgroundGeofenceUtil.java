@@ -2,12 +2,25 @@ package io.okhi.android_background_geofencing.models;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.graphics.drawable.Icon;
+import android.location.Location;
 
 import java.util.List;
+
+import io.okhi.android_background_geofencing.interfaces.RequestHandler;
+import io.okhi.android_background_geofencing.interfaces.ResultHandler;
+import io.okhi.android_core.interfaces.OkHiRequestHandler;
+import io.okhi.android_core.models.OkHiException;
+import io.okhi.android_core.models.OkHiLocationService;
+import io.okhi.android_core.models.OkHiPermissionService;
+import io.okhi.android_core.models.OkHiPlayService;
 
 public class BackgroundGeofenceUtil {
     public static boolean isAppOnForeground(Context context) {
         ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        if (activityManager == null) {
+            return false;
+        }
         List<ActivityManager.RunningAppProcessInfo> appProcesses =
                 activityManager.getRunningAppProcesses();
         if (appProcesses == null) {
@@ -22,5 +35,41 @@ public class BackgroundGeofenceUtil {
             }
         }
         return false;
+    }
+
+    public static boolean isLocationPermissionGranted(Context context) {
+        return OkHiPermissionService.isLocationPermissionGranted(context);
+    }
+
+    public static boolean isGooglePlayServicesAvailable(Context context) {
+        return OkHiPlayService.isGooglePlayServicesAvailable(context);
+    }
+
+    public static boolean isLocationServicesEnabled(Context context) {
+        return OkHiLocationService.isLocationServicesEnabled(context);
+    }
+
+    public static boolean canRestartGeofences(Context context) {
+        return isLocationPermissionGranted(context) && isGooglePlayServicesAvailable(context) && isLocationServicesEnabled(context);
+    }
+
+    public static void getCurrentLocation(Context context, final ResultHandler<Location> handler) {
+        // TODO: remove throw signature from core library
+        try {
+            OkHiLocationService.getCurrentLocation(context, new OkHiRequestHandler<Location>() {
+                @Override
+                public void onResult(Location result) {
+                    handler.onSuccess(result);
+                }
+
+                @Override
+                public void onError(OkHiException exception) {
+                    handler.onError(new BackgroundGeofencingException(exception.getCode(), exception.getMessage()));
+                }
+            });
+        } catch (OkHiException e) {
+            e.printStackTrace();
+            handler.onError(new BackgroundGeofencingException(e.getCode(), e.getMessage()));
+        }
     }
 }

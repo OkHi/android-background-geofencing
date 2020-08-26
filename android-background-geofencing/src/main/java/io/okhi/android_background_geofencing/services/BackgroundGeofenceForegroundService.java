@@ -13,10 +13,8 @@ import java.util.ArrayList;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
-import io.okhi.android_background_geofencing.models.BackgroundGeofencingLocationService;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
-import io.okhi.android_background_geofencing.models.BackgroundGeofencingPermissionService;
-import io.okhi.android_background_geofencing.models.BackgroundGeofencingPlayService;
 
 public class BackgroundGeofenceForegroundService extends Service {
     private static String TAG = "BGFS";
@@ -82,10 +80,7 @@ public class BackgroundGeofenceForegroundService extends Service {
     void performRestart() {
         try {
             ArrayList<BackgroundGeofence> failedGeofences = new ArrayList<>();
-            boolean isLocationServicesEnabled = BackgroundGeofencingLocationService.isLocationServicesEnabled(getApplicationContext());
-            boolean isLocationPermissionGranted = BackgroundGeofencingPermissionService.isLocationPermissionGranted(getApplicationContext());
-            boolean isGooglePlayServicesAvailable = BackgroundGeofencingPlayService.isGooglePlayServicesAvailable(getApplicationContext());
-            if (isLocationServicesEnabled && isLocationPermissionGranted && isGooglePlayServicesAvailable) {
+            if (BackgroundGeofenceUtil.canRestartGeofences(getApplicationContext())) {
                 ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(getApplicationContext());
                 for (BackgroundGeofence geofence : geofences) {
                     if (geofence.isFailing()) {

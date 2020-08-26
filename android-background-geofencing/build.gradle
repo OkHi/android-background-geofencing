@@ -25,10 +25,16 @@ android {
 
 }
 
+allprojects {
+    repositories {
+        maven { url 'https://jitpack.io' }
+    }
+}
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
@@ -36,5 +42,6 @@ dependencies {
     api 'com.esotericsoftware.kryo:kryo:2.24.0'
     implementation 'com.google.android.gms:play-services-location:17.0.0'
     implementation 'com.squareup.okhttp3:okhttp:4.8.0'
-    implementation "androidx.work:work-runtime:2.3.4"
+    implementation "androidx.work:work-runtime:2.4.0"
+    implementation 'com.github.OkHi:android-core:v1.1.0'
 }

@@ -12,10 +12,8 @@ import java.util.ArrayList;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
-import io.okhi.android_background_geofencing.models.BackgroundGeofencingLocationService;
-import io.okhi.android_background_geofencing.models.BackgroundGeofencingPermissionService;
-import io.okhi.android_background_geofencing.models.BackgroundGeofencingPlayService;
 import io.okhi.android_background_geofencing.models.Constant;
 
 public class BackgroundGeofenceRestartWorker extends Worker {
@@ -33,9 +31,9 @@ public class BackgroundGeofenceRestartWorker extends Worker {
         boolean isWithinThreshold = lastGeofenceTransitionEventTimestamp < 0 || System.currentTimeMillis() - lastGeofenceTransitionEventTimestamp < Constant.GEOFENCE_TRANSITION_TIME_STAMP_THRESHOLD;
         ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(getApplicationContext());
         ArrayList<BackgroundGeofence> failedGeofences = new ArrayList<>();
-        boolean isLocationServicesEnabled = BackgroundGeofencingLocationService.isLocationServicesEnabled(getApplicationContext());
-        boolean isLocationPermissionGranted = BackgroundGeofencingPermissionService.isLocationPermissionGranted(getApplicationContext());
-        boolean isGooglePlayServicesAvailable = BackgroundGeofencingPlayService.isGooglePlayServicesAvailable(getApplicationContext());
+        boolean isLocationServicesEnabled = BackgroundGeofenceUtil.isLocationServicesEnabled(getApplicationContext());
+        boolean isLocationPermissionGranted = BackgroundGeofenceUtil.isLocationPermissionGranted(getApplicationContext());
+        boolean isGooglePlayServicesAvailable = BackgroundGeofenceUtil.isGooglePlayServicesAvailable(getApplicationContext());
 
         for (BackgroundGeofence geofence : geofences) {
             if (geofence.isFailing()) {

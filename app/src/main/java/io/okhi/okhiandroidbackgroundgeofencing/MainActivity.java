@@ -23,17 +23,15 @@ import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
-import io.okhi.android_background_geofencing.models.BackgroundGeofencingLocationService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
-import io.okhi.android_background_geofencing.models.BackgroundGeofencingPermissionService;
-import io.okhi.android_background_geofencing.models.BackgroundGeofencingPlayService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
+import io.okhi.android_core.OkHi;
+import io.okhi.android_core.interfaces.OkHiRequestHandler;
+import io.okhi.android_core.models.OkHiException;
 
 public class MainActivity extends AppCompatActivity {
 
-    BackgroundGeofencingPermissionService permissionService;
-    BackgroundGeofencingLocationService locationService;
-    BackgroundGeofencingPlayService playService;
+    OkHi okHi;
     BackgroundGeofencingWebHook webHook;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -41,34 +39,33 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        okHi = new OkHi(this);
         BackgroundGeofencing.init(this, new BackgroundGeofencingNotification(
                 "Hi Kiano",
                 "Don't mind us",
                 "OkHi_Channel_id",
                 "OkHi Channel",
                 "My channel description",
-                NotificationManager.IMPORTANCE_DEFAULT,
+                NotificationManager.IMPORTANCE_HIGH,
                 R.mipmap.ic_launcher
         ));
         final Button button = findViewById(R.id.button1);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                permissionService.requestLocationPermission("We need permission", "Pretty please", new RequestHandler() {
+                okHi.requestLocationPermission("We need permission", "Pretty please", new OkHiRequestHandler<Boolean>() {
                     @Override
-                    public void onSuccess() {
-                        startGeofence();
+                    public void onResult(Boolean result) {
+                        Log.v("OKHI", result + "..Hmm");
+                        if (result) startGeofence();
                     }
 
                     @Override
-                    public void onError(BackgroundGeofencingException e) {
+                    public void onError(OkHiException e) {
                     }
                 });
             }
         });
-        permissionService = new BackgroundGeofencingPermissionService(this);
-        locationService = new BackgroundGeofencingLocationService(this);
-        playService = new BackgroundGeofencingPlayService(this);
         HashMap<String, String> headers = new HashMap<>();
         headers.put("foo", "bar");
         JSONObject meta = new JSONObject();
@@ -77,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        webHook = new BackgroundGeofencingWebHook("https://1cb283fdc680.ngrok.io/transition", 10000, headers, meta);
+        webHook = new BackgroundGeofencingWebHook("https://010c46dc80d6.ngrok.io/transition", 10000, headers, meta);
         webHook.save(this);
     }
 
@@ -163,16 +160,12 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        permissionService.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        okHi.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        locationService.onActivityResult(requestCode, resultCode, data);
-        playService.onActivityResult(requestCode, resultCode, data);
+        okHi.onActivityResult(requestCode, resultCode, data);
     }
-
-
 }

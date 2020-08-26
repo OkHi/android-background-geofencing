@@ -154,9 +154,9 @@ public class BackgroundGeofence implements Serializable {
 
     @SuppressLint("MissingPermission")
     private void start(final boolean silently, final Context context, final RequestHandler requestHandler) {
-        boolean isLocationServicesEnabled = BackgroundGeofencingLocationService.isLocationServicesEnabled(context);
-        boolean isLocationPermissionGranted = BackgroundGeofencingPermissionService.isLocationPermissionGranted(context);
-        boolean isGooglePlayServicesAvailable = BackgroundGeofencingPlayService.isGooglePlayServicesAvailable(context);
+        boolean isLocationServicesEnabled = BackgroundGeofenceUtil.isLocationServicesEnabled(context);
+        boolean isLocationPermissionGranted = BackgroundGeofenceUtil.isLocationPermissionGranted(context);
+        boolean isGooglePlayServicesAvailable = BackgroundGeofenceUtil.isGooglePlayServicesAvailable(context);
 
         if (!isLocationServicesEnabled) {
             requestHandler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE, "Location services are unavailable"));

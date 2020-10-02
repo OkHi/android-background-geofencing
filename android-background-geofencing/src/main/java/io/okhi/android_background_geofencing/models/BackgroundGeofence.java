@@ -155,7 +155,7 @@ public class BackgroundGeofence implements Serializable {
     @SuppressLint("MissingPermission")
     private void start(final boolean silently, final Context context, final RequestHandler requestHandler) {
         boolean isLocationServicesEnabled = BackgroundGeofenceUtil.isLocationServicesEnabled(context);
-        boolean isLocationPermissionGranted = BackgroundGeofenceUtil.isLocationPermissionGranted(context);
+        boolean isBackgroundLocationPermissionGranted = BackgroundGeofenceUtil.isBackgroundLocationPermissionGranted(context);
         boolean isGooglePlayServicesAvailable = BackgroundGeofenceUtil.isGooglePlayServicesAvailable(context);
 
         if (!isLocationServicesEnabled) {
@@ -168,7 +168,7 @@ public class BackgroundGeofence implements Serializable {
             return;
         }
 
-        if (!isLocationPermissionGranted) {
+        if (!isBackgroundLocationPermissionGranted) {
             requestHandler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.PERMISSION_DENIED_CODE, "Location permissions aren't granted"));
             return;
         }

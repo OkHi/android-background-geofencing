@@ -32,7 +32,7 @@ public class BackgroundGeofenceRestartWorker extends Worker {
         ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(getApplicationContext());
         ArrayList<BackgroundGeofence> failedGeofences = new ArrayList<>();
         boolean isLocationServicesEnabled = BackgroundGeofenceUtil.isLocationServicesEnabled(getApplicationContext());
-        boolean isLocationPermissionGranted = BackgroundGeofenceUtil.isLocationPermissionGranted(getApplicationContext());
+        boolean isBackgroundLocationPermissionGranted = BackgroundGeofenceUtil.isBackgroundLocationPermissionGranted(getApplicationContext());
         boolean isGooglePlayServicesAvailable = BackgroundGeofenceUtil.isGooglePlayServicesAvailable(getApplicationContext());
 
         for (BackgroundGeofence geofence : geofences) {
@@ -49,7 +49,7 @@ public class BackgroundGeofenceRestartWorker extends Worker {
             return Result.retry();
         }
 
-        if (!isLocationPermissionGranted) {
+        if (!isBackgroundLocationPermissionGranted) {
             return Result.failure();
         }
 

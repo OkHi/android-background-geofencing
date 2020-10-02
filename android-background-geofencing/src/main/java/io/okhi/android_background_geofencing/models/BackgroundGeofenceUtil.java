@@ -2,12 +2,10 @@ package io.okhi.android_background_geofencing.models;
 
 import android.app.ActivityManager;
 import android.content.Context;
-import android.graphics.drawable.Icon;
 import android.location.Location;
 
 import java.util.List;
 
-import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
@@ -37,8 +35,8 @@ public class BackgroundGeofenceUtil {
         return false;
     }
 
-    public static boolean isLocationPermissionGranted(Context context) {
-        return OkHiPermissionService.isLocationPermissionGranted(context);
+    public static boolean isBackgroundLocationPermissionGranted(Context context) {
+        return OkHiPermissionService.isBackgroundLocationPermissionGranted(context);
     }
 
     public static boolean isGooglePlayServicesAvailable(Context context) {
@@ -50,7 +48,7 @@ public class BackgroundGeofenceUtil {
     }
 
     public static boolean canRestartGeofences(Context context) {
-        return isLocationPermissionGranted(context) && isGooglePlayServicesAvailable(context) && isLocationServicesEnabled(context);
+        return isBackgroundLocationPermissionGranted(context) && isGooglePlayServicesAvailable(context) && isLocationServicesEnabled(context);
     }
 
     public static void getCurrentLocation(Context context, final ResultHandler<Location> handler) {

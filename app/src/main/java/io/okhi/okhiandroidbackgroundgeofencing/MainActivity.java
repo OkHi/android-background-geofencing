@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                okHi.requestLocationPermission("We need permission", "Pretty please", new OkHiRequestHandler<Boolean>() {
+                okHi.requestBackgroundLocationPermission("We need permission", "Pretty please", new OkHiRequestHandler<Boolean>() {
                     @Override
                     public void onResult(Boolean result) {
                         Log.v("OKHI", result + "..Hmm");
@@ -123,7 +123,8 @@ public class MainActivity extends AppCompatActivity {
 
                         @Override
                         public void onError(BackgroundGeofencingException exception) {
-
+                            exception.printStackTrace();
+                            Log.v("MainActivity", exception.getMessage());
                         }
                     });
                 }

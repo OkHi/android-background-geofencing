@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "io.okhi.okhiandroidbackgroundgeofencing"
-        minSdkVersion 16
+        minSdkVersion 19
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
@@ -38,5 +38,5 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation project(path: ':android-background-geofencing')
-    implementation 'com.github.okhi:android-core:qa-20-10-SNAPSHOT'
+    implementation 'com.github.okhi:android-core:df6feb02f037b4c1c063893d421923d193378aa0'
 }

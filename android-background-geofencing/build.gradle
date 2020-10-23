@@ -7,7 +7,7 @@ android {
     buildToolsVersion "29.0.3"
 
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 19
         targetSdkVersion 29
         versionCode 1
         versionName "1.2.4"
@@ -41,7 +41,9 @@ dependencies {
     api 'com.snappydb:snappydb-lib:0.5.2'
     api 'com.esotericsoftware.kryo:kryo:2.24.0'
     implementation 'com.google.android.gms:play-services-location:17.0.0'
-    implementation 'com.squareup.okhttp3:okhttp:4.8.0'
+    implementation ("com.squareup.okhttp3:okhttp:3.12.12"){
+        force = true //API 19 support
+    }
     implementation "androidx.work:work-runtime:2.4.0"
-    implementation 'com.github.okhi:android-core:qa-20-10-SNAPSHOT'
+    implementation 'com.github.okhi:android-core:df6feb02f037b4c1c063893d421923d193378aa0'
 }

@@ -45,5 +45,5 @@ dependencies {
         force = true //API 19 support
     }
     implementation "androidx.work:work-runtime:2.4.0"
-    implementation 'com.github.okhi:android-core:df6feb02f037b4c1c063893d421923d193378aa0'
+    implementation 'com.github.okhi:android-core:47beefb8cb869b7b3ad51339c856d6297c92a5b7'
 }

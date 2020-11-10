@@ -60,6 +60,7 @@ public class BackgroundGeofenceBroadcastReceiver extends BroadcastReceiver {
     }
 
     public static boolean isNetworkAvailable(Context context) {
+        // Todo: move this to util class
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
         return (netInfo != null && netInfo.isConnected());

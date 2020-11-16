@@ -11,7 +11,7 @@ public class BackgroundGeofencingException extends Exception {
     private String code;
     private String message;
 
-    BackgroundGeofencingException(String code, String message) {
+    BackgroundGeofencingException(String code, String message, Boolean poison) {
         super(message);
         this.code = code;
         this.message = message;

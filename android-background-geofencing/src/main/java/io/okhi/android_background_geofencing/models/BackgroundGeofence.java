@@ -28,6 +28,7 @@ import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.receivers.BackgroundGeofenceBroadcastReceiver;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
+import io.okhi.android_core.models.OkHiException;
 
 public class BackgroundGeofence implements Serializable {
 
@@ -159,17 +160,17 @@ public class BackgroundGeofence implements Serializable {
         boolean isGooglePlayServicesAvailable = BackgroundGeofenceUtil.isGooglePlayServicesAvailable(context);
 
         if (!isLocationServicesEnabled) {
-            requestHandler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE, "Location services are unavailable"));
+            requestHandler.onError(new OkHiException(OkHiException.SERVICE_UNAVAILABLE_CODE, "Location services are unavailable"));
             return;
         }
 
         if (!isGooglePlayServicesAvailable) {
-            requestHandler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE, "Google play services are unavailable"));
+            requestHandler.onError(new OkHiException(OkHiException.SERVICE_UNAVAILABLE_CODE, "Google play services are unavailable"));
             return;
         }
 
         if (!isBackgroundLocationPermissionGranted) {
-            requestHandler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.PERMISSION_DENIED_CODE, "Location permissions aren't granted"));
+            requestHandler.onError(new OkHiException(OkHiException.PERMISSION_DENIED_CODE, "Location permissions aren't granted"));
             return;
         }
 
@@ -195,7 +196,7 @@ public class BackgroundGeofence implements Serializable {
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                requestHandler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.UNKNOWN_EXCEPTION, e.getMessage()));
+                requestHandler.onError(new OkHiException(OkHiException.UNKNOWN_ERROR_CODE, e.getMessage()));
                 e.printStackTrace();
             }
         });

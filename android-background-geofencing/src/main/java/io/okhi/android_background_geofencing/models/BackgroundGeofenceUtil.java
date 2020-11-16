@@ -62,12 +62,12 @@ public class BackgroundGeofenceUtil {
 
                 @Override
                 public void onError(OkHiException exception) {
-                    handler.onError(new BackgroundGeofencingException(exception.getCode(), exception.getMessage()));
+                    handler.onError(new OkHiException(exception.getCode(), exception.getMessage()));
                 }
             });
         } catch (OkHiException e) {
             e.printStackTrace();
-            handler.onError(new BackgroundGeofencingException(e.getCode(), e.getMessage()));
+            handler.onError(new OkHiException(e.getCode(), e.getMessage()));
         }
     }
 }

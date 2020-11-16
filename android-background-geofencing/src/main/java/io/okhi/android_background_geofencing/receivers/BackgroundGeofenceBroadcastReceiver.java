@@ -22,6 +22,8 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceForegroundService;
 
+import static io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil.isNetworkAvailable;
+
 public class BackgroundGeofenceBroadcastReceiver extends BroadcastReceiver {
 
     private String TAG = "GeofenceReceiver";
@@ -59,10 +61,4 @@ public class BackgroundGeofenceBroadcastReceiver extends BroadcastReceiver {
         }
     }
 
-    public static boolean isNetworkAvailable(Context context) {
-        // Todo: move this to util class
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo netInfo = cm.getActiveNetworkInfo();
-        return (netInfo != null && netInfo.isConnected());
-    }
 }

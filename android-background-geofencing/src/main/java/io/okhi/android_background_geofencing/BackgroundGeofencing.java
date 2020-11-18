@@ -15,6 +15,7 @@ import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceSetting;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
@@ -26,18 +27,23 @@ import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransiti
 
 public class BackgroundGeofencing {
 
-    public static void init(final Context context) {
+    public static void init(Context context) {
         init(context, null);
     }
 
-    public static void init(final Context context, BackgroundGeofencingNotification notification) {
+    public static void init(Context context, BackgroundGeofencingNotification notification) {
+        init(context, notification, null);
+    }
+
+    public static void init(final Context context, BackgroundGeofencingNotification notification, BackgroundGeofenceSetting setting) {
         WorkManager.getInstance(context).cancelAllWork();
-        if (notification != null) {
-            BackgroundGeofencingDB.saveNotification(notification, context);
-        }
-        BackgroundGeofencingWebHook webhook = BackgroundGeofencingDB.getWebHook(context);
+        BackgroundGeofencingDB.saveNotification(notification, context);
+        BackgroundGeofencingDB.saveSetting(setting);
         boolean isAppOnForeground = BackgroundGeofenceUtil.isAppOnForeground(context);
-        if (webhook != null && BackgroundGeofenceUtil.canRestartGeofences(context) && isAppOnForeground) {
+        boolean hasWebhook = BackgroundGeofencingDB.getWebHook(context) != null;
+        boolean canRestartGeofences  = BackgroundGeofenceUtil.canRestartGeofences(context);
+        boolean canPerformInitWork = isAppOnForeground && hasWebhook && canRestartGeofences;
+        if (canPerformInitWork) {
             performInitWork(context, new RequestHandler() {
                 @Override
                 public void onSuccess() {

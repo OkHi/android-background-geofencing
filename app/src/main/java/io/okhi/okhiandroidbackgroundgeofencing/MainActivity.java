@@ -22,6 +22,7 @@ import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceSetting;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
@@ -40,7 +41,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         okHi = new OkHi(this);
-        BackgroundGeofencing.init(this, new BackgroundGeofencingNotification(
+
+        BackgroundGeofenceSetting setting = new BackgroundGeofenceSetting.Builder().setWithForegroundService(true).build();
+        BackgroundGeofencingNotification notification = new BackgroundGeofencingNotification(
                 "Hi Kiano",
                 "Don't mind us",
                 "OkHi_Channel_id",
@@ -48,7 +51,9 @@ public class MainActivity extends AppCompatActivity {
                 "My channel description",
                 NotificationManager.IMPORTANCE_HIGH,
                 R.mipmap.ic_launcher
-        ));
+        );
+        BackgroundGeofencing.init(this, notification, setting);
+
         final Button button = findViewById(R.id.button1);
         button.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -46,7 +46,7 @@ public class BackgroundGeofenceForegroundService extends Service {
             });
             uploadWork.start();
             uploadWork.join();
-            Log.v(TAG, "Upload work complete..");
+            Log.v(TAG, "Upload work complete.");
             Thread restartWork = new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -55,8 +55,7 @@ public class BackgroundGeofenceForegroundService extends Service {
             });
             restartWork.start();
             restartWork.join();
-            Log.v(TAG, "Restart work complete..");
-            Log.v(TAG, "Thank you for your time, bye");
+            Log.v(TAG, "Restart work complete.");
             stopSelf();
         } catch (Exception e) {
             e.printStackTrace();

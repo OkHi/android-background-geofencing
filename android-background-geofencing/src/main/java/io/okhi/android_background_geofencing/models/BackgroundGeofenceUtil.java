@@ -4,9 +4,18 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.location.Location;
 
+import androidx.work.BackoffPolicy;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
+import io.okhi.android_background_geofencing.services.BackgroundGeofenceForegroundRestartWorker;
+import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
 import io.okhi.android_core.models.OkHiLocationService;
@@ -69,5 +78,16 @@ public class BackgroundGeofenceUtil {
             e.printStackTrace();
             handler.onError(new BackgroundGeofencingException(e.getCode(), e.getMessage()));
         }
+    }
+
+    public static void scheduleForegroundRestartWorker (Context context, int initialDelay, TimeUnit unit) {
+        PeriodicWorkRequest workRequest = new PeriodicWorkRequest.Builder(BackgroundGeofenceForegroundRestartWorker.class, 1, TimeUnit.HOURS)
+                .setInitialDelay(initialDelay, unit)
+                .build();
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(Constant.FOREGROUND_SERVICE_UNIQUE_WORK, ExistingPeriodicWorkPolicy.KEEP, workRequest);
+    }
+
+    public static void cancelForegroundRestartWorker (Context context) {
+        WorkManager.getInstance(context).cancelUniqueWork(Constant.FOREGROUND_SERVICE_UNIQUE_WORK);
     }
 }

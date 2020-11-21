@@ -24,6 +24,7 @@ import com.google.android.gms.location.LocationServices;
 import java.util.ArrayList;
 import java.util.Objects;
 
+import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceSetting;
@@ -45,8 +46,6 @@ public class BackgroundGeofenceForegroundService extends Service {
     private Runnable runnable;
 
     private boolean foregroundWorkStarted;
-
-    private boolean hasGeofences;
 
     private  boolean isWithForegroundService = false;
 
@@ -112,18 +111,6 @@ public class BackgroundGeofenceForegroundService extends Service {
             } catch (Exception e) {
                 /// ignore
             }
-        }
-    }
-
-    private void stopService(boolean forceStop) {
-        if (!isWithForegroundService || forceStop) {
-            if (runnable != null) {
-                handler.removeCallbacks(runnable);
-            }
-            if (fusedLocationProviderClient != null && watchLocationCallback != null) {
-                fusedLocationProviderClient.removeLocationUpdates(watchLocationCallback);
-            }
-            stopSelf();
         }
     }
 
@@ -269,5 +256,49 @@ public class BackgroundGeofenceForegroundService extends Service {
         watchLocationRequest.setFastestInterval(10000 / 2);
         watchLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         watchLocationRequest.setSmallestDisplacement(100);
+    }
+
+    private void stopService(boolean forceStop) {
+        if (!isWithForegroundService || forceStop) {
+           runCleanUp();
+           stopSelf();
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        runCleanUp();
+        BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(getApplicationContext());
+        if (setting != null && setting.isWithForegroundService()) {
+            final Handler handler = new Handler();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Runnable runnable = new Runnable() {
+                        @Override
+                        public void run() {
+                            Log.v(TAG, "Attempting to restart foreground service");
+                            BackgroundGeofencing.startForegroundService(getApplicationContext());
+                            handler.removeCallbacks(this);
+                        }
+                    };
+                    handler.postDelayed(runnable, 60000);
+                    Log.v(TAG, "Restart scheduled in the next 1min");
+                }
+            }).start();
+        }
+    }
+
+    private void runCleanUp() {
+        Log.v(TAG, "Running clean up..");
+        if (runnable != null) {
+            handler.removeCallbacks(runnable);
+        }
+        if (fusedLocationProviderClient != null && watchLocationCallback != null) {
+            fusedLocationProviderClient.removeLocationUpdates(watchLocationCallback);
+        }
+        foregroundWorkStarted = false;
+        Log.v(TAG, "Clean up done");
     }
 }

@@ -90,4 +90,5 @@ public class Constant {
     public static final String FOREGROUND_SERVICE_PING_GEOFENCE_SOURCE = "foregroundPing";
     public static final String FOREGROUND_SERVICE_WATCH_GEOFENCE_SOURCE = "foregroundWatch";
     public static final String FOREGROUND_SERVICE_STOP = "foregroundStop";
+    public static final String FOREGROUND_SERVICE_UNIQUE_WORK = "foregroundServiceUniqueWork";
 }

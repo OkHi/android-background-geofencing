@@ -23,18 +23,17 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
-import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceForegroundService;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
-//import io.okhi.android_background_geofencing.services.WatchLocationService;
 
 public class BackgroundGeofencing {
 
     public static void init(final Context context, BackgroundGeofencingNotification notification) {
         WorkManager.getInstance(context).cancelAllWork();
         BackgroundGeofencingDB.saveNotification(notification, context);
+        BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(context);
         boolean isAppOnForeground = BackgroundGeofenceUtil.isAppOnForeground(context);
         boolean hasWebhook = BackgroundGeofencingDB.getWebHook(context) != null;
         boolean canRestartGeofences  = BackgroundGeofenceUtil.canRestartGeofences(context);
@@ -54,7 +53,6 @@ public class BackgroundGeofencing {
         } else {
             performBackgroundWork(context);
         }
-        BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(context);
         if (setting != null && setting.isWithForegroundService()) {
             startForegroundService(context);
         }
@@ -66,7 +64,6 @@ public class BackgroundGeofencing {
             public void onSuccess(Location location) {
                 triggerInitGeofenceEvents(location, context, handler);
             }
-
             @Override
             public void onError(BackgroundGeofencingException exception) {
                 handler.onError(exception);

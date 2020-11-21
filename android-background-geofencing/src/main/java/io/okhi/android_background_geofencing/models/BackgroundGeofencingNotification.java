@@ -20,6 +20,7 @@ public class BackgroundGeofencingNotification implements Serializable {
     private String channelName;
     private String channelDescription;
     private int icon = 0;
+    private int notificationId;
 
     BackgroundGeofencingNotification() {}
 
@@ -39,6 +40,27 @@ public class BackgroundGeofencingNotification implements Serializable {
         this.channelDescription = channelDescription;
         this.channelImportance = channelImportance;
         this.icon = icon;
+        this.notificationId = 1;
+    }
+
+    public BackgroundGeofencingNotification(
+            @NonNull String title,
+            @NonNull String text,
+            @NonNull String channelId,
+            @NonNull String channelName,
+            @NonNull String channelDescription,
+            int channelImportance,
+            int icon,
+            int notificationId
+    ) {
+        this.title = title;
+        this.text = text;
+        this.channelId = channelId;
+        this.channelName = channelName;
+        this.channelDescription = channelDescription;
+        this.channelImportance = channelImportance;
+        this.icon = icon;
+        this.notificationId = notificationId;
     }
 
     public Notification getNotification(Context context) {
@@ -60,5 +82,9 @@ public class BackgroundGeofencingNotification implements Serializable {
             NotificationManager manager = context.getSystemService(NotificationManager.class);
             Objects.requireNonNull(manager).createNotificationChannel(serviceChannel);
         }
+    }
+
+    public int getNotificationId() {
+        return notificationId;
     }
 }

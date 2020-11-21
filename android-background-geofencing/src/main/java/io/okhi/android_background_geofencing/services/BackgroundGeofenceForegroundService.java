@@ -251,9 +251,10 @@ public class BackgroundGeofenceForegroundService extends Service {
     }
 
     private void createLocationRequest() {
+        long interval = 30 * 60 * 1000;
         watchLocationRequest = new LocationRequest();
-        watchLocationRequest.setInterval(10000);
-        watchLocationRequest.setFastestInterval(10000 / 2);
+        watchLocationRequest.setInterval(interval);
+        watchLocationRequest.setFastestInterval(interval / 2);
         watchLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         watchLocationRequest.setSmallestDisplacement(100);
     }

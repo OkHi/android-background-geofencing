@@ -1,8 +1,11 @@
 package io.okhi.android_background_geofencing;
 
+import android.app.ActivityManager;
 import android.content.Context;
+import android.content.Intent;
 import android.location.Location;
 
+import androidx.core.content.ContextCompat;
 import androidx.work.BackoffPolicy;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
@@ -22,23 +25,16 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofencingExceptio
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
+import io.okhi.android_background_geofencing.services.BackgroundGeofenceForegroundService;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
+//import io.okhi.android_background_geofencing.services.WatchLocationService;
 
 public class BackgroundGeofencing {
 
-    public static void init(Context context) {
-        init(context, null);
-    }
-
-    public static void init(Context context, BackgroundGeofencingNotification notification) {
-        init(context, notification, null);
-    }
-
-    public static void init(final Context context, BackgroundGeofencingNotification notification, BackgroundGeofenceSetting setting) {
+    public static void init(final Context context, BackgroundGeofencingNotification notification) {
         WorkManager.getInstance(context).cancelAllWork();
         BackgroundGeofencingDB.saveNotification(notification, context);
-        BackgroundGeofencingDB.saveSetting(setting);
         boolean isAppOnForeground = BackgroundGeofenceUtil.isAppOnForeground(context);
         boolean hasWebhook = BackgroundGeofencingDB.getWebHook(context) != null;
         boolean canRestartGeofences  = BackgroundGeofenceUtil.canRestartGeofences(context);
@@ -57,6 +53,10 @@ public class BackgroundGeofencing {
             });
         } else {
             performBackgroundWork(context);
+        }
+        BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(context);
+        if (setting != null && setting.isWithForegroundService()) {
+            startForegroundService(context);
         }
     }
 
@@ -81,6 +81,7 @@ public class BackgroundGeofencing {
                     Constant.INIT_GEOFENCE_TRANSITION_SOURCE_NAME,
                     location,
                     geofences,
+                    false,
                     context
             );
             for (BackgroundGeofenceTransition transition : transitions) {
@@ -115,5 +116,38 @@ public class BackgroundGeofencing {
         WorkManager.getInstance(context).beginUniqueWork(Constant.GEOFENCE_INIT_WORK_NAME, ExistingWorkPolicy.REPLACE, geofenceTransitionUploadWorkRequest)
                 .then(failedGeofencesRestartWork)
                 .enqueue();
+    }
+
+    public static void stopForegroundService (Context context) {
+        if (!isForegroundServiceRunning(context)) {
+            return;
+        }
+        BackgroundGeofencingDB.saveSetting(new BackgroundGeofenceSetting.Builder().setWithForegroundService(false).build(), context);
+        Intent serviceIntent = new Intent(context, BackgroundGeofenceForegroundService.class);
+        serviceIntent.putExtra(Constant.FOREGROUND_SERVICE_ACTION, Constant.FOREGROUND_SERVICE_STOP);
+        ContextCompat.startForegroundService(context, serviceIntent);
+    }
+
+    public static void startForegroundService (Context context) {
+        if (isForegroundServiceRunning(context)) {
+            return;
+        }
+        BackgroundGeofencingDB.saveSetting(new BackgroundGeofenceSetting.Builder().setWithForegroundService(true).build(), context);
+        Intent serviceIntent = new Intent(context, BackgroundGeofenceForegroundService.class);
+        serviceIntent.putExtra(Constant.FOREGROUND_SERVICE_ACTION, Constant.FOREGROUND_SERVICE_START_STICKY);
+        ContextCompat.startForegroundService(context, serviceIntent);
+    }
+
+    public static boolean isForegroundServiceRunning (Context context) {
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (BackgroundGeofenceForegroundService.class.getName().equals(service.service.getClassName())) {
+                if (service.foreground) {
+                    return true;
+                }
+
+            }
+        }
+        return false;
     }
 }

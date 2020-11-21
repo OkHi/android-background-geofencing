@@ -1,25 +1,21 @@
 package io.okhi.android_background_geofencing.receivers;
 
-import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.Build;
 import android.util.Log;
 
 import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.location.GeofencingEvent;
 
-import java.util.List;
-
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
-import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
+import io.okhi.android_background_geofencing.models.Constant;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceForegroundService;
 
 public class BackgroundGeofenceBroadcastReceiver extends BroadcastReceiver {
@@ -48,6 +44,7 @@ public class BackgroundGeofenceBroadcastReceiver extends BroadcastReceiver {
 
     private void startForegroundTask(Context context) {
         Intent serviceIntent = new Intent(context, BackgroundGeofenceForegroundService.class);
+        serviceIntent.putExtra(Constant.FOREGROUND_SERVICE_ACTION, Constant.FOREGROUND_SERVICE_GEOFENCE_EVENT);
         ContextCompat.startForegroundService(context, serviceIntent);
     }
 

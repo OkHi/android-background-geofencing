@@ -1,6 +1,8 @@
 package io.okhi.android_background_geofencing.models;
 
-public class BackgroundGeofenceSetting {
+import java.io.Serializable;
+
+public class BackgroundGeofenceSetting implements Serializable {
 
     private boolean withForegroundService = false;
 

@@ -239,4 +239,9 @@ public class BackgroundGeofencingDB {
             save(key, setting, context);
         }
     }
+
+    public static BackgroundGeofenceSetting getBackgroundGeofenceSetting(Context context) {
+        String key = Constant.DB_SETTING_CONFIGURATION_KEY;
+        return (BackgroundGeofenceSetting) get(key, BackgroundGeofenceSetting.class, context);
+    }
 }

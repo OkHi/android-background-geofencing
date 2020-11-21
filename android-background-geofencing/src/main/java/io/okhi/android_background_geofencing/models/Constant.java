@@ -79,4 +79,15 @@ public class Constant {
 
     // init
     public static final String INIT_GEOFENCE_TRANSITION_SOURCE_NAME = "appOpen";
+
+    // foreground service
+    public static final String FOREGROUND_SERVICE_ACTION = "action";
+    public static final String FOREGROUND_SERVICE_GEOFENCE_EVENT = "geofence_event";
+    public static final String FOREGROUND_SERVICE_START_STICKY = "start_sticky";
+    public static final String FOREGROUND_SERVICE_WAKE_LOCK_TAG = "BackgroundGeofenceForegroundService::WakeLock";
+    public static final long FOREGROUND_SERVICE_PING_INTERVAL = 10000; // change to 60 * 60 * 1000
+    public static final long FOREGROUND_SERVICE_PING_DELAY = 0;
+    public static final String FOREGROUND_SERVICE_PING_GEOFENCE_SOURCE = "foregroundPing";
+    public static final String FOREGROUND_SERVICE_WATCH_GEOFENCE_SOURCE = "foregroundWatch";
+    public static final String FOREGROUND_SERVICE_STOP = "foregroundStop";
 }

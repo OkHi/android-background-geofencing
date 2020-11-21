@@ -123,6 +123,7 @@ public class BackgroundGeofencing {
         Intent serviceIntent = new Intent(context, BackgroundGeofenceForegroundService.class);
         serviceIntent.putExtra(Constant.FOREGROUND_SERVICE_ACTION, Constant.FOREGROUND_SERVICE_STOP);
         ContextCompat.startForegroundService(context, serviceIntent);
+        BackgroundGeofenceUtil.cancelForegroundRestartWorker(context);
     }
 
     public static void startForegroundService (Context context) {
@@ -133,6 +134,7 @@ public class BackgroundGeofencing {
         Intent serviceIntent = new Intent(context, BackgroundGeofenceForegroundService.class);
         serviceIntent.putExtra(Constant.FOREGROUND_SERVICE_ACTION, Constant.FOREGROUND_SERVICE_START_STICKY);
         ContextCompat.startForegroundService(context, serviceIntent);
+        BackgroundGeofenceUtil.scheduleForegroundRestartWorker(context, 1, TimeUnit.HOURS);
     }
 
     public static boolean isForegroundServiceRunning (Context context) {

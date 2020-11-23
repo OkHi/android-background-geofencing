@@ -122,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         @Override
-                        public void onError(OkHiException exception) {
+                        public void onError(BackgroundGeofencingException exception) {
                             exception.printStackTrace();
                             Log.v("MainActivity", exception.getMessage());
                         }
@@ -142,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         @Override
-                        public void onError(OkHiException exception) {
+                        public void onError(BackgroundGeofencingException exception) {
 
                         }
                     });

@@ -13,7 +13,6 @@ import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
-import io.okhi.android_core.models.OkHiException;
 
 public class DeviceRebootBroadcastReceiver extends BroadcastReceiver {
     public static final String TAG = "DeviceRebootReceiver";
@@ -33,7 +32,7 @@ public class DeviceRebootBroadcastReceiver extends BroadcastReceiver {
                     }
 
                     @Override
-                    public void onError(OkHiException e) {
+                    public void onError(BackgroundGeofencingException e) {
                         Log.v(TAG, "Failed to start: " + geofence.getId());
                         BackgroundGeofence.setIsFailing(geofence.getId(), true, context);
                     }

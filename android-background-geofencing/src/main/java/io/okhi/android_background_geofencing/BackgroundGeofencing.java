@@ -23,7 +23,6 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
-import io.okhi.android_core.models.OkHiException;
 
 public class BackgroundGeofencing {
 
@@ -46,7 +45,7 @@ public class BackgroundGeofencing {
                 }
 
                 @Override
-                public void onError(OkHiException exception) {
+                public void onError(BackgroundGeofencingException exception) {
                     performBackgroundWork(context);
                 }
             });
@@ -63,7 +62,7 @@ public class BackgroundGeofencing {
             }
 
             @Override
-            public void onError(OkHiException exception) {
+            public void onError(BackgroundGeofencingException exception) {
                 handler.onError(exception);
             }
         });

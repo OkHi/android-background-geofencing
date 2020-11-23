@@ -6,14 +6,9 @@ import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
-import androidx.work.BackoffPolicy;
-import androidx.work.OneTimeWorkRequest;
-
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
-import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
 import io.okhi.android_core.models.OkHiLocationService;
@@ -69,15 +64,14 @@ public class BackgroundGeofenceUtil {
 
                 @Override
                 public void onError(OkHiException exception) {
-                    handler.onError(new OkHiException(exception.getCode(), exception.getMessage()));
+                    handler.onError(new BackgroundGeofencingException(exception.getCode(), exception.getMessage()));
                 }
             });
         } catch (OkHiException e) {
             e.printStackTrace();
-            handler.onError(new OkHiException(e.getCode(), e.getMessage()));
+            handler.onError(new BackgroundGeofencingException(e.getCode(), e.getMessage()));
         }
     }
-
     public static boolean isNetworkAvailable(Context context) {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = cm.getActiveNetworkInfo();

@@ -336,23 +336,15 @@ public class BackgroundGeofenceTransition implements Serializable {
         schedule(context, Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY, Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY_TIME_UNIT);
     }
 
-    public static ArrayList<BackgroundGeofenceTransition> generateTransitions(String geoPointSource, Location location, ArrayList<BackgroundGeofence> geofences, Context context) {
+    public static ArrayList<BackgroundGeofenceTransition> generateTransitions(String geoPointSource, Location location, ArrayList<BackgroundGeofence> geofences, boolean withDwell, Context context) {
         ArrayList<String> enterIds = new ArrayList<>();
         ArrayList<String> exitIds = new ArrayList<>();
-        ArrayList<String> dwellIds = new ArrayList<>();
         ArrayList<BackgroundGeofenceTransition> transitions = new ArrayList<>();
         for (BackgroundGeofence geofence : geofences) {
             if (isEnter(location, geofence)) {
-                if (isDwell(geofence, context)) {
-                    dwellIds.add(geofence.getId());
-                    removeGeofenceEnterTimestamp(geofence, context);
-                } else {
-                    saveGeofenceEnterTimestamp(geofence, context);
-                    enterIds.add(geofence.getId());
-                }
+                enterIds.add(geofence.getId());
             } else {
                 exitIds.add(geofence.getId());
-                removeGeofenceEnterTimestamp(geofence, context);
             }
         }
         if (!enterIds.isEmpty()) {
@@ -379,18 +371,6 @@ public class BackgroundGeofenceTransition implements Serializable {
                     .build();
             transitions.add(enterTransition);
         }
-        if (!dwellIds.isEmpty()) {
-            BackgroundGeofenceTransition dwellTransition = new Builder(dwellIds)
-                    .setLocationDate(location.getTime())
-                    .setGeoPointProvider(location.getProvider())
-                    .setLat(location.getLatitude())
-                    .setLon(location.getLongitude())
-                    .setGpsAccuracy(location.getAccuracy())
-                    .setTransitionEvent("dwell")
-                    .setGeoPointSource(geoPointSource)
-                    .build();
-            transitions.add(dwellTransition);
-        }
         return transitions;
     }
 
@@ -400,14 +380,6 @@ public class BackgroundGeofenceTransition implements Serializable {
 
     private static void saveGeofenceEnterTimestamp(BackgroundGeofence geofence, Context context) {
         BackgroundGeofencingDB.saveGeofenceEnterTimestamp(geofence, context);
-    }
-
-    private static boolean isDwell(BackgroundGeofence geofence, Context context) {
-        long timestamp = BackgroundGeofencingDB.getGeofenceEnterTimestamp(geofence, context);
-        if (timestamp > 0) {
-            return System.currentTimeMillis() - timestamp >= geofence.getLoiteringDelay();
-        }
-        return false;
     }
 
     private static boolean isEnter(Location location, BackgroundGeofence geofence) {

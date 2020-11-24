@@ -3,6 +3,8 @@ package io.okhi.android_background_geofencing.models;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.location.Location;
+import android.os.Build;
+import android.util.Log;
 
 import androidx.work.BackoffPolicy;
 import androidx.work.ExistingPeriodicWorkPolicy;
@@ -89,5 +91,16 @@ public class BackgroundGeofenceUtil {
 
     public static void cancelForegroundRestartWorker (Context context) {
         WorkManager.getInstance(context).cancelUniqueWork(Constant.FOREGROUND_SERVICE_UNIQUE_WORK);
+    }
+
+    public static boolean isChineseDevice() {
+        String[] devices = {"infinix", "tecno"};
+        for (String device: devices) {
+            if (Build.MANUFACTURER.toLowerCase().contains(device)) {
+                Log.v("Util", "Chinese phone detected..");
+                return true;
+            }
+        }
+        return false;
     }
 }

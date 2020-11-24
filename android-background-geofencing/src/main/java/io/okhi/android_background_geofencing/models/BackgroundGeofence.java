@@ -29,6 +29,8 @@ import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.receivers.BackgroundGeofenceBroadcastReceiver;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
 
+import static io.okhi.android_background_geofencing.models.BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE;
+
 public class BackgroundGeofence implements Serializable {
 
     private String id;
@@ -159,12 +161,12 @@ public class BackgroundGeofence implements Serializable {
         boolean isGooglePlayServicesAvailable = BackgroundGeofenceUtil.isGooglePlayServicesAvailable(context);
 
         if (!isLocationServicesEnabled) {
-            requestHandler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE, "Location services are unavailable"));
+            requestHandler.onError(new BackgroundGeofencingException(SERVICE_UNAVAILABLE_CODE, "Location services are unavailable"));
             return;
         }
 
         if (!isGooglePlayServicesAvailable) {
-            requestHandler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE, "Google play services are unavailable"));
+            requestHandler.onError(new BackgroundGeofencingException(SERVICE_UNAVAILABLE_CODE, "Google play services are unavailable"));
             return;
         }
 

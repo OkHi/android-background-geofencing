@@ -6,18 +6,17 @@ import android.location.Location;
 import android.os.Build;
 import android.util.Log;
 
-import androidx.work.BackoffPolicy;
 import androidx.work.ExistingPeriodicWorkPolicy;
-import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceForegroundRestartWorker;
-import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
 import io.okhi.android_core.models.OkHiLocationService;
@@ -95,12 +94,18 @@ public class BackgroundGeofenceUtil {
 
     public static boolean isChineseDevice() {
         String[] devices = {"infinix", "tecno"};
-        for (String device: devices) {
+        for (String device : devices) {
             if (Build.MANUFACTURER.toLowerCase().contains(device)) {
                 Log.v("Util", "Chinese phone detected..");
                 return true;
             }
         }
         return false;
+    }
+
+    public static boolean isNetworkAvailable(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        return (netInfo != null && netInfo.isConnected());
     }
 }

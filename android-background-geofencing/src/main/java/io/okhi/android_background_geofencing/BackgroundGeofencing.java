@@ -54,7 +54,11 @@ public class BackgroundGeofencing {
             performBackgroundWork(context);
         }
         if (setting != null && setting.isWithForegroundService()) {
-            startForegroundService(context);
+            try {
+                startForegroundService(context);
+            } catch (BackgroundGeofencingException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -126,13 +130,20 @@ public class BackgroundGeofencing {
         BackgroundGeofenceUtil.cancelForegroundRestartWorker(context);
     }
 
-    public static void startForegroundService (Context context) {
+    public static void startForegroundService (Context context) throws BackgroundGeofencingException {
         boolean hasGeofences = !BackgroundGeofencingDB.getAllGeofences(context).isEmpty();
         boolean isBackgroundLocationPermissionGranted = BackgroundGeofenceUtil.isBackgroundLocationPermissionGranted(context);
         boolean isGooglePlayServicesAvailable = BackgroundGeofenceUtil.isGooglePlayServicesAvailable(context);
         boolean isLocationServicesEnabled = BackgroundGeofenceUtil.isLocationServicesEnabled(context);
-        if (isForegroundServiceRunning(context) || !hasGeofences || !isBackgroundLocationPermissionGranted || !isGooglePlayServicesAvailable || !isLocationServicesEnabled) {
+        if (isForegroundServiceRunning(context)) {
             return;
+        }
+        if (!hasGeofences || !isBackgroundLocationPermissionGranted || !isGooglePlayServicesAvailable || !isLocationServicesEnabled) {
+            String message = !hasGeofences ? "No saved geofences" :
+                    !isBackgroundLocationPermissionGranted ? "Background location permission not granted" :
+                            !isGooglePlayServicesAvailable ? "Google play services are currently unavailable" :
+                                    "Location services are unavailable";
+            throw new BackgroundGeofencingException(BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE, message);
         }
         BackgroundGeofencingDB.saveSetting(new BackgroundGeofenceSetting.Builder().setWithForegroundService(true).build(), context);
         Intent serviceIntent = new Intent(context, BackgroundGeofenceForegroundService.class);

@@ -33,6 +33,7 @@ public class Constant {
     public static final String DB_BACKGROUND_GEOFENCE_LAST_TRANSITION_KEY = "BACKGROUND_GEOFENCE_LAST_TRANSITION";
     public static final String DB_INIT_ENTER_GEOFENCE_PREFIX_KEY = "INIT_ENTER_GEOFENCE:";
     public static final String DB_NOTIFICATION_CONFIGURATION_KEY = "NOTIFICATION_CONFIGURATION_KEY";
+    public static final String DB_SETTING_CONFIGURATION_KEY = "SETTING_CONFIGURATION_KEY";
 
     // geofence defaults
     public static final long DEFAULT_GEOFENCE_EXPIRATION = Geofence.NEVER_EXPIRE;
@@ -78,4 +79,18 @@ public class Constant {
 
     // init
     public static final String INIT_GEOFENCE_TRANSITION_SOURCE_NAME = "appOpen";
+
+    // foreground service
+    public static final String FOREGROUND_SERVICE_ACTION = "action";
+    public static final String FOREGROUND_SERVICE_GEOFENCE_EVENT = "geofence_event";
+    public static final String FOREGROUND_SERVICE_START_STICKY = "start_sticky";
+    public static final String FOREGROUND_SERVICE_WAKE_LOCK_TAG = "BackgroundGeofenceForegroundService::WakeLock";
+    public static final long FOREGROUND_SERVICE_PING_INTERVAL = 60 * 60 * 1000; // change to 60 * 60 * 1000 || 10000
+    public static final long FOREGROUND_SERVICE_PING_DELAY = 0;
+    public static final String FOREGROUND_SERVICE_PING_GEOFENCE_SOURCE = "foregroundPing";
+    public static final String FOREGROUND_SERVICE_WATCH_GEOFENCE_SOURCE = "foregroundWatch";
+    public static final String FOREGROUND_SERVICE_STOP = "foregroundStop";
+    public static final String FOREGROUND_SERVICE_UNIQUE_WORK = "foregroundServiceUniqueWork";
+    public static final long FOREGROUND_SERVICE_LOCATION_UPDATE_INTERVAL = BackgroundGeofenceUtil.isChineseDevice() ? 60 * 1000 :  30 * 60 * 1000 ;
+    public static final float FOREGROUND_SERVICE_LOCATION_DISPLACEMENT = BackgroundGeofenceUtil.isChineseDevice() ? 10 : 100;
 }

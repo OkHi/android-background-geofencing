@@ -7,11 +7,14 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceSetting;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 
 public class DeviceRebootBroadcastReceiver extends BroadcastReceiver {
@@ -38,7 +41,16 @@ public class DeviceRebootBroadcastReceiver extends BroadcastReceiver {
                     }
                 });
             }
-            BackgroundGeofencing.init(context);
+            BackgroundGeofencing.init(context, null);
+        }
+        BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(context);
+        if (setting != null && setting.isWithForegroundService() && !BackgroundGeofencing.isForegroundServiceRunning(context)) {
+            try {
+                BackgroundGeofencing.startForegroundService(context);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            BackgroundGeofenceUtil.scheduleForegroundRestartWorker(context, 1, TimeUnit.HOURS);
         }
     }
 }

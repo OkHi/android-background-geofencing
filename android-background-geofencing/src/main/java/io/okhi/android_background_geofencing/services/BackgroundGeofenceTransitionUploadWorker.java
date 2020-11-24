@@ -51,7 +51,7 @@ public class BackgroundGeofenceTransitionUploadWorker extends Worker {
         try {
             // attempt to upload all transitions
             for (BackgroundGeofenceTransition transition : transitions) {
-                if (transition.syncUpload(webHook)) {
+                if (transition != null && transition.syncUpload(webHook)) {
                     // remove from db if upload succeeds
                     BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
                 } else {

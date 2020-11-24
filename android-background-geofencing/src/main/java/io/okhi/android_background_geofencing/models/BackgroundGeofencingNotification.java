@@ -23,6 +23,7 @@ public class BackgroundGeofencingNotification implements Serializable {
     private String channelDescription;
     private int icon = 0;
     private int notificationId;
+    private int notificationRequestCode;
 
     BackgroundGeofencingNotification() {}
 
@@ -43,6 +44,7 @@ public class BackgroundGeofencingNotification implements Serializable {
         this.channelImportance = channelImportance;
         this.icon = icon;
         this.notificationId = 1;
+        this.notificationRequestCode = 2;
     }
 
     public BackgroundGeofencingNotification(
@@ -53,7 +55,8 @@ public class BackgroundGeofencingNotification implements Serializable {
             @NonNull String channelDescription,
             int channelImportance,
             int icon,
-            int notificationId
+            int notificationId,
+            int notificationRequestCode
     ) {
         this.title = title;
         this.text = text;
@@ -63,12 +66,13 @@ public class BackgroundGeofencingNotification implements Serializable {
         this.channelImportance = channelImportance;
         this.icon = icon;
         this.notificationId = notificationId;
+        this.notificationRequestCode = notificationRequestCode;
     }
 
     public Notification getNotification(Context context) {
         String packageName = context.getPackageName();
         Intent intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 898789, intent, 0);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, notificationRequestCode, intent, 0);
         return new NotificationCompat.Builder(context, channelId)
                 .setContentIntent(pendingIntent)
                 .setContentTitle(title)
@@ -92,5 +96,9 @@ public class BackgroundGeofencingNotification implements Serializable {
 
     public int getNotificationId() {
         return notificationId;
+    }
+
+    public int getNotificationRequestCode() {
+        return notificationRequestCode;
     }
 }

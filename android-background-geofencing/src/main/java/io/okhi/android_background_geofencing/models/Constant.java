@@ -91,4 +91,6 @@ public class Constant {
     public static final String FOREGROUND_SERVICE_WATCH_GEOFENCE_SOURCE = "foregroundWatch";
     public static final String FOREGROUND_SERVICE_STOP = "foregroundStop";
     public static final String FOREGROUND_SERVICE_UNIQUE_WORK = "foregroundServiceUniqueWork";
+    public static final long FOREGROUND_SERVICE_LOCATION_UPDATE_INTERVAL = BackgroundGeofenceUtil.isChineseDevice() ? 60 * 1000 :  30 * 60 * 1000 ;
+    public static final float FOREGROUND_SERVICE_LOCATION_DISPLACEMENT = BackgroundGeofenceUtil.isChineseDevice() ? 10 : 100;
 }

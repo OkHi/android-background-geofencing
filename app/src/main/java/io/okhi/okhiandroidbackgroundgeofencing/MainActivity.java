@@ -51,7 +51,8 @@ public class MainActivity extends AppCompatActivity {
                 "My channel description",
                 NotificationManager.IMPORTANCE_HIGH,
                 R.mipmap.ic_launcher,
-                123
+                123,
+                456
         );
 
         BackgroundGeofencing.init(this, notification);

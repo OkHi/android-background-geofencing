@@ -184,7 +184,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startService (View view) {
-        BackgroundGeofencing.startForegroundService(getApplicationContext());
+        try {
+            BackgroundGeofencing.startForegroundService(getApplicationContext());
+        } catch (BackgroundGeofencingException e) {
+            e.printStackTrace();
+        }
     }
 
     public void stopService (View v) {

@@ -69,6 +69,7 @@ public class BackgroundGeofenceForegroundService extends Service {
         isWithForegroundService = setting != null && setting.isWithForegroundService();
         PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constant.FOREGROUND_SERVICE_WAKE_LOCK_TAG);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForeground(backgroundGeofencingNotification.getNotificationId(), backgroundGeofencingNotification.getNotification(getApplicationContext()));
         }
@@ -76,13 +77,6 @@ public class BackgroundGeofenceForegroundService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        boolean isBackgroundLocationPermissionGranted = BackgroundGeofenceUtil.isBackgroundLocationPermissionGranted(getApplicationContext());
-        boolean isGooglePlayServicesAvailable = BackgroundGeofenceUtil.isGooglePlayServicesAvailable(getApplicationContext());
-        boolean isLocationServicesEnabled = BackgroundGeofenceUtil.isLocationServicesEnabled(getApplicationContext());
-        boolean hasGeofences = !BackgroundGeofencingDB.getAllGeofences(getApplicationContext()).isEmpty();
-        if (!hasGeofences) {
-            stopSelf();
-        }
         if (intent.hasExtra(Constant.FOREGROUND_SERVICE_ACTION) && Objects.equals(intent.getStringExtra(Constant.FOREGROUND_SERVICE_ACTION), Constant.FOREGROUND_SERVICE_STOP)) {
             foregroundWorkStarted = false;
             stopService(true);
@@ -90,7 +84,7 @@ public class BackgroundGeofenceForegroundService extends Service {
         if (intent.hasExtra(Constant.FOREGROUND_SERVICE_ACTION) && Objects.equals(intent.getStringExtra(Constant.FOREGROUND_SERVICE_ACTION), Constant.FOREGROUND_SERVICE_GEOFENCE_EVENT)) {
             startGeofenceTransitionWork(true);
         }
-        if (isWithForegroundService && isBackgroundLocationPermissionGranted && isGooglePlayServicesAvailable && isLocationServicesEnabled && !foregroundWorkStarted) {
+        if (isWithForegroundService && !foregroundWorkStarted) {
             foregroundWorkStarted = true;
             startForegroundPingService();
             startForegroundLocationWatch();
@@ -251,12 +245,12 @@ public class BackgroundGeofenceForegroundService extends Service {
     }
 
     private void createLocationRequest() {
-        long interval = 30 * 60 * 1000;
+        long interval = 1 * 60 * 1000;
         watchLocationRequest = new LocationRequest();
         watchLocationRequest.setInterval(interval);
         watchLocationRequest.setFastestInterval(interval / 2);
         watchLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        watchLocationRequest.setSmallestDisplacement(100);
+        watchLocationRequest.setSmallestDisplacement(10);
     }
 
     private void stopService(boolean forceStop) {

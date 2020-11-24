@@ -18,8 +18,6 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
 import io.okhi.android_background_geofencing.models.Constant;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceForegroundService;
 
-import static io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil.isNetworkAvailable;
-
 public class BackgroundGeofenceBroadcastReceiver extends BroadcastReceiver {
 
     private String TAG = "GeofenceReceiver";
@@ -28,7 +26,6 @@ public class BackgroundGeofenceBroadcastReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
         boolean isNotificationAvailable = BackgroundGeofencingDB.getNotification(context) != null;
-        boolean isNetworkAvailable = isNetworkAvailable(context);
         boolean isInBackground = !BackgroundGeofenceUtil.isAppOnForeground(context);
         if (geofencingEvent.hasError()) {
             BackgroundGeofence.setIsFailing(geofencingEvent, true, context);
@@ -37,7 +34,7 @@ public class BackgroundGeofenceBroadcastReceiver extends BroadcastReceiver {
             Log.v(TAG, "Received a " + transition.getTransitionEvent() + " geofence event");
             transition.save(context);
         }
-        if (isNotificationAvailable && isNetworkAvailable && isInBackground) {
+        if (isNotificationAvailable && isInBackground) {
             startForegroundTask(context);
         } else {
             scheduleBackgroundWork(context, geofencingEvent);

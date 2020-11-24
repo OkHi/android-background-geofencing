@@ -45,7 +45,11 @@ public class DeviceRebootBroadcastReceiver extends BroadcastReceiver {
         }
         BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(context);
         if (setting != null && setting.isWithForegroundService() && !BackgroundGeofencing.isForegroundServiceRunning(context)) {
-            BackgroundGeofencing.startForegroundService(context);
+            try {
+                BackgroundGeofencing.startForegroundService(context);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             BackgroundGeofenceUtil.scheduleForegroundRestartWorker(context, 1, TimeUnit.HOURS);
         }
     }

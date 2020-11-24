@@ -24,7 +24,11 @@ public class BackgroundGeofenceForegroundRestartWorker extends Worker {
         BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(getApplicationContext());
         if (setting != null && setting.isWithForegroundService()) {
             if (!BackgroundGeofencing.isForegroundServiceRunning(getApplicationContext())) {
-                BackgroundGeofencing.startForegroundService(getApplicationContext());
+                try {
+                    BackgroundGeofencing.startForegroundService(getApplicationContext());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         } else {
             BackgroundGeofenceUtil.cancelForegroundRestartWorker(getApplicationContext());

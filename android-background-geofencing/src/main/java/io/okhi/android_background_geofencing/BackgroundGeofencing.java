@@ -127,7 +127,11 @@ public class BackgroundGeofencing {
     }
 
     public static void startForegroundService (Context context) {
-        if (isForegroundServiceRunning(context)) {
+        boolean hasGeofences = !BackgroundGeofencingDB.getAllGeofences(context).isEmpty();
+        boolean isBackgroundLocationPermissionGranted = BackgroundGeofenceUtil.isBackgroundLocationPermissionGranted(context);
+        boolean isGooglePlayServicesAvailable = BackgroundGeofenceUtil.isGooglePlayServicesAvailable(context);
+        boolean isLocationServicesEnabled = BackgroundGeofenceUtil.isLocationServicesEnabled(context);
+        if (isForegroundServiceRunning(context) || !hasGeofences || !isBackgroundLocationPermissionGranted || !isGooglePlayServicesAvailable || !isLocationServicesEnabled) {
             return;
         }
         BackgroundGeofencingDB.saveSetting(new BackgroundGeofenceSetting.Builder().setWithForegroundService(true).build(), context);

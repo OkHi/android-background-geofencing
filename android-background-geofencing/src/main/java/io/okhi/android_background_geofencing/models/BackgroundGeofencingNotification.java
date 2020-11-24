@@ -3,7 +3,9 @@ package io.okhi.android_background_geofencing.models;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
@@ -64,7 +66,11 @@ public class BackgroundGeofencingNotification implements Serializable {
     }
 
     public Notification getNotification(Context context) {
+        String packageName = context.getPackageName();
+        Intent intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 898789, intent, 0);
         return new NotificationCompat.Builder(context, channelId)
+                .setContentIntent(pendingIntent)
                 .setContentTitle(title)
                 .setContentText(text)
                 .setSmallIcon(icon)

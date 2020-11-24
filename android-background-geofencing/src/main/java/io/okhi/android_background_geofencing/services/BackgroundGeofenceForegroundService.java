@@ -30,6 +30,7 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceSetting;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
+import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.Constant;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
@@ -245,12 +246,11 @@ public class BackgroundGeofenceForegroundService extends Service {
     }
 
     private void createLocationRequest() {
-        long interval = 1 * 60 * 1000;
         watchLocationRequest = new LocationRequest();
-        watchLocationRequest.setInterval(interval);
-        watchLocationRequest.setFastestInterval(interval / 2);
+        watchLocationRequest.setInterval(Constant.FOREGROUND_SERVICE_LOCATION_UPDATE_INTERVAL);
+        watchLocationRequest.setFastestInterval(Constant.FOREGROUND_SERVICE_LOCATION_UPDATE_INTERVAL / 2);
         watchLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        watchLocationRequest.setSmallestDisplacement(10);
+        watchLocationRequest.setSmallestDisplacement(Constant.FOREGROUND_SERVICE_LOCATION_DISPLACEMENT);
     }
 
     private void stopService(boolean forceStop) {
@@ -274,7 +274,11 @@ public class BackgroundGeofenceForegroundService extends Service {
                         @Override
                         public void run() {
                             Log.v(TAG, "Attempting to restart foreground service");
-                            BackgroundGeofencing.startForegroundService(getApplicationContext());
+                            try {
+                                BackgroundGeofencing.startForegroundService(getApplicationContext());
+                            } catch (BackgroundGeofencingException e) {
+                                e.printStackTrace();
+                            }
                             handler.removeCallbacks(this);
                         }
                     };

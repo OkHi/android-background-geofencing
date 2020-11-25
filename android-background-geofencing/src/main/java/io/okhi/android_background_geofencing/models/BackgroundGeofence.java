@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.receivers.BackgroundGeofenceBroadcastReceiver;
@@ -273,6 +274,9 @@ public class BackgroundGeofence implements Serializable {
         geofencingClient.removeGeofences(ids);
         BackgroundGeofencingDB.removeBackgroundGeofence(id, context);
         BackgroundGeofencingDB.removeGeofenceEnterTimestamp(id, context);
+        if (BackgroundGeofencingDB.getAllGeofences(context).isEmpty()) {
+            BackgroundGeofencing.stopForegroundService(context);
+        }
     }
 
     public float getRadius() {

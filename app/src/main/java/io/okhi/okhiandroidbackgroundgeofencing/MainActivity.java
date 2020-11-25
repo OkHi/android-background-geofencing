@@ -192,6 +192,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void stopGeofence(View view) {
+        BackgroundGeofence.stop(getApplicationContext(), "home1");
+    }
+
     public void stopService (View v) {
         BackgroundGeofencing.stopForegroundService(getApplicationContext());
     }

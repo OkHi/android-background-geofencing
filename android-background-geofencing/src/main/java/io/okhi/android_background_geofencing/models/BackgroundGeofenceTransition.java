@@ -229,6 +229,7 @@ public class BackgroundGeofenceTransition implements Serializable {
         if (response.isSuccessful()) {
             return true;
         } else {
+            Log.v(TAG, "Request failed with payload:\n" + payload.toString());
             return false;
         }
     }

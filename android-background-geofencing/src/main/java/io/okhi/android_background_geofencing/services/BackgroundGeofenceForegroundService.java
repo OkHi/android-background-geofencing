@@ -168,41 +168,36 @@ public class BackgroundGeofenceForegroundService extends Service {
             @Override
             public void run() {
                 /* do what you need to do */
-                try {
-                    manageDeviceWake(true);
-                    OkHiLocationService.getCurrentLocation(getApplicationContext(), new OkHiRequestHandler<Location>() {
-                        @Override
-                        public void onResult(Location location) {
-                            ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(getApplicationContext());
-                            ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofenceTransition.generateTransitions(
-                                    Constant.FOREGROUND_SERVICE_PING_GEOFENCE_SOURCE,
-                                    location,
-                                    geofences,
-                                    false,
-                                    getApplicationContext()
-                            );
-                            for (BackgroundGeofenceTransition transition : transitions) {
-                                transition.save(getApplicationContext());
+                manageDeviceWake(true);
+                OkHiLocationService.getCurrentLocation(getApplicationContext(), new OkHiRequestHandler<Location>() {
+                    @Override
+                    public void onResult(Location location) {
+                        ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(getApplicationContext());
+                        ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofenceTransition.generateTransitions(
+                                Constant.FOREGROUND_SERVICE_PING_GEOFENCE_SOURCE,
+                                location,
+                                geofences,
+                                false,
+                                getApplicationContext()
+                        );
+                        for (BackgroundGeofenceTransition transition : transitions) {
+                            transition.save(getApplicationContext());
+                        }
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                startGeofenceTransitionWork(false);
                             }
-                            new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    startGeofenceTransitionWork(false);
-                                }
-                            }).start();
-                        }
-                        @Override
-                        public void onError(OkHiException exception) {
-                            exception.printStackTrace();
-                        }
-                    });
-                } catch (OkHiException e) {
-                    e.printStackTrace();
-                } finally {
-                    manageDeviceWake(false);
-                    /* and here comes the "trick" */
-                    handler.postDelayed(this, Constant.FOREGROUND_SERVICE_PING_INTERVAL);
-                }
+                        }).start();
+                    }
+                    @Override
+                    public void onError(OkHiException exception) {
+                        exception.printStackTrace();
+                        manageDeviceWake(false);
+                    }
+                });
+                /* and here comes the "trick" */
+                handler.postDelayed(this, Constant.FOREGROUND_SERVICE_PING_INTERVAL);
             }
         };
         handler.postDelayed(runnable, Constant.FOREGROUND_SERVICE_PING_DELAY);

@@ -225,10 +225,10 @@ public class BackgroundGeofenceTransition implements Serializable {
                 .post(requestBody)
                 .build();
         Response response = client.newCall(request).execute();
+        response.close();
         if (response.isSuccessful()) {
             return true;
         } else {
-            response.close();
             return false;
         }
     }

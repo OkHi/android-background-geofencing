@@ -62,23 +62,17 @@ public class BackgroundGeofenceUtil {
     }
 
     public static void getCurrentLocation(Context context, final ResultHandler<Location> handler) {
-        // TODO: remove throw signature from core library
-        try {
-            OkHiLocationService.getCurrentLocation(context, new OkHiRequestHandler<Location>() {
-                @Override
-                public void onResult(Location result) {
-                    handler.onSuccess(result);
-                }
+        OkHiLocationService.getCurrentLocation(context, new OkHiRequestHandler<Location>() {
+            @Override
+            public void onResult(Location result) {
+                handler.onSuccess(result);
+            }
 
-                @Override
-                public void onError(OkHiException exception) {
-                    handler.onError(new BackgroundGeofencingException(exception.getCode(), exception.getMessage()));
-                }
-            });
-        } catch (OkHiException e) {
-            e.printStackTrace();
-            handler.onError(new BackgroundGeofencingException(e.getCode(), e.getMessage()));
-        }
+            @Override
+            public void onError(OkHiException exception) {
+                handler.onError(new BackgroundGeofencingException(exception.getCode(), exception.getMessage()));
+            }
+        });
     }
 
     public static void scheduleForegroundRestartWorker (Context context, int initialDelay, TimeUnit unit) {

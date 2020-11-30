@@ -158,7 +158,7 @@ public class BackgroundGeofencing {
         ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
             if (BackgroundGeofenceForegroundService.class.getName().equals(service.service.getClassName())) {
-                if (service.foreground) {
+                if (service.foreground || service.started) {
                     return true;
                 }
 

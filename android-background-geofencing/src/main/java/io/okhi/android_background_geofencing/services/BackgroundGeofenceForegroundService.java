@@ -220,7 +220,26 @@ public class BackgroundGeofenceForegroundService extends Service {
         fusedLocationProviderClient.requestLocationUpdates(watchLocationRequest, watchLocationCallback, null);
     }
 
-    private void handleOnLocationResult(Location location) {
+    private void handleOnLocationResult(final Location location) {
+        // TODO: refactor 100 to a constant
+        if (location.hasAccuracy() && location.getAccuracy() < 100) {
+            generateGeofenceTransitions(location);
+        } else {
+            OkHiLocationService.getCurrentLocation(getApplicationContext(), new OkHiRequestHandler<Location>() {
+                @Override
+                public void onResult(Location result) {
+                    generateGeofenceTransitions(result);
+                }
+                @Override
+                public void onError(OkHiException exception) {
+                    exception.printStackTrace();
+                    generateGeofenceTransitions(location);
+                }
+            });
+        }
+    }
+
+    private void generateGeofenceTransitions(Location location) {
         ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(getApplicationContext());
         ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofenceTransition.generateTransitions(
                 Constant.FOREGROUND_SERVICE_WATCH_GEOFENCE_SOURCE,

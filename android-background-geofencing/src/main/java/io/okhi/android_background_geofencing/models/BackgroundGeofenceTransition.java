@@ -218,6 +218,7 @@ public class BackgroundGeofenceTransition implements Serializable {
         if (meta != null) {
             payload.put("meta", meta);
         }
+        Log.v("SYNCUPLOAD", payload.toString());
         RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), payload.toString());
         Request request = new Request.Builder()
                 .url(webHook.getUrl())

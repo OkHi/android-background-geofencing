@@ -3,10 +3,20 @@ package io.okhi.android_background_geofencing.models;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.location.Location;
+import android.os.Build;
+import android.util.Log;
+
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
+import io.okhi.android_background_geofencing.services.BackgroundGeofenceForegroundRestartWorker;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
 import io.okhi.android_core.models.OkHiLocationService;
@@ -52,22 +62,44 @@ public class BackgroundGeofenceUtil {
     }
 
     public static void getCurrentLocation(Context context, final ResultHandler<Location> handler) {
-        // TODO: remove throw signature from core library
-        try {
-            OkHiLocationService.getCurrentLocation(context, new OkHiRequestHandler<Location>() {
-                @Override
-                public void onResult(Location result) {
-                    handler.onSuccess(result);
-                }
+        OkHiLocationService.getCurrentLocation(context, new OkHiRequestHandler<Location>() {
+            @Override
+            public void onResult(Location result) {
+                handler.onSuccess(result);
+            }
 
-                @Override
-                public void onError(OkHiException exception) {
-                    handler.onError(new BackgroundGeofencingException(exception.getCode(), exception.getMessage()));
-                }
-            });
-        } catch (OkHiException e) {
-            e.printStackTrace();
-            handler.onError(new BackgroundGeofencingException(e.getCode(), e.getMessage()));
+            @Override
+            public void onError(OkHiException exception) {
+                handler.onError(new BackgroundGeofencingException(exception.getCode(), exception.getMessage()));
+            }
+        });
+    }
+
+    public static void scheduleForegroundRestartWorker (Context context, int initialDelay, TimeUnit unit) {
+        PeriodicWorkRequest workRequest = new PeriodicWorkRequest.Builder(BackgroundGeofenceForegroundRestartWorker.class, 1, TimeUnit.HOURS)
+                .setInitialDelay(initialDelay, unit)
+                .build();
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(Constant.FOREGROUND_SERVICE_UNIQUE_WORK, ExistingPeriodicWorkPolicy.KEEP, workRequest);
+    }
+
+    public static void cancelForegroundRestartWorker (Context context) {
+        WorkManager.getInstance(context).cancelUniqueWork(Constant.FOREGROUND_SERVICE_UNIQUE_WORK);
+    }
+
+    public static boolean isChineseDevice() {
+        String[] devices = {"infinix", "tecno"};
+        for (String device : devices) {
+            if (Build.MANUFACTURER.toLowerCase().contains(device)) {
+                Log.v("Util", "Chinese phone detected..");
+                return true;
+            }
         }
+        return false;
+    }
+
+    public static boolean isNetworkAvailable(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        return (netInfo != null && netInfo.isConnected());
     }
 }

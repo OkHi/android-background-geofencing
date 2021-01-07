@@ -12,6 +12,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceSetting;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
@@ -221,12 +222,26 @@ public class BackgroundGeofencingDB {
     }
 
     public static void saveNotification(BackgroundGeofencingNotification notification, Context context) {
-        String key = Constant.DB_NOTIFICATION_CONFIGURATION_KEY;
-        save(key, notification, context);
+        if (notification != null) {
+            String key = Constant.DB_NOTIFICATION_CONFIGURATION_KEY;
+            save(key, notification, context);
+        }
     }
 
     public static BackgroundGeofencingNotification getNotification(Context context) {
         String key = Constant.DB_NOTIFICATION_CONFIGURATION_KEY;
         return (BackgroundGeofencingNotification) get(key, BackgroundGeofencingNotification.class, context);
+    }
+
+    public static void saveSetting(BackgroundGeofenceSetting setting, Context context) {
+        if (setting != null) {
+            String key = Constant.DB_SETTING_CONFIGURATION_KEY;
+            save(key, setting, context);
+        }
+    }
+
+    public static BackgroundGeofenceSetting getBackgroundGeofenceSetting(Context context) {
+        String key = Constant.DB_SETTING_CONFIGURATION_KEY;
+        return (BackgroundGeofenceSetting) get(key, BackgroundGeofenceSetting.class, context);
     }
 }

@@ -27,6 +27,7 @@ import io.okhi.android_background_geofencing.models.Constant;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceForegroundService;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
+import io.okhi.android_core.models.OkHiCoreUtil;
 
 public class BackgroundGeofencing {
 
@@ -58,6 +59,7 @@ public class BackgroundGeofencing {
                 startForegroundService(context);
             } catch (BackgroundGeofencingException e) {
                 e.printStackTrace();
+                OkHiCoreUtil.captureException(e);
             }
         }
     }

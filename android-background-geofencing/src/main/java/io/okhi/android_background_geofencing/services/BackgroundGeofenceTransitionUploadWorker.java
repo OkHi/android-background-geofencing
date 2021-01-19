@@ -15,6 +15,7 @@ import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
+import io.okhi.android_core.models.OkHiCoreUtil;
 
 public class BackgroundGeofenceTransitionUploadWorker extends Worker {
     public BackgroundGeofenceTransitionUploadWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
@@ -67,10 +68,12 @@ public class BackgroundGeofenceTransitionUploadWorker extends Worker {
                 return false;
             }
         } catch (IOException e) {
+            OkHiCoreUtil.captureException(e);
             e.printStackTrace();
             // retry if we get an IO exception
             return false;
         } catch (Exception e) {
+            OkHiCoreUtil.captureException(e);
             // fail if we have any other exceptions
             throw e;
         }

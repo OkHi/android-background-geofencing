@@ -17,6 +17,7 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
+import io.okhi.android_core.models.OkHiCoreUtil;
 
 // TODO: implement strategy to dump the current db if we bump up the version
 
@@ -36,6 +37,7 @@ public class BackgroundGeofencingDB {
             Log.v(TAG, "Successfully saved: " + key);
         } catch (Exception e) {
             e.printStackTrace();
+            OkHiCoreUtil.captureException(e);
         } finally {
             lock.unlock();
         }

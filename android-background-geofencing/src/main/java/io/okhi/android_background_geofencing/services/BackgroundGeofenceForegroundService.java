@@ -34,6 +34,7 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofencingExceptio
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.Constant;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
+import io.okhi.android_core.models.OkHiCoreUtil;
 import io.okhi.android_core.models.OkHiException;
 import io.okhi.android_core.models.OkHiLocationService;
 
@@ -126,6 +127,7 @@ public class BackgroundGeofenceForegroundService extends Service {
             Log.v(TAG, "Transition work complete.");
         } catch (Exception e) {
             e.printStackTrace();
+            OkHiCoreUtil.captureException(e);
         } finally {
             manageDeviceWake(false);
             stopService(false);
@@ -140,6 +142,7 @@ public class BackgroundGeofenceForegroundService extends Service {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            OkHiCoreUtil.captureException(e);
         }
     }
 
@@ -160,6 +163,7 @@ public class BackgroundGeofenceForegroundService extends Service {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            OkHiCoreUtil.captureException(e);
         }
     }
 
@@ -192,6 +196,7 @@ public class BackgroundGeofenceForegroundService extends Service {
                     }
                     @Override
                     public void onError(OkHiException exception) {
+                        OkHiCoreUtil.captureException(exception);
                         exception.printStackTrace();
                         manageDeviceWake(false);
                     }
@@ -232,6 +237,7 @@ public class BackgroundGeofenceForegroundService extends Service {
                 }
                 @Override
                 public void onError(OkHiException exception) {
+                    OkHiCoreUtil.captureException(exception);
                     exception.printStackTrace();
                     generateGeofenceTransitions(location);
                 }

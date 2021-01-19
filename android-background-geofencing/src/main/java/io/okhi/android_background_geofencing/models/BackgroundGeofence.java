@@ -29,6 +29,7 @@ import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.receivers.BackgroundGeofenceBroadcastReceiver;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
+import io.okhi.android_core.models.OkHiCoreUtil;
 
 import static io.okhi.android_background_geofencing.models.BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE;
 
@@ -198,6 +199,7 @@ public class BackgroundGeofence implements Serializable {
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
+                OkHiCoreUtil.captureException(e);
                 requestHandler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.UNKNOWN_EXCEPTION, e.getMessage()));
                 e.printStackTrace();
             }
@@ -224,6 +226,9 @@ public class BackgroundGeofence implements Serializable {
         List<Geofence> geofences = event.getTriggeringGeofences();
         for (Geofence geofence : geofences) {
             setIsFailing(geofence.getRequestId(), isFailing, context);
+            if (isFailing) {
+                OkHiCoreUtil.captureException(new BackgroundGeofencingException(String.valueOf(event.getErrorCode()), "Geofence exception for location id, " + geofence.getRequestId()));
+            }
         }
     }
 

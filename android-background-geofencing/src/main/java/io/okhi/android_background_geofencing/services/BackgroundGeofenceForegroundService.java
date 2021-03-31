@@ -23,6 +23,9 @@ import com.google.android.gms.location.LocationServices;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
@@ -54,6 +57,8 @@ public class BackgroundGeofenceForegroundService extends Service {
     private LocationRequest watchLocationRequest;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationCallback watchLocationCallback;
+    private static Lock lock = new ReentrantLock();
+    private static Condition condition = lock.newCondition();
 
     @Nullable
     @Override
@@ -78,11 +83,11 @@ public class BackgroundGeofenceForegroundService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent.hasExtra(Constant.FOREGROUND_SERVICE_ACTION) && Objects.equals(intent.getStringExtra(Constant.FOREGROUND_SERVICE_ACTION), Constant.FOREGROUND_SERVICE_STOP)) {
+        if (intent != null && intent.hasExtra(Constant.FOREGROUND_SERVICE_ACTION) && Objects.equals(intent.getStringExtra(Constant.FOREGROUND_SERVICE_ACTION), Constant.FOREGROUND_SERVICE_STOP)) {
             foregroundWorkStarted = false;
             stopService(true);
         }
-        if (intent.hasExtra(Constant.FOREGROUND_SERVICE_ACTION) && Objects.equals(intent.getStringExtra(Constant.FOREGROUND_SERVICE_ACTION), Constant.FOREGROUND_SERVICE_GEOFENCE_EVENT)) {
+        if (intent != null && intent.hasExtra(Constant.FOREGROUND_SERVICE_ACTION) && Objects.equals(intent.getStringExtra(Constant.FOREGROUND_SERVICE_ACTION), Constant.FOREGROUND_SERVICE_GEOFENCE_EVENT)) {
             startGeofenceTransitionWork(true);
         }
         if (isWithForegroundService && !foregroundWorkStarted) {
@@ -96,15 +101,21 @@ public class BackgroundGeofenceForegroundService extends Service {
     private void manageDeviceWake(boolean wake) {
         if (wake && !wakeLock.isHeld()) {
             try {
-                wakeLock.acquire(10 * 60 * 1000L /*10 minutes*/);
+                lock.lock();
+                wakeLock.acquire();
             } catch (Exception e) {
                 /// ignore
+            } finally {
+                lock.unlock();
             }
         } else {
             try {
+                lock.lock();
                 wakeLock.release();
             } catch (Exception e) {
                 /// ignore
+            } finally {
+                lock.unlock();
             }
         }
     }
@@ -189,6 +200,7 @@ public class BackgroundGeofenceForegroundService extends Service {
                                 startGeofenceTransitionWork(false);
                             }
                         }).start();
+                        manageDeviceWake(false);
                     }
                     @Override
                     public void onError(OkHiException exception) {

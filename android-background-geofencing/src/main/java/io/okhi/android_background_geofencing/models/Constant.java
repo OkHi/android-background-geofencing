@@ -93,4 +93,7 @@ public class Constant {
     public static final String FOREGROUND_SERVICE_UNIQUE_WORK = "foregroundServiceUniqueWork";
     public static final long FOREGROUND_SERVICE_LOCATION_UPDATE_INTERVAL = BackgroundGeofenceUtil.isChineseDevice() ? 60 * 1000 :  30 * 60 * 1000 ;
     public static final float FOREGROUND_SERVICE_LOCATION_DISPLACEMENT = BackgroundGeofenceUtil.isChineseDevice() ? 10 : 100;
+
+    public static final String FOREGROUND_NOTIFICATION_ICON_META_KEY = "io.okhi.android_background_geofencing.foreground_notification_icon";
+    public static final String FOREGROUND_NOTIFICATION_COLOR_META_KEY = "io.okhi.android_background_geofencing.foreground_notification_color";
 }

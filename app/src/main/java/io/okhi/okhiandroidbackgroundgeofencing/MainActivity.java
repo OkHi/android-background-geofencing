@@ -23,7 +23,6 @@ import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
-import io.okhi.android_background_geofencing.models.BackgroundGeofenceSetting;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
@@ -50,9 +49,8 @@ public class MainActivity extends AppCompatActivity {
                 "OkHi Channel",
                 "My channel description",
                 NotificationManager.IMPORTANCE_HIGH,
-                R.mipmap.ic_launcher,
-                123,
-                456
+            123,
+            456
         );
 
         BackgroundGeofencing.init(this, notification);

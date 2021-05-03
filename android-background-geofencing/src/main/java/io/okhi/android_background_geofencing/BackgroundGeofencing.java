@@ -4,6 +4,7 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
+import android.util.Log;
 
 import androidx.core.content.ContextCompat;
 import androidx.work.BackoffPolicy;
@@ -18,6 +19,7 @@ import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceDeviceMeta;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceSetting;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
@@ -34,6 +36,8 @@ public class BackgroundGeofencing {
         WorkManager.getInstance(context).cancelAllWork();
         BackgroundGeofencingDB.saveNotification(notification, context);
         BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(context);
+        BackgroundGeofenceDeviceMeta deviceMeta = new BackgroundGeofenceDeviceMeta(context);
+        Log.v("BackgroundGeofencing", deviceMeta.toJSON());
         boolean isAppOnForeground = BackgroundGeofenceUtil.isAppOnForeground(context);
         boolean hasWebhook = BackgroundGeofencingDB.getWebHook(context) != null;
         boolean canRestartGeofences  = BackgroundGeofenceUtil.canRestartGeofences(context);

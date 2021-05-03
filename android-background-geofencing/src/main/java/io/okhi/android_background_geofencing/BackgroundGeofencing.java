@@ -36,8 +36,6 @@ public class BackgroundGeofencing {
         WorkManager.getInstance(context).cancelAllWork();
         BackgroundGeofencingDB.saveNotification(notification, context);
         BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(context);
-        BackgroundGeofenceDeviceMeta deviceMeta = new BackgroundGeofenceDeviceMeta(context);
-        Log.v("BackgroundGeofencing", deviceMeta.toJSON());
         boolean isAppOnForeground = BackgroundGeofenceUtil.isAppOnForeground(context);
         boolean hasWebhook = BackgroundGeofencingDB.getWebHook(context) != null;
         boolean canRestartGeofences  = BackgroundGeofenceUtil.canRestartGeofences(context);
@@ -82,6 +80,7 @@ public class BackgroundGeofencing {
     private static void triggerInitGeofenceEvents(Location location, Context context, RequestHandler handler) {
         ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(context);
         if (!geofences.isEmpty()) {
+            new BackgroundGeofenceDeviceMeta(context).transmit();
             ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofenceTransition.generateTransitions(
                     Constant.INIT_GEOFENCE_TRANSITION_SOURCE_NAME,
                     location,

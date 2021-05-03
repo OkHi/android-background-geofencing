@@ -7,6 +7,7 @@ import com.snappydb.DB;
 import com.snappydb.DBFactory;
 
 import java.util.ArrayList;
+import java.util.UUID;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -248,4 +249,18 @@ public class BackgroundGeofencingDB {
         String key = Constant.DB_SETTING_CONFIGURATION_KEY;
         return (BackgroundGeofenceSetting) get(key, BackgroundGeofenceSetting.class, context);
     }
+
+  public static void saveDeviceId(Context context) {
+      String key = Constant.DB_DEVICE_ID_CONFIGURATION_KEY;
+      String deviceId = (String) get(key, String.class, context);
+      if (deviceId == null) {
+          deviceId = UUID.randomUUID().toString();
+          save(key, deviceId, context);
+      }
+  }
+
+  public static String getDeviceId(Context context) {
+      String key = Constant.DB_DEVICE_ID_CONFIGURATION_KEY;
+      return (String) get(key, String.class, context);
+  }
 }

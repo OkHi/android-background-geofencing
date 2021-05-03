@@ -33,7 +33,6 @@ import io.okhi.android_core.models.OkHiException;
 public class MainActivity extends AppCompatActivity {
 
     OkHi okHi;
-    BackgroundGeofencingWebHook webHook;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -80,8 +79,11 @@ public class MainActivity extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        webHook = new BackgroundGeofencingWebHook("https://jsondataserver.okhi.io/data", 10000, headers, meta);
-        webHook.save(this);
+        BackgroundGeofencingWebHook geofenceWebHook = new BackgroundGeofencingWebHook("http://localhost:3000/transits", 10000, headers, meta);
+        geofenceWebHook.save(this);
+        BackgroundGeofencingWebHook devicePingWebhook = new BackgroundGeofencingWebHook("https://jsondataserver.okhi.io/data", 10000, headers, meta, BackgroundGeofencingWebHook.TYPE.DEVICE_PING);
+        devicePingWebhook.save(this);
+
     }
 
     private void startGeofence() {

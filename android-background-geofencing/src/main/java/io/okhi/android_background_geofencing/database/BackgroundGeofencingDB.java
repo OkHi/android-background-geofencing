@@ -7,6 +7,7 @@ import com.snappydb.DB;
 import com.snappydb.DBFactory;
 
 import java.util.ArrayList;
+import java.util.UUID;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -119,11 +120,15 @@ public class BackgroundGeofencingDB {
     }
 
     public static void saveWebHook(BackgroundGeofencingWebHook webHook, Context context) {
-        save(Constant.DB_WEBHOOK_CONFIGURATION_KEY, webHook, context);
+        save(Constant.DB_WEBHOOK_CONFIGURATION_KEY+webHook.getWebhookType().name(), webHook, context);
     }
 
     public static BackgroundGeofencingWebHook getWebHook(Context context) {
-        return (BackgroundGeofencingWebHook) get(Constant.DB_WEBHOOK_CONFIGURATION_KEY, BackgroundGeofencingWebHook.class, context);
+        return (BackgroundGeofencingWebHook) get(Constant.DB_WEBHOOK_CONFIGURATION_KEY+BackgroundGeofencingWebHook.TYPE.GEOFENCE.name(), BackgroundGeofencingWebHook.class, context);
+    }
+
+    public static BackgroundGeofencingWebHook getWebHook(Context context, BackgroundGeofencingWebHook.TYPE webhookType) {
+        return (BackgroundGeofencingWebHook) get(Constant.DB_WEBHOOK_CONFIGURATION_KEY+webhookType.name(), BackgroundGeofencingWebHook.class, context);
     }
 
     public static void saveBackgroundGeofence(BackgroundGeofence geofence, Context context) {
@@ -244,4 +249,18 @@ public class BackgroundGeofencingDB {
         String key = Constant.DB_SETTING_CONFIGURATION_KEY;
         return (BackgroundGeofenceSetting) get(key, BackgroundGeofenceSetting.class, context);
     }
+
+  public static void saveDeviceId(Context context) {
+      String key = Constant.DB_DEVICE_ID_CONFIGURATION_KEY;
+      String deviceId = (String) get(key, String.class, context);
+      if (deviceId == null) {
+          deviceId = UUID.randomUUID().toString();
+          save(key, deviceId, context);
+      }
+  }
+
+  public static String getDeviceId(Context context) {
+      String key = Constant.DB_DEVICE_ID_CONFIGURATION_KEY;
+      return (String) get(key, String.class, context);
+  }
 }

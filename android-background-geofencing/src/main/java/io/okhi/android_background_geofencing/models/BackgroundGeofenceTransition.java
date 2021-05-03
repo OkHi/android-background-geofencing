@@ -213,7 +213,7 @@ public class BackgroundGeofenceTransition implements Serializable {
 
     public boolean syncUpload(BackgroundGeofencingWebHook webHook) throws JSONException, IOException {
         JSONObject meta = webHook.getMeta();
-        OkHttpClient client = getHttpClient(webHook);
+        OkHttpClient client = BackgroundGeofenceUtil.getHttpClient(webHook);
         JSONObject payload = toJSONObject();
         if (meta != null) {
             payload.put("meta", meta);
@@ -232,31 +232,6 @@ public class BackgroundGeofenceTransition implements Serializable {
             Log.v(TAG, "Request failed with payload:\n" + payload.toString());
             return false;
         }
-    }
-
-    private OkHttpClient getHttpClient(BackgroundGeofencingWebHook webHook) {
-        ConnectionSpec spec = new ConnectionSpec.Builder(ConnectionSpec.COMPATIBLE_TLS)
-                .supportsTlsExtensions(true)
-                .tlsVersions(TlsVersion.TLS_1_2, TlsVersion.TLS_1_1, TlsVersion.TLS_1_0)
-                .cipherSuites(
-                        CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-                        CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-                        CipherSuite.TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,
-                        CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
-                        CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
-                        CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
-                        CipherSuite.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-                        CipherSuite.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
-                        CipherSuite.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
-                        CipherSuite.TLS_DHE_RSA_WITH_AES_128_CBC_SHA,
-                        CipherSuite.TLS_DHE_DSS_WITH_AES_128_CBC_SHA,
-                        CipherSuite.TLS_DHE_RSA_WITH_AES_256_CBC_SHA)
-                .build();
-        return new OkHttpClient.Builder()
-                .connectionSpecs(Collections.singletonList(spec))
-                .connectTimeout(webHook.getTimeout(), TimeUnit.MILLISECONDS)
-                .writeTimeout(webHook.getTimeout(), TimeUnit.MILLISECONDS)
-                .readTimeout(webHook.getTimeout(), TimeUnit.MILLISECONDS).build();
     }
 
     public String getTransitionEvent() {

@@ -12,6 +12,7 @@ import androidx.work.WorkManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -22,6 +23,10 @@ import io.okhi.android_core.models.OkHiException;
 import io.okhi.android_core.models.OkHiLocationService;
 import io.okhi.android_core.models.OkHiPermissionService;
 import io.okhi.android_core.models.OkHiPlayService;
+import okhttp3.CipherSuite;
+import okhttp3.ConnectionSpec;
+import okhttp3.OkHttpClient;
+import okhttp3.TlsVersion;
 
 public class BackgroundGeofenceUtil {
     public static boolean isAppOnForeground(Context context) {
@@ -101,5 +106,30 @@ public class BackgroundGeofenceUtil {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
         return (netInfo != null && netInfo.isConnected());
+    }
+
+    public static OkHttpClient getHttpClient(BackgroundGeofencingWebHook webHook) {
+        ConnectionSpec spec = new ConnectionSpec.Builder(ConnectionSpec.COMPATIBLE_TLS)
+            .supportsTlsExtensions(true)
+            .tlsVersions(TlsVersion.TLS_1_2, TlsVersion.TLS_1_1, TlsVersion.TLS_1_0)
+            .cipherSuites(
+                CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+                CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+                CipherSuite.TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,
+                CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+                CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+                CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+                CipherSuite.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+                CipherSuite.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
+                CipherSuite.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+                CipherSuite.TLS_DHE_RSA_WITH_AES_128_CBC_SHA,
+                CipherSuite.TLS_DHE_DSS_WITH_AES_128_CBC_SHA,
+                CipherSuite.TLS_DHE_RSA_WITH_AES_256_CBC_SHA)
+            .build();
+        return new OkHttpClient.Builder()
+            .connectionSpecs(Collections.singletonList(spec))
+            .connectTimeout(webHook.getTimeout(), TimeUnit.MILLISECONDS)
+            .writeTimeout(webHook.getTimeout(), TimeUnit.MILLISECONDS)
+            .readTimeout(webHook.getTimeout(), TimeUnit.MILLISECONDS).build();
     }
 }

@@ -12,12 +12,20 @@ import android.telephony.TelephonyManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_core.models.OkHiLocationService;
 import io.okhi.android_core.models.OkHiPermissionService;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class BackgroundGeofenceDeviceMeta {
   private String deviceId;
@@ -36,27 +44,30 @@ public class BackgroundGeofenceDeviceMeta {
   private String netWorkSSID;
   private ArrayList<HashMap<String, String>> permissions = new ArrayList<>();
 
+  private Context context;
+
   public BackgroundGeofenceDeviceMeta(Context context) {
-    BackgroundGeofencingDB.saveDeviceId(context);
-    boolean isBackgroundLocationPermissionGranted = OkHiPermissionService.isBackgroundLocationPermissionGranted(context);
-    boolean isLocationPermissionGranted = OkHiPermissionService.isLocationPermissionGranted(context);
-    boolean isLocationServicesEnabled = OkHiLocationService.isLocationServicesEnabled(context);
-    this.deviceId = BackgroundGeofencingDB.getDeviceId(context);
-    BatteryManager bm = (BatteryManager) context.getSystemService(Context.BATTERY_SERVICE);
-    TelephonyManager manager = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
+    this.context = context;
+    BackgroundGeofencingDB.saveDeviceId(this.context);
+    boolean isBackgroundLocationPermissionGranted = OkHiPermissionService.isBackgroundLocationPermissionGranted(this.context);
+    boolean isLocationPermissionGranted = OkHiPermissionService.isLocationPermissionGranted(this.context);
+    boolean isLocationServicesEnabled = OkHiLocationService.isLocationServicesEnabled(this.context);
+    this.deviceId = BackgroundGeofencingDB.getDeviceId(this.context);
+    BatteryManager bm = (BatteryManager) this.context.getSystemService(Context.BATTERY_SERVICE);
+    TelephonyManager manager = (TelephonyManager)this.context.getSystemService(Context.TELEPHONY_SERVICE);
     this.networkCarrierName = manager.getNetworkOperatorName();
     this.networkSimOperatorName = manager.getSimOperatorName();
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
       this.deviceBatteryLevel = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) / 100;
     }
-    ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+    ConnectivityManager connManager = (ConnectivityManager) this.context.getSystemService(Context.CONNECTIVITY_SERVICE);
     NetworkInfo wifiNetworkInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
     this.networkWifi = wifiNetworkInfo.isConnected();
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       this.networkCellular = manager.isDataEnabled();
     }
     if (isLocationServicesEnabled && isLocationPermissionGranted && this.networkWifi) {
-      WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+      WifiManager wifiManager = (WifiManager) this.context.getSystemService(Context.WIFI_SERVICE);
       WifiInfo info = wifiManager.getConnectionInfo();
       this.netWorkSSID = info.getSSID();
     }
@@ -105,5 +116,26 @@ public class BackgroundGeofenceDeviceMeta {
     } catch (Exception error) {
       return null;
     }
+  }
+
+  public void transmit() {
+    BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(this.context, BackgroundGeofencingWebHook.TYPE.DEVICE_PING);
+    OkHttpClient client = BackgroundGeofenceUtil.getHttpClient(webHook);
+    RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), this.toJSON());
+    Request request = new Request.Builder()
+        .url(webHook.getUrl())
+        .headers(webHook.getHeaders())
+        .post(requestBody)
+        .build();
+    client.newCall(request).enqueue(new Callback() {
+      @Override
+      public void onFailure(Call call, IOException e) {
+        e.printStackTrace();
+      }
+      @Override
+      public void onResponse(Call call, Response response) throws IOException {
+        response.close();
+      }
+    });
   }
 }

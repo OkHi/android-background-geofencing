@@ -119,11 +119,15 @@ public class BackgroundGeofencingDB {
     }
 
     public static void saveWebHook(BackgroundGeofencingWebHook webHook, Context context) {
-        save(Constant.DB_WEBHOOK_CONFIGURATION_KEY, webHook, context);
+        save(Constant.DB_WEBHOOK_CONFIGURATION_KEY+webHook.getWebhookType().name(), webHook, context);
     }
 
     public static BackgroundGeofencingWebHook getWebHook(Context context) {
-        return (BackgroundGeofencingWebHook) get(Constant.DB_WEBHOOK_CONFIGURATION_KEY, BackgroundGeofencingWebHook.class, context);
+        return (BackgroundGeofencingWebHook) get(Constant.DB_WEBHOOK_CONFIGURATION_KEY+BackgroundGeofencingWebHook.TYPE.GEOFENCE.name(), BackgroundGeofencingWebHook.class, context);
+    }
+
+    public static BackgroundGeofencingWebHook getWebHook(Context context, BackgroundGeofencingWebHook.TYPE webhookType) {
+        return (BackgroundGeofencingWebHook) get(Constant.DB_WEBHOOK_CONFIGURATION_KEY+webhookType.name(), BackgroundGeofencingWebHook.class, context);
     }
 
     public static void saveBackgroundGeofence(BackgroundGeofence geofence, Context context) {

@@ -27,7 +27,7 @@ public class Constant {
     // db
     public static final String DB_NAME_VERSION = "v1";
     public static final String DB_NAME = "BACKGROUND_GEOFENCING_DB:" + Constant.DB_NAME_VERSION;
-    public static final String DB_WEBHOOK_CONFIGURATION_KEY = "WEBHOOK_CONFIGURATION_KEY";
+    public static final String DB_WEBHOOK_CONFIGURATION_KEY = "WEBHOOK_CONFIGURATION_KEY:";
     public static final String DB_BACKGROUND_GEOFENCE_PREFIX_KEY = "BACKGROUND_GEOFENCE:";
     public static final String DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY = "BACKGROUND_GEOFENCE_TRANSITION:";
     public static final String DB_BACKGROUND_GEOFENCE_LAST_TRANSITION_KEY = "BACKGROUND_GEOFENCE_LAST_TRANSITION";

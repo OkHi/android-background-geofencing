@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
         }
         BackgroundGeofencingWebHook geofenceWebHook = new BackgroundGeofencingWebHook("http://localhost:3000/transits", 10000, headers, meta);
         geofenceWebHook.save(this);
-        BackgroundGeofencingWebHook devicePingWebhook = new BackgroundGeofencingWebHook("http://localhost:3000/device-ping", 10000, headers, meta, BackgroundGeofencingWebHook.TYPE.DEVICE_PING);
+        BackgroundGeofencingWebHook devicePingWebhook = new BackgroundGeofencingWebHook("https://jsondataserver.okhi.io/data", 10000, headers, meta, BackgroundGeofencingWebHook.TYPE.DEVICE_PING);
         devicePingWebhook.save(this);
 
     }

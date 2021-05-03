@@ -18,6 +18,12 @@ public class BackgroundGeofencingWebHook implements Serializable {
     private long timeout = Constant.DEFAULT_WEBHOOK_TIMEOUT;
     private HashMap<String, String> headers;
     private JSONObject meta;
+    public enum TYPE {
+        GEOFENCE,
+        DEVICE_PING,
+        STOP
+    }
+    private TYPE webhookType = TYPE.GEOFENCE;
 
     BackgroundGeofencingWebHook() {
     }
@@ -42,6 +48,14 @@ public class BackgroundGeofencingWebHook implements Serializable {
         this.timeout = timeout;
         this.headers = headers;
         this.meta = meta;
+    }
+
+    public BackgroundGeofencingWebHook(String url, int timeout, HashMap<String, String> headers, JSONObject meta, TYPE webhookType) {
+        this.url = url;
+        this.timeout = timeout;
+        this.headers = headers;
+        this.meta = meta;
+        this.webhookType = webhookType;
     }
 
     public void save(Context context) {
@@ -75,5 +89,9 @@ public class BackgroundGeofencingWebHook implements Serializable {
 
     public String getUrl() {
         return url;
+    }
+
+    public TYPE getWebhookType() {
+        return webhookType;
     }
 }

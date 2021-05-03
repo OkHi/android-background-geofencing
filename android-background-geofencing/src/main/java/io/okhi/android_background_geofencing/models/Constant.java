@@ -63,8 +63,9 @@ public class Constant {
     public static final TimeUnit GEOFENCE_RESTART_WORK_DELAY_TIME_UNIT = TimeUnit.HOURS; // TODO: change to hour
     public static final long GEOFENCE_RESTART_WORK_BACKOFF_DELAY = 1; // TODO: change to 1
     public static final TimeUnit GEOFENCE_RESTART_WORK_BACKOFF_DELAY_TIME_UNIT = TimeUnit.HOURS; // TODO: change to hour
+  public static final String DB_DEVICE_ID_CONFIGURATION_KEY = "DEVICE_ID_CONFIGURATION_KEY";
 
-    // work manager constraints
+  // work manager constraints
     public static Constraints GEOFENCE_WORK_MANAGER_CONSTRAINTS = new Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .setRequiresBatteryNotLow(true)

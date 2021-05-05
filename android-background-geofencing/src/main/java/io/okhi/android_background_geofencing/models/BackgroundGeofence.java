@@ -198,7 +198,7 @@ public class BackgroundGeofence implements Serializable {
         return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
-    private void save(Context context) {
+    public void save(Context context) {
         BackgroundGeofencingDB.saveBackgroundGeofence(this, context);
     }
 
@@ -373,7 +373,31 @@ public class BackgroundGeofence implements Serializable {
         geofencingClient.removeGeofences(ids);
         BackgroundGeofencingDB.removeBackgroundGeofence(id, context);
         BackgroundGeofencingDB.removeGeofenceEnterTimestamp(id, context);
-        if (BackgroundGeofencingDB.getAllGeofences(context).isEmpty()) {
+        ArrayList<BackgroundGeofence> foregroundWatchGeofences = BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.FOREGROUND_WATCH);
+        ArrayList<BackgroundGeofence> foregroundPingGeofences = BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.FOREGROUND_PING);
+        if (foregroundWatchGeofences.isEmpty() && foregroundPingGeofences.isEmpty()) {
+            BackgroundGeofencing.stopForegroundService(context);
+        }
+    }
+
+    public static void stop (Context context, BackgroundGeofence geofence) {
+        Boolean isAllStop = !geofence.isWithAppOpenTracking() && !geofence.isWithNativeGeofenceTracking() && !geofence.isWithForegroundWatchTracking() && !geofence.isWithForegroundPingTracking();
+        if (isAllStop) {
+            BackgroundGeofencingDB.removeBackgroundGeofence(geofence.getId(), context);
+            BackgroundGeofencingDB.removeGeofenceEnterTimestamp(geofence.getId(), context);
+        }
+        if (!geofence.isWithAppOpenTracking()) {
+            BackgroundGeofencingDB.removeGeofenceEnterTimestamp(geofence.getId(), context);
+        }
+        if (!geofence.isWithNativeGeofenceTracking()) {
+            GeofencingClient geofencingClient = LocationServices.getGeofencingClient(context);
+            List<String> ids = new ArrayList<>();
+            ids.add(geofence.getId());
+            geofencingClient.removeGeofences(ids);
+        }
+        ArrayList<BackgroundGeofence> foregroundWatchGeofences = BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.FOREGROUND_WATCH);
+        ArrayList<BackgroundGeofence> foregroundPingGeofences = BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.FOREGROUND_PING);
+        if (foregroundWatchGeofences.isEmpty() && foregroundPingGeofences.isEmpty()) {
             BackgroundGeofencing.stopForegroundService(context);
         }
     }

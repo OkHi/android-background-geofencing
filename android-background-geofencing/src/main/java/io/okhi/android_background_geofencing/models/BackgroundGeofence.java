@@ -223,32 +223,37 @@ public class BackgroundGeofence implements Serializable {
             return;
         }
 
-        GeofencingClient geofencingClient = LocationServices.getGeofencingClient(context);
-        ArrayList<Geofence> geofenceList = new ArrayList<>();
-        Geofence geofence = new Geofence.Builder()
-            .setRequestId(id)
-            .setCircularRegion(lat, lng, radius)
-            .setExpirationDuration(expiration)
-            .setTransitionTypes(transitionTypes)
-            .setLoiteringDelay(loiteringDelay)
-            .setNotificationResponsiveness(notificationResponsiveness)
-            .build();
-        geofenceList.add(geofence);
-        geofencingClient.addGeofences(getGeofencingRequest(silently, geofenceList), getGeofencePendingIntent(context)).addOnSuccessListener(new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(Void aVoid) {
-                if (!silently) {
-                    save(context);
+        if (this.isWithNativeGeofenceTracking()) {
+            GeofencingClient geofencingClient = LocationServices.getGeofencingClient(context);
+            ArrayList<Geofence> geofenceList = new ArrayList<>();
+            Geofence geofence = new Geofence.Builder()
+                .setRequestId(id)
+                .setCircularRegion(lat, lng, radius)
+                .setExpirationDuration(expiration)
+                .setTransitionTypes(transitionTypes)
+                .setLoiteringDelay(loiteringDelay)
+                .setNotificationResponsiveness(notificationResponsiveness)
+                .build();
+            geofenceList.add(geofence);
+            geofencingClient.addGeofences(getGeofencingRequest(silently, geofenceList), getGeofencePendingIntent(context)).addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void aVoid) {
+                    if (!silently) {
+                        save(context);
+                    }
+                    requestHandler.onSuccess();
                 }
-                requestHandler.onSuccess();
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                requestHandler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.UNKNOWN_EXCEPTION, e.getMessage()));
-                e.printStackTrace();
-            }
-        });
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    requestHandler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.UNKNOWN_EXCEPTION, e.getMessage()));
+                    e.printStackTrace();
+                }
+            });
+        } else {
+            save(context);
+            requestHandler.onSuccess();
+        }
     }
 
     public void start(Context context, final RequestHandler requestHandler) {

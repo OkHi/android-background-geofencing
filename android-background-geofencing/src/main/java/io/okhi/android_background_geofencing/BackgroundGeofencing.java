@@ -100,7 +100,7 @@ public class BackgroundGeofencing {
     handler.onSuccess();
   }
 
-  private static void performBackgroundWork(Context context) {
+  public static void performBackgroundWork(Context context) {
     // TODO: refactor this to static methods to get request work
     OneTimeWorkRequest failedGeofencesRestartWork = new OneTimeWorkRequest.Builder(BackgroundGeofenceRestartWorker.class)
         .setConstraints(Constant.GEOFENCE_WORK_MANAGER_CONSTRAINTS)

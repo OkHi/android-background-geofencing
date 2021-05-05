@@ -19,6 +19,11 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,8 +32,18 @@ import java.util.concurrent.TimeUnit;
 import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
+import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.receivers.BackgroundGeofenceBroadcastReceiver;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
+import io.okhi.android_core.models.OkHiCoreUtil;
+import io.okhi.android_core.models.OkHiException;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 import static io.okhi.android_background_geofencing.models.BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE;
 
@@ -267,7 +282,54 @@ public class BackgroundGeofence implements Serializable {
         return expirationTimestamp > 0 && System.currentTimeMillis() > expirationTimestamp;
     }
 
-    public static void stop(Context context, String id) {
+    public static void stop(final Context context, final String id, final ResultHandler<String> handler) {
+        BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(context, BackgroundGeofencingWebHook.TYPE.STOP);
+        if (webHook != null) {
+            try {
+                JSONArray payload = new JSONArray();
+                JSONObject stoppedGeofence = new JSONObject();
+                JSONObject stopLevel = new JSONObject();
+                stoppedGeofence.put("location_id", id);
+                stopLevel.put("foregroundWatch", true);
+                stopLevel.put("foregroundPing", true);
+                stopLevel.put("appOpen", true);
+                stopLevel.put("geofence", true);
+                stoppedGeofence.put("stop", stopLevel);
+                payload.put(stoppedGeofence);
+                OkHttpClient client = BackgroundGeofenceUtil.getHttpClient(webHook);
+                RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), payload.toString());
+                Request request = new Request.Builder()
+                    .url(webHook.getUrl())
+                    .headers(webHook.getHeaders())
+                    .post(requestBody)
+                    .build();
+                client.newCall(request).enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        e.printStackTrace();
+                        handler.onError(new BackgroundGeofencingException(OkHiException.NETWORK_ERROR_CODE, OkHiException.NETWORK_ERROR_MESSAGE));
+                    }
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        if (response.isSuccessful()) {
+                            stopGeofences(context, id);
+                            handler.onSuccess(id);
+                        } else {
+                            OkHiException exception = OkHiCoreUtil.generateOkHiException(response);
+                            handler.onError(new BackgroundGeofencingException(exception.getCode(), exception.getMessage()));
+                        }
+                    }
+                });
+            } catch (Exception e) {
+                handler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.UNKNOWN_EXCEPTION, e.getMessage()));
+            }
+        } else {
+            stopGeofences(context, id);
+            handler.onSuccess(id);
+        }
+    }
+
+    private static void stopGeofences(Context context, String id) {
         GeofencingClient geofencingClient = LocationServices.getGeofencingClient(context);
         List<String> ids = new ArrayList<>();
         ids.add(id);

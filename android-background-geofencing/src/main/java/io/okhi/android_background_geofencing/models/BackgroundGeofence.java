@@ -60,7 +60,6 @@ public class BackgroundGeofence implements Serializable {
     private int transitionTypes;
     private int initialTriggerTransitionTypes;
     private long registrationTimestamp;
-
     private boolean isFailing = false;
 
     public static int TRANSITION_ENTER = Geofence.GEOFENCE_TRANSITION_ENTER;
@@ -70,6 +69,11 @@ public class BackgroundGeofence implements Serializable {
     public static int INITIAL_TRIGGER_ENTER = GeofencingRequest.INITIAL_TRIGGER_ENTER;
     public static int INITIAL_TRIGGER_EXIT = GeofencingRequest.INITIAL_TRIGGER_EXIT;
     public static int INITIAL_TRIGGER_DWELL = GeofencingRequest.INITIAL_TRIGGER_DWELL;
+
+    private boolean withNativeGeofenceTracking = true;
+    private boolean withForegroundPingTracking = true;
+    private boolean withForegroundWatchTracking = true;
+    private boolean withAppOpenTracking = true;
 
     BackgroundGeofence() {
     }
@@ -86,12 +90,16 @@ public class BackgroundGeofence implements Serializable {
         this.registrationTimestamp = System.currentTimeMillis();
         this.transitionTypes = builder.transitionTypes;
         this.initialTriggerTransitionTypes = builder.initialTriggerTransitionTypes;
+        this.withNativeGeofenceTracking = builder.withNativeGeofenceTracking;
+        this.withForegroundPingTracking = builder.withForegroundPingTracking;
+        this.withForegroundWatchTracking = builder.withForegroundWatchTracking;
+        this.withAppOpenTracking = builder.withAppOpenTracking;
     }
 
     public static class BackgroundGeofenceBuilder {
-        private String id;
-        private double lat;
-        private double lng;
+        private final String id;
+        private final double lat;
+        private final double lng;
         private float radius = Constant.DEFAULT_GEOFENCE_RADIUS;
         private long expirationTimestamp = Constant.DEFAULT_GEOFENCE_EXPIRATION;
         private long expiration = Constant.DEFAULT_GEOFENCE_EXPIRATION;
@@ -100,6 +108,10 @@ public class BackgroundGeofence implements Serializable {
         private boolean registerOnDeviceRestart = Constant.DEFAULT_GEOFENCE_REGISTER_ON_DEVICE_RESTART;
         private int transitionTypes = Constant.DEFAULT_GEOFENCE_TRANSITION_TYPES;
         private int initialTriggerTransitionTypes = Constant.DEFAULT_GEOFENCE_INITIAL_TRIGGER_TRANSITION_TYPES;
+        private boolean withNativeGeofenceTracking = true;
+        private boolean withForegroundPingTracking = true;
+        private boolean withForegroundWatchTracking = true;
+        private boolean withAppOpenTracking = true;
 
         public BackgroundGeofenceBuilder(String id, double lat, double lng) {
             this.id = id;
@@ -142,6 +154,26 @@ public class BackgroundGeofence implements Serializable {
 
         public BackgroundGeofenceBuilder setInitialTriggerTransitionTypes(int initialTriggerTransitionTypes) {
             this.initialTriggerTransitionTypes = initialTriggerTransitionTypes;
+            return this;
+        }
+
+        public BackgroundGeofenceBuilder setWithNativeGeofenceTracking(boolean withNativeGeofenceTracking) {
+            this.withNativeGeofenceTracking = withNativeGeofenceTracking;
+            return this;
+        }
+
+        public BackgroundGeofenceBuilder setWithForegroundWatchTracking(boolean withForegroundWatchTracking) {
+            this.withForegroundWatchTracking = withForegroundWatchTracking;
+            return this;
+        }
+
+        public BackgroundGeofenceBuilder setWithForegroundPingTracking(boolean withForegroundPingTracking) {
+            this.withForegroundPingTracking = withForegroundPingTracking;
+            return this;
+        }
+
+        public BackgroundGeofenceBuilder setWithAppOpenTracking(boolean withAppOpenTracking) {
+            this.withAppOpenTracking = withAppOpenTracking;
             return this;
         }
 
@@ -194,13 +226,13 @@ public class BackgroundGeofence implements Serializable {
         GeofencingClient geofencingClient = LocationServices.getGeofencingClient(context);
         ArrayList<Geofence> geofenceList = new ArrayList<>();
         Geofence geofence = new Geofence.Builder()
-                .setRequestId(id)
-                .setCircularRegion(lat, lng, radius)
-                .setExpirationDuration(expiration)
-                .setTransitionTypes(transitionTypes)
-                .setLoiteringDelay(loiteringDelay)
-                .setNotificationResponsiveness(notificationResponsiveness)
-                .build();
+            .setRequestId(id)
+            .setCircularRegion(lat, lng, radius)
+            .setExpirationDuration(expiration)
+            .setTransitionTypes(transitionTypes)
+            .setLoiteringDelay(loiteringDelay)
+            .setNotificationResponsiveness(notificationResponsiveness)
+            .build();
         geofenceList.add(geofence);
         geofencingClient.addGeofences(getGeofencingRequest(silently, geofenceList), getGeofencePendingIntent(context)).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
@@ -266,15 +298,15 @@ public class BackgroundGeofence implements Serializable {
 
     private static void schedule(Context context, long duration, TimeUnit unit) {
         OneTimeWorkRequest failedGeofencesRestartWork = new OneTimeWorkRequest.Builder(BackgroundGeofenceRestartWorker.class)
-                .setConstraints(Constant.GEOFENCE_WORK_MANAGER_CONSTRAINTS)
-                .addTag(Constant.GEOFENCE_RESTART_WORK_TAG)
-                .setInitialDelay(duration, unit)
-                .setBackoffCriteria(
-                        BackoffPolicy.LINEAR,
-                        Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY,
-                        Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY_TIME_UNIT
-                )
-                .build();
+            .setConstraints(Constant.GEOFENCE_WORK_MANAGER_CONSTRAINTS)
+            .addTag(Constant.GEOFENCE_RESTART_WORK_TAG)
+            .setInitialDelay(duration, unit)
+            .setBackoffCriteria(
+                BackoffPolicy.LINEAR,
+                Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY,
+                Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY_TIME_UNIT
+            )
+            .build();
         WorkManager.getInstance(context).enqueueUniqueWork(Constant.GEOFENCE_RESTART_WORK_NAME, ExistingWorkPolicy.REPLACE, failedGeofencesRestartWork);
     }
 
@@ -355,5 +387,37 @@ public class BackgroundGeofence implements Serializable {
 
     public int getLoiteringDelay() {
         return loiteringDelay;
+    }
+
+    public boolean isWithNativeGeofenceTracking() {
+        return withNativeGeofenceTracking;
+    }
+
+    public void setWithNativeGeofenceTracking(boolean withNativeGeofenceTracking) {
+        this.withNativeGeofenceTracking = withNativeGeofenceTracking;
+    }
+
+    public boolean isWithForegroundPingTracking() {
+        return withForegroundPingTracking;
+    }
+
+    public void setWithForegroundPingTracking(boolean withForegroundPingTracking) {
+        this.withForegroundPingTracking = withForegroundPingTracking;
+    }
+
+    public boolean isWithForegroundWatchTracking() {
+        return withForegroundWatchTracking;
+    }
+
+    public void setWithForegroundWatchTracking(boolean withForegroundWatchTracking) {
+        this.withForegroundWatchTracking = withForegroundWatchTracking;
+    }
+
+    public boolean isWithAppOpenTracking() {
+        return withAppOpenTracking;
+    }
+
+    public void setWithAppOpenTracking(boolean withAppOpenTracking) {
+        this.withAppOpenTracking = withAppOpenTracking;
     }
 }

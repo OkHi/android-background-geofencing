@@ -14,6 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceSetting;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceSource;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
@@ -250,17 +251,37 @@ public class BackgroundGeofencingDB {
         return (BackgroundGeofenceSetting) get(key, BackgroundGeofenceSetting.class, context);
     }
 
-  public static void saveDeviceId(Context context) {
-      String key = Constant.DB_DEVICE_ID_CONFIGURATION_KEY;
-      String deviceId = (String) get(key, String.class, context);
-      if (deviceId == null) {
-          deviceId = UUID.randomUUID().toString();
-          save(key, deviceId, context);
-      }
-  }
+    public static void saveDeviceId(Context context) {
+        String key = Constant.DB_DEVICE_ID_CONFIGURATION_KEY;
+        String deviceId = (String) get(key, String.class, context);
+        if (deviceId == null) {
+            deviceId = UUID.randomUUID().toString();
+            save(key, deviceId, context);
+        }
+    }
 
-  public static String getDeviceId(Context context) {
-      String key = Constant.DB_DEVICE_ID_CONFIGURATION_KEY;
-      return (String) get(key, String.class, context);
-  }
+    public static String getDeviceId(Context context) {
+        String key = Constant.DB_DEVICE_ID_CONFIGURATION_KEY;
+        return (String) get(key, String.class, context);
+    }
+
+    public static ArrayList<BackgroundGeofence> getGeofences(Context context, BackgroundGeofenceSource source) {
+        ArrayList<BackgroundGeofence> geofences = new ArrayList<>();
+        ArrayList<BackgroundGeofence> savedGeofences = BackgroundGeofencingDB.getAllGeofences(context);
+        for(BackgroundGeofence geofence: savedGeofences) {
+            if (source == BackgroundGeofenceSource.APP_OPEN && geofence.isWithAppOpenTracking()) {
+                geofences.add(geofence);
+            }
+            if (source == BackgroundGeofenceSource.NATIVE_GEOFENCE && geofence.isWithNativeGeofenceTracking()) {
+                geofences.add(geofence);
+            }
+            if (source == BackgroundGeofenceSource.FOREGROUND_PING && geofence.isWithForegroundPingTracking()) {
+                geofences.add(geofence);
+            }
+            if (source == BackgroundGeofenceSource.FOREGROUND_WATCH && geofence.isWithForegroundWatchTracking()) {
+                geofences.add(geofence);
+            }
+        }
+        return geofences;
+    }
 }

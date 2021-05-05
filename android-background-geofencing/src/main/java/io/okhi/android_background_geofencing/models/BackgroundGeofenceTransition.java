@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
 import okhttp3.CipherSuite;
@@ -211,7 +212,7 @@ public class BackgroundGeofenceTransition implements Serializable {
         return payload;
     }
 
-    public boolean syncUpload(BackgroundGeofencingWebHook webHook) throws JSONException, IOException {
+    public boolean syncUpload(Context context, BackgroundGeofencingWebHook webHook) throws JSONException, IOException {
         JSONObject meta = webHook.getMeta();
         OkHttpClient client = BackgroundGeofenceUtil.getHttpClient(webHook);
         JSONObject payload = toJSONObject();
@@ -224,13 +225,46 @@ public class BackgroundGeofenceTransition implements Serializable {
                 .headers(webHook.getHeaders())
                 .post(requestBody)
                 .build();
-        Response response = client.newCall(request).execute();
-        response.close();
-        if (response.isSuccessful()) {
-            return true;
-        } else {
+        try {
+            Response response = client.newCall(request).execute();
+            response.close();
+            handleStopGeofenceTrackingResponse(context, response);
+            if (response.isSuccessful() || response.code() == 312) return true;
             Log.v(TAG, "Request failed with payload:\n" + payload.toString());
             return false;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private void handleStopGeofenceTrackingResponse (Context context, Response response) {
+        // TODO: refactor to something constant
+        if (response.code() != 312) return;
+        try {
+            String body = response.body().toString();
+            JSONArray jsonArrayResponse = new JSONArray(body);
+            for (int i = 0; i < jsonArrayResponse.length(); i++) {
+                JSONObject item = jsonArrayResponse.getJSONObject(i);
+                String locationId = item.optString("location_id", null);
+                if (locationId == null) return;
+                JSONObject stop = item.has("stop") ? item.getJSONObject("stop") : null;
+                if (stop == null) return;
+                BackgroundGeofence geofence = BackgroundGeofencingDB.getBackgroundGeofence(locationId, context);
+                if (geofence == null) return;
+                Boolean stopForegroundWatch = stop.has("foregroundWatch") && stop.getBoolean("foregroundWatch");
+                Boolean stopForegroundPing = stop.has("foregroundPing") && stop.getBoolean("foregroundPing");
+                Boolean stopGeofence = stop.has("geofence") && stop.getBoolean("geofence");
+                Boolean stopAppOpen = stop.has("appOpen") && stop.getBoolean("appOpen");
+                geofence.setWithAppOpenTracking(!stopAppOpen);
+                geofence.setWithNativeGeofenceTracking(!stopGeofence);
+                geofence.setWithForegroundPingTracking(!stopForegroundPing);
+                geofence.setWithForegroundWatchTracking(!stopForegroundWatch);
+                geofence.save(context);
+                BackgroundGeofence.stop(context, geofence);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

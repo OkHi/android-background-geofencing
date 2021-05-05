@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        BackgroundGeofencingWebHook geofenceWebHook = new BackgroundGeofencingWebHook("http://localhost:3000/transits", 10000, headers, meta);
+        BackgroundGeofencingWebHook geofenceWebHook = new BackgroundGeofencingWebHook("https://jsondataserver.okhi.io/data", 10000, headers, meta);
         geofenceWebHook.save(this);
         BackgroundGeofencingWebHook devicePingWebhook = new BackgroundGeofencingWebHook("https://jsondataserver.okhi.io/data", 10000, headers, meta, BackgroundGeofencingWebHook.TYPE.DEVICE_PING);
         devicePingWebhook.save(this);
@@ -93,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
                 .setNotificationResponsiveness(5)
                 .setLoiteringDelay(60000)
                 .setInitialTriggerTransitionTypes(0)
+            .setWithAppOpenTracking(false)
                 .build();
 //        BackgroundGeofence workGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("work2", -1.313339237582541, 36.842414181487776)
 //                .setNotificationResponsiveness(5)

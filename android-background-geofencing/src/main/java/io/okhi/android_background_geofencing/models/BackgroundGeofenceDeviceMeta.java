@@ -44,9 +44,10 @@ public class BackgroundGeofenceDeviceMeta {
   private String netWorkSSID;
   private ArrayList<HashMap<String, String>> permissions = new ArrayList<>();
 
+  private ArrayList<String> geofenceIds = new ArrayList<>();
   private Context context;
 
-  public BackgroundGeofenceDeviceMeta(Context context) {
+  public BackgroundGeofenceDeviceMeta(Context context, ArrayList<BackgroundGeofence> geofences) {
     this.context = context;
     BackgroundGeofencingDB.saveDeviceId(this.context);
     boolean isBackgroundLocationPermissionGranted = OkHiPermissionService.isBackgroundLocationPermissionGranted(this.context);
@@ -78,6 +79,9 @@ public class BackgroundGeofenceDeviceMeta {
       locationPermission.put("level", isBackgroundLocationPermissionGranted ? "always" : "whenInUse");
     }
     permissions.add(locationPermission);
+    for(BackgroundGeofence geofence: geofences) {
+      this.geofenceIds.add(geofence.getId());
+    }
   }
 
   public String toJSON() {
@@ -110,9 +114,8 @@ public class BackgroundGeofenceDeviceMeta {
       payload.put("os", osInformation);
       payload.put("network", networkInformation);
       payload.put("permissions", permissionsInformation);
-
+      payload.put("location_ids", new JSONArray(this.geofenceIds));
       return payload.toString();
-
     } catch (Exception error) {
       return null;
     }

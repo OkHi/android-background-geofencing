@@ -43,7 +43,7 @@ public class BackgroundGeofencing {
         boolean canPerformInitWork = isAppOnForeground && hasWebhook && canRestartGeofences;
         geofences = BackgroundGeofencingDB.getAllGeofences(context);
         if (!geofences.isEmpty()) {
-            new BackgroundGeofenceDeviceMeta(context).transmit();
+            new BackgroundGeofenceDeviceMeta(context, geofences).transmit();
         }
         if (canPerformInitWork) {
             performInitWork(context, new RequestHandler() {

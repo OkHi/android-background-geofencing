@@ -47,10 +47,10 @@ public class BackgroundGeofenceDeviceMeta {
   private ArrayList<String> geofenceIds = new ArrayList<>();
   private Context context;
 
-  public BackgroundGeofenceDeviceMeta(Context context) {
+  public BackgroundGeofenceDeviceMeta(Context context, ArrayList<BackgroundGeofence> geofences) {
     this.context = context;
     BackgroundGeofencingDB.saveDeviceId(this.context);
-    ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(this.context);
+
     boolean isBackgroundLocationPermissionGranted = OkHiPermissionService.isBackgroundLocationPermissionGranted(this.context);
     boolean isLocationPermissionGranted = OkHiPermissionService.isLocationPermissionGranted(this.context);
     boolean isLocationServicesEnabled = OkHiLocationService.isLocationServicesEnabled(this.context);
@@ -124,6 +124,7 @@ public class BackgroundGeofenceDeviceMeta {
 
   public void transmit() {
     BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(this.context, BackgroundGeofencingWebHook.TYPE.DEVICE_PING);
+    if (webHook == null) return;
     OkHttpClient client = BackgroundGeofenceUtil.getHttpClient(webHook);
     RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), this.toJSON());
     Request request = new Request.Builder()

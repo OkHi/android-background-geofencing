@@ -31,6 +31,7 @@ import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartW
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
 
 public class BackgroundGeofencing {
+    private static ArrayList<BackgroundGeofence> geofences;
 
     public static void init(final Context context, BackgroundGeofencingNotification notification) {
         WorkManager.getInstance(context).cancelAllWork();
@@ -40,6 +41,10 @@ public class BackgroundGeofencing {
         boolean hasWebhook = BackgroundGeofencingDB.getWebHook(context) != null;
         boolean canRestartGeofences  = BackgroundGeofenceUtil.canRestartGeofences(context);
         boolean canPerformInitWork = isAppOnForeground && hasWebhook && canRestartGeofences;
+        geofences = BackgroundGeofencingDB.getAllGeofences(context);
+        if (!geofences.isEmpty()) {
+            new BackgroundGeofenceDeviceMeta(context).transmit();
+        }
         if (canPerformInitWork) {
             performInitWork(context, new RequestHandler() {
                 @Override
@@ -78,9 +83,7 @@ public class BackgroundGeofencing {
     }
 
     private static void triggerInitGeofenceEvents(Location location, Context context, RequestHandler handler) {
-        ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(context);
         if (!geofences.isEmpty()) {
-            new BackgroundGeofenceDeviceMeta(context).transmit();
             ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofenceTransition.generateTransitions(
                     Constant.INIT_GEOFENCE_TRANSITION_SOURCE_NAME,
                     location,

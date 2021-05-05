@@ -32,7 +32,7 @@ import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartW
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
 
 public class BackgroundGeofencing {
-  private static ArrayList<BackgroundGeofence> geofences;
+  private static ArrayList<BackgroundGeofence> appOpenGeofences;
 
   public static void init(final Context context, BackgroundGeofencingNotification notification) {
     WorkManager.getInstance(context).cancelAllWork();
@@ -42,8 +42,11 @@ public class BackgroundGeofencing {
     boolean hasWebhook = BackgroundGeofencingDB.getWebHook(context) != null;
     boolean canRestartGeofences  = BackgroundGeofenceUtil.canRestartGeofences(context);
     boolean canPerformInitWork = isAppOnForeground && hasWebhook && canRestartGeofences;
-    new BackgroundGeofenceDeviceMeta(context).transmit();
-    geofences = BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.APP_OPEN);
+    ArrayList<BackgroundGeofence> allGeofences = BackgroundGeofencingDB.getAllGeofences(context);
+    if (!allGeofences.isEmpty()) {
+      new BackgroundGeofenceDeviceMeta(context, allGeofences).transmit();
+    }
+    appOpenGeofences = BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.APP_OPEN);
     if (canPerformInitWork) {
       performInitWork(context, new RequestHandler() {
         @Override
@@ -82,11 +85,11 @@ public class BackgroundGeofencing {
   }
 
   private static void triggerInitGeofenceEvents(Location location, Context context, RequestHandler handler) {
-    if (!geofences.isEmpty()) {
+    if (!appOpenGeofences.isEmpty()) {
       ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofenceTransition.generateTransitions(
           Constant.INIT_GEOFENCE_TRANSITION_SOURCE_NAME,
           location,
-          geofences,
+          appOpenGeofences,
           false,
           context
       );

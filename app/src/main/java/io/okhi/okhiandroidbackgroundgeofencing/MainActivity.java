@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
                 .setNotificationResponsiveness(5)
                 .setLoiteringDelay(60000)
                 .setInitialTriggerTransitionTypes(0)
-            .setWithAppOpenTracking(false)
+                .setWithNativeGeofenceTracking(false)
                 .build();
 //        BackgroundGeofence workGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("work2", -1.313339237582541, 36.842414181487776)
 //                .setNotificationResponsiveness(5)

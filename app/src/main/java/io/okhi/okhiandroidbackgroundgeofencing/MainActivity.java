@@ -22,6 +22,7 @@ import java.util.HashMap;
 import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
+import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
@@ -83,7 +84,8 @@ public class MainActivity extends AppCompatActivity {
         geofenceWebHook.save(this);
         BackgroundGeofencingWebHook devicePingWebhook = new BackgroundGeofencingWebHook("https://jsondataserver.okhi.io/data", 10000, headers, meta, BackgroundGeofencingWebHook.TYPE.DEVICE_PING);
         devicePingWebhook.save(this);
-
+        BackgroundGeofencingWebHook stopGeofencingWebhook = new BackgroundGeofencingWebHook("https://jsondataserver.okhi.io/data", 1000, headers, meta, BackgroundGeofencingWebHook.TYPE.STOP);
+        stopGeofencingWebhook.save(this);
     }
 
     private void startGeofence() {
@@ -193,14 +195,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void stopGeofence(View view) {
-        BackgroundGeofence.stop(getApplicationContext(), "home1");
+        BackgroundGeofence.stop(getApplicationContext(), "home1", new ResultHandler<String>() {
+            @Override
+            public void onSuccess(String result) {
+                showMessage("Stopped: " + result);
+            }
+
+            @Override
+            public void onError(BackgroundGeofencingException exception) {
+                showMessage("Something went wrong: " + exception.getCode() + "\n" + exception.getMessage());
+            }
+        });
     }
 
     public void stopService (View v) {
         BackgroundGeofencing.stopForegroundService(getApplicationContext());
     }
 
-    private void showMessage(String s) {
-        Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
+    private void showMessage(final String s) {
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }

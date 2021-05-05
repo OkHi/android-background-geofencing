@@ -47,9 +47,10 @@ public class BackgroundGeofenceDeviceMeta {
   private ArrayList<String> geofenceIds = new ArrayList<>();
   private Context context;
 
-  public BackgroundGeofenceDeviceMeta(Context context, ArrayList<BackgroundGeofence> geofences) {
+  public BackgroundGeofenceDeviceMeta(Context context) {
     this.context = context;
     BackgroundGeofencingDB.saveDeviceId(this.context);
+    ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(this.context);
     boolean isBackgroundLocationPermissionGranted = OkHiPermissionService.isBackgroundLocationPermissionGranted(this.context);
     boolean isLocationPermissionGranted = OkHiPermissionService.isLocationPermissionGranted(this.context);
     boolean isLocationServicesEnabled = OkHiLocationService.isLocationServicesEnabled(this.context);

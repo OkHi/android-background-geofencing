@@ -328,7 +328,7 @@ public class BackgroundGeofence implements Serializable {
                 OkHttpClient client = BackgroundGeofenceUtil.getHttpClient(webHook);
                 RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), payload.toString());
                 Request.Builder requestBuild = new Request.Builder();
-                requestBuild.url(webHook.getUrl());
+                requestBuild.url(webHook.getUrl(id));
                 requestBuild.headers(webHook.getHeaders());
                 if (webHook.getWebHookRequest() == WebHookRequest.POST) {
                     requestBuild.post(requestBody);

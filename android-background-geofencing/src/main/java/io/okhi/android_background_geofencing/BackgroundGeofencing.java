@@ -44,7 +44,7 @@ public class BackgroundGeofencing {
     boolean canPerformInitWork = isAppOnForeground && hasWebhook && canRestartGeofences;
     ArrayList<BackgroundGeofence> allGeofences = BackgroundGeofencingDB.getAllGeofences(context);
     if (!allGeofences.isEmpty()) {
-      new BackgroundGeofenceDeviceMeta(context, allGeofences).transmit();
+      new BackgroundGeofenceDeviceMeta(context, allGeofences).syncUpload();
     }
     appOpenGeofences = BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.APP_OPEN);
     if (canPerformInitWork) {

@@ -323,20 +323,12 @@ public class BackgroundGeofence implements Serializable {
         BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(context, BackgroundGeofencingWebHook.TYPE.STOP);
         if (webHook != null) {
             try {
-                JSONArray payload = new JSONArray();
-                JSONObject stoppedGeofence = new JSONObject();
-                JSONObject stopLevel = new JSONObject();
-                stoppedGeofence.put("location_id", id);
-                stopLevel.put("foregroundWatch", true);
-                stopLevel.put("foregroundPing", true);
-                stopLevel.put("appOpen", true);
-                stopLevel.put("geofence", true);
-                stoppedGeofence.put("stop", stopLevel);
-                payload.put(stoppedGeofence);
+                JSONObject payload = new JSONObject();
+                payload.put("state", "stop");
                 OkHttpClient client = BackgroundGeofenceUtil.getHttpClient(webHook);
                 RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), payload.toString());
                 Request request = new Request.Builder()
-                    .url(webHook.getUrl())
+                    .url(webHook.getUrl(id))
                     .headers(webHook.getHeaders())
                     .post(requestBody)
                     .build();

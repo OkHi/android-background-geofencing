@@ -27,6 +27,8 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
+import io.okhi.android_background_geofencing.models.WebHookRequest;
+import io.okhi.android_background_geofencing.models.WebHookType;
 import io.okhi.android_core.OkHi;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
@@ -80,12 +82,33 @@ public class MainActivity extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        BackgroundGeofencingWebHook geofenceWebHook = new BackgroundGeofencingWebHook("https://jsondataserver.okhi.io/data", 10000, headers, meta);
+        BackgroundGeofencingWebHook geofenceWebHook = new BackgroundGeofencingWebHook(
+            "https://30aa51129846.ngrok.io/transits",
+            10000,
+            headers,
+            null,
+            WebHookType.GEOFENCE,
+            WebHookRequest.POST
+        );
         geofenceWebHook.save(this);
-        BackgroundGeofencingWebHook devicePingWebhook = new BackgroundGeofencingWebHook("https://jsondataserver.okhi.io/data", 10000, headers, meta, BackgroundGeofencingWebHook.TYPE.DEVICE_PING);
-        devicePingWebhook.save(this);
-        BackgroundGeofencingWebHook stopGeofencingWebhook = new BackgroundGeofencingWebHook("https://jsondataserver.okhi.io/data", 1000, headers, meta, BackgroundGeofencingWebHook.TYPE.STOP);
-        stopGeofencingWebhook.save(this);
+        BackgroundGeofencingWebHook deviceMetaWebHook = new BackgroundGeofencingWebHook(
+            "https://30aa51129846.ngrok.io/device-meta",
+            10000,
+            headers,
+            null,
+            WebHookType.DEVICE_PING,
+            WebHookRequest.PUT
+        );
+        deviceMetaWebHook.save(this);
+        BackgroundGeofencingWebHook stopVerificationWebHook = new BackgroundGeofencingWebHook(
+            "https://30aa51129846.ngrok.io/stop/${id}/verification",
+            10000,
+            headers,
+            null,
+            WebHookType.STOP,
+            WebHookRequest.PATCH
+        );
+        stopVerificationWebHook.save(this);
     }
 
     private void startGeofence() {

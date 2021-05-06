@@ -19,6 +19,7 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
+import io.okhi.android_background_geofencing.models.WebHookType;
 
 // TODO: implement strategy to dump the current db if we bump up the version
 
@@ -125,10 +126,10 @@ public class BackgroundGeofencingDB {
     }
 
     public static BackgroundGeofencingWebHook getWebHook(Context context) {
-        return (BackgroundGeofencingWebHook) get(Constant.DB_WEBHOOK_CONFIGURATION_KEY+BackgroundGeofencingWebHook.TYPE.GEOFENCE.name(), BackgroundGeofencingWebHook.class, context);
+        return (BackgroundGeofencingWebHook) get(Constant.DB_WEBHOOK_CONFIGURATION_KEY+ WebHookType.GEOFENCE.name(), BackgroundGeofencingWebHook.class, context);
     }
 
-    public static BackgroundGeofencingWebHook getWebHook(Context context, BackgroundGeofencingWebHook.TYPE webhookType) {
+    public static BackgroundGeofencingWebHook getWebHook(Context context, WebHookType webhookType) {
         return (BackgroundGeofencingWebHook) get(Constant.DB_WEBHOOK_CONFIGURATION_KEY+webhookType.name(), BackgroundGeofencingWebHook.class, context);
     }
 

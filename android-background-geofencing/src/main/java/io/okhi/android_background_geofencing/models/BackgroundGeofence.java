@@ -320,18 +320,29 @@ public class BackgroundGeofence implements Serializable {
     }
 
     public static void stop(final Context context, final String id, final ResultHandler<String> handler) {
-        BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(context, BackgroundGeofencingWebHook.TYPE.STOP);
+        BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(context, WebHookType.STOP);
         if (webHook != null) {
             try {
                 JSONObject payload = new JSONObject();
                 payload.put("state", "stop");
                 OkHttpClient client = BackgroundGeofenceUtil.getHttpClient(webHook);
                 RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), payload.toString());
-                Request request = new Request.Builder()
-                    .url(webHook.getUrl(id))
-                    .headers(webHook.getHeaders())
-                    .post(requestBody)
-                    .build();
+                Request.Builder requestBuild = new Request.Builder();
+                requestBuild.url(webHook.getUrl());
+                requestBuild.headers(webHook.getHeaders());
+                if (webHook.getWebHookRequest() == WebHookRequest.POST) {
+                    requestBuild.post(requestBody);
+                }
+                if (webHook.getWebHookRequest() == WebHookRequest.PATCH) {
+                    requestBuild.patch(requestBody);
+                }
+                if (webHook.getWebHookRequest() == WebHookRequest.DELETE) {
+                    requestBuild.delete(requestBody);
+                }
+                if (webHook.getWebHookRequest() == WebHookRequest.PUT) {
+                    requestBuild.put(requestBody);
+                }
+                Request request = requestBuild.build();
                 client.newCall(request).enqueue(new Callback() {
                     @Override
                     public void onFailure(Call call, IOException e) {

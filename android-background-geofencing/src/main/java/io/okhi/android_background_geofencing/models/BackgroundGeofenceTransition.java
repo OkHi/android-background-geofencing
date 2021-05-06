@@ -220,14 +220,24 @@ public class BackgroundGeofenceTransition implements Serializable {
             payload.put("meta", meta);
         }
         RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), payload.toString());
-        Request request = new Request.Builder()
-                .url(webHook.getUrl())
-                .headers(webHook.getHeaders())
-                .post(requestBody)
-                .build();
+        Request.Builder requestBuild = new Request.Builder();
+        requestBuild.url(webHook.getUrl());
+        requestBuild.headers(webHook.getHeaders());
+        if (webHook.getWebHookRequest() == WebHookRequest.POST) {
+            requestBuild.post(requestBody);
+        }
+        if (webHook.getWebHookRequest() == WebHookRequest.PATCH) {
+            requestBuild.patch(requestBody);
+        }
+        if (webHook.getWebHookRequest() == WebHookRequest.DELETE) {
+            requestBuild.delete(requestBody);
+        }
+        if (webHook.getWebHookRequest() == WebHookRequest.PUT) {
+            requestBuild.put(requestBody);
+        }
+        Request request = requestBuild.build();
+        Response response = client.newCall(request).execute();
         try {
-            Response response = client.newCall(request).execute();
-            response.close();
             handleStopGeofenceTrackingResponse(context, response);
             if (response.isSuccessful() || response.code() == 312) return true;
             Log.v(TAG, "Request failed with payload:\n" + payload.toString());
@@ -235,6 +245,8 @@ public class BackgroundGeofenceTransition implements Serializable {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        } finally {
+
         }
     }
 
@@ -242,8 +254,7 @@ public class BackgroundGeofenceTransition implements Serializable {
         // TODO: refactor to something constant
         if (response.code() != 312) return;
         try {
-            String body = response.body().toString();
-            JSONArray jsonArrayResponse = new JSONArray(body);
+            JSONArray jsonArrayResponse = new JSONArray(response.body().string());
             for (int i = 0; i < jsonArrayResponse.length(); i++) {
                 JSONObject item = jsonArrayResponse.getJSONObject(i);
                 String locationId = item.optString("location_id", null);

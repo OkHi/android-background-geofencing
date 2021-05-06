@@ -6,7 +6,6 @@ import org.json.JSONObject;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
@@ -18,12 +17,8 @@ public class BackgroundGeofencingWebHook implements Serializable {
     private long timeout = Constant.DEFAULT_WEBHOOK_TIMEOUT;
     private HashMap<String, String> headers;
     private JSONObject meta;
-    public enum TYPE {
-        GEOFENCE,
-        DEVICE_PING,
-        STOP
-    }
-    private TYPE webhookType = TYPE.GEOFENCE;
+    private WebHookType webhookType = WebHookType.GEOFENCE;
+    private String webHookRequest = WebHookRequest.POST.name();
 
     BackgroundGeofencingWebHook() {
     }
@@ -50,12 +45,21 @@ public class BackgroundGeofencingWebHook implements Serializable {
         this.meta = meta;
     }
 
-    public BackgroundGeofencingWebHook(String url, int timeout, HashMap<String, String> headers, JSONObject meta, TYPE webhookType) {
+    public BackgroundGeofencingWebHook(String url, int timeout, HashMap<String, String> headers, JSONObject meta, WebHookType webhookType) {
         this.url = url;
         this.timeout = timeout;
         this.headers = headers;
         this.meta = meta;
         this.webhookType = webhookType;
+    }
+
+    public BackgroundGeofencingWebHook(String url, int timeout, HashMap<String, String> headers, JSONObject meta, WebHookType webhookType, WebHookRequest webHookRequest) {
+        this.url = url;
+        this.timeout = timeout;
+        this.headers = headers;
+        this.meta = meta;
+        this.webhookType = webhookType;
+        this.webHookRequest = webHookRequest.name();
     }
 
     public void save(Context context) {
@@ -98,7 +102,20 @@ public class BackgroundGeofencingWebHook implements Serializable {
         return url;
     }
 
-    public TYPE getWebhookType() {
+    public WebHookType getWebhookType() {
         return webhookType;
+    }
+
+    public WebHookRequest getWebHookRequest() {
+        if (webHookRequest.equals(WebHookRequest.PATCH)) {
+            return WebHookRequest.PATCH;
+        }
+        if (webHookRequest.equals(WebHookRequest.DELETE)) {
+            return WebHookRequest.DELETE;
+        }
+        if (webHookRequest.equals(WebHookRequest.PUT)) {
+            return WebHookRequest.PUT;
+        }
+        return WebHookRequest.POST;
     }
 }

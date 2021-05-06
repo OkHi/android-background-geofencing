@@ -107,13 +107,13 @@ public class BackgroundGeofencingWebHook implements Serializable {
     }
 
     public WebHookRequest getWebHookRequest() {
-        if (webHookRequest.equals(WebHookRequest.PATCH)) {
+        if (webHookRequest.equals(WebHookRequest.PATCH.name())) {
             return WebHookRequest.PATCH;
         }
-        if (webHookRequest.equals(WebHookRequest.DELETE)) {
+        if (webHookRequest.equals(WebHookRequest.DELETE.name())) {
             return WebHookRequest.DELETE;
         }
-        if (webHookRequest.equals(WebHookRequest.PUT)) {
+        if (webHookRequest.equals(WebHookRequest.PUT.name())) {
             return WebHookRequest.PUT;
         }
         return WebHookRequest.POST;

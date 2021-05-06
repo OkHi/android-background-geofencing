@@ -91,6 +91,13 @@ public class BackgroundGeofencingWebHook implements Serializable {
         return url;
     }
 
+    public String getUrl(String geofenceId) {
+        if (url.contains("${id}")) {
+            return url.replace("${id}", geofenceId);
+        }
+        return url;
+    }
+
     public TYPE getWebhookType() {
         return webhookType;
     }

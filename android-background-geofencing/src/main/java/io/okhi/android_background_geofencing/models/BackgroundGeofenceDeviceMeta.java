@@ -125,13 +125,24 @@ public class BackgroundGeofenceDeviceMeta {
   public void syncUpload() {
     BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(this.context, WebHookType.DEVICE_PING);
     if (webHook == null) return;
-    OkHttpClient client = BackgroundGeofenceUtil.getHttpClient(webHook);
     RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), this.toJSON());
-    Request request = new Request.Builder()
-        .url(webHook.getUrl())
-        .headers(webHook.getHeaders())
-        .post(requestBody)
-        .build();
+    Request.Builder requestBuild = new Request.Builder();
+    requestBuild.url(webHook.getUrl());
+    requestBuild.headers(webHook.getHeaders());
+    if (webHook.getWebHookRequest() == WebHookRequest.POST) {
+      requestBuild.post(requestBody);
+    }
+    if (webHook.getWebHookRequest() == WebHookRequest.PATCH) {
+      requestBuild.patch(requestBody);
+    }
+    if (webHook.getWebHookRequest() == WebHookRequest.DELETE) {
+      requestBuild.delete(requestBody);
+    }
+    if (webHook.getWebHookRequest() == WebHookRequest.PUT) {
+      requestBuild.put(requestBody);
+    }
+    Request request = requestBuild.build();
+    OkHttpClient client = BackgroundGeofenceUtil.getHttpClient(webHook);
     client.newCall(request).enqueue(new Callback() {
       @Override
       public void onFailure(Call call, IOException e) {

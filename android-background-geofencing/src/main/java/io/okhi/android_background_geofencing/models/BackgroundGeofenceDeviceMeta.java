@@ -122,7 +122,7 @@ public class BackgroundGeofenceDeviceMeta {
     }
   }
 
-  public void transmit() {
+  public void syncUpload() {
     BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(this.context, BackgroundGeofencingWebHook.TYPE.DEVICE_PING);
     if (webHook == null) return;
     OkHttpClient client = BackgroundGeofenceUtil.getHttpClient(webHook);

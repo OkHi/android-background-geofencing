@@ -87,7 +87,7 @@ public class BackgroundGeofencing {
   private static void triggerInitGeofenceEvents(Location location, Context context, RequestHandler handler) {
     if (!appOpenGeofences.isEmpty()) {
       ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofenceTransition.generateTransitions(
-          Constant.INIT_GEOFENCE_TRANSITION_SOURCE_NAME,
+          Constant.APP_OPEN_GEOFENCE_TRANSITION_SOURCE_NAME,
           location,
           appOpenGeofences,
           false,

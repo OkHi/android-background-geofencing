@@ -267,6 +267,10 @@ public class BackgroundGeofenceTransition implements Serializable {
                 Boolean stopForegroundPing = stop.has("foregroundPing") && stop.getBoolean("foregroundPing");
                 Boolean stopGeofence = stop.has("geofence") && stop.getBoolean("geofence");
                 Boolean stopAppOpen = stop.has("appOpen") && stop.getBoolean("appOpen");
+                if (geofence.isWithForegroundWatchTracking() == !stopForegroundWatch && geofence.isWithForegroundPingTracking() == !stopForegroundPing && geofence.isWithNativeGeofenceTracking() == !stopGeofence && geofence.isWithAppOpenTracking() == !stopAppOpen) {
+                    // nothing has changed following previous stop
+                    return;
+                }
                 geofence.setWithAppOpenTracking(!stopAppOpen);
                 geofence.setWithNativeGeofenceTracking(!stopGeofence);
                 geofence.setWithForegroundPingTracking(!stopForegroundPing);

@@ -245,8 +245,6 @@ public class BackgroundGeofenceTransition implements Serializable {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
-        } finally {
-
         }
     }
 
@@ -397,6 +395,10 @@ public class BackgroundGeofenceTransition implements Serializable {
             transitions.add(enterTransition);
         }
         return transitions;
+    }
+
+    public BackgroundGeofence getTriggeringGeofence (Context context) {
+        return BackgroundGeofencingDB.getBackgroundGeofence(ids.get(0), context);
     }
 
     private static void removeGeofenceEnterTimestamp(BackgroundGeofence geofence, Context context) {

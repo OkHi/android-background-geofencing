@@ -132,4 +132,8 @@ public class BackgroundGeofenceUtil {
             .writeTimeout(webHook.getTimeout(), TimeUnit.MILLISECONDS)
             .readTimeout(webHook.getTimeout(), TimeUnit.MILLISECONDS).build();
     }
+
+    public static boolean isLocationPermissionGranted(Context context) {
+        return OkHiPermissionService.isLocationPermissionGranted(context);
+    }
 }

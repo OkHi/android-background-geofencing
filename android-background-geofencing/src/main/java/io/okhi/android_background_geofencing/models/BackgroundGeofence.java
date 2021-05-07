@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
 
 import androidx.annotation.NonNull;
 import androidx.work.BackoffPolicy;
@@ -35,8 +36,11 @@ import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.receivers.BackgroundGeofenceBroadcastReceiver;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
+import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiCoreUtil;
 import io.okhi.android_core.models.OkHiException;
+import io.okhi.android_core.models.OkHiLocationService;
+import io.okhi.android_core.models.OkHiPermissionService;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -254,6 +258,10 @@ public class BackgroundGeofence implements Serializable {
             save(context);
             requestHandler.onSuccess();
         }
+
+        if (this.isWithAppOpenTracking() && !silently) {
+            triggerInitialAppOpen(context);
+        }
     }
 
     public void start(Context context, final RequestHandler requestHandler) {
@@ -451,5 +459,45 @@ public class BackgroundGeofence implements Serializable {
 
     public void setWithAppOpenTracking(boolean withAppOpenTracking) {
         this.withAppOpenTracking = withAppOpenTracking;
+    }
+
+    private void triggerInitialAppOpen (final Context context) {
+        final BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(context);
+        if (webHook != null && BackgroundGeofenceUtil.isLocationServicesEnabled(context) && BackgroundGeofenceUtil.isLocationPermissionGranted(context)) {
+            final ArrayList<BackgroundGeofence> geofences = new ArrayList<>();
+            geofences.add(this);
+            BackgroundGeofenceUtil.getCurrentLocation(context, new ResultHandler<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofenceTransition.generateTransitions(
+                        Constant.APP_OPEN_GEOFENCE_TRANSITION_SOURCE_NAME,
+                        location,
+                        geofences,
+                        false,
+                        context
+                    );
+                    for(final BackgroundGeofenceTransition transition: transitions) {
+                        try {
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        transition.syncUpload(context, webHook);
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }).start();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                @Override
+                public void onError(BackgroundGeofencingException exception) {
+                    exception.printStackTrace();
+                }
+            });
+        }
     }
 }

@@ -5,6 +5,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.work.BackoffPolicy;
@@ -36,6 +37,7 @@ import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.receivers.BackgroundGeofenceBroadcastReceiver;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
+import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiCoreUtil;
 import io.okhi.android_core.models.OkHiException;
@@ -476,21 +478,14 @@ public class BackgroundGeofence implements Serializable {
                         false,
                         context
                     );
-                    for(final BackgroundGeofenceTransition transition: transitions) {
-                        try {
-                            new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        transition.syncUpload(context, webHook);
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            }).start();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+                    Log.v("InitCount", transitions.size() + "");
+                    for (BackgroundGeofenceTransition transition : transitions) {
+                        transition.save(context);
+                    }
+                    try {
+                        BackgroundGeofenceTransitionUploadWorker.uploadTransitions(context);
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
                 @Override

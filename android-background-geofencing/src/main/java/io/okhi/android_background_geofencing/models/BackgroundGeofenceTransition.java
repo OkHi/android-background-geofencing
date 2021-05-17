@@ -236,8 +236,8 @@ public class BackgroundGeofenceTransition implements Serializable {
             requestBuild.put(requestBody);
         }
         Request request = requestBuild.build();
-        Response response = client.newCall(request).execute();
         try {
+            Response response = client.newCall(request).execute();
             handleStopGeofenceTrackingResponse(context, response);
             if (response.isSuccessful() || response.code() == 312) return true;
             Log.v(TAG, "Request failed with payload:\n" + payload.toString());

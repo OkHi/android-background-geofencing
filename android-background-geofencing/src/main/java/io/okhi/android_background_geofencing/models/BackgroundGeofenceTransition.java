@@ -24,11 +24,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.CipherSuite;
 import okhttp3.ConnectionSpec;
 import okhttp3.MediaType;
@@ -212,7 +215,7 @@ public class BackgroundGeofenceTransition implements Serializable {
         return payload;
     }
 
-    public boolean syncUpload(Context context, BackgroundGeofencingWebHook webHook) throws JSONException, IOException {
+    public boolean syncUpload(final Context context, BackgroundGeofencingWebHook webHook) throws JSONException, IOException {
         JSONObject meta = webHook.getMeta();
         OkHttpClient client = BackgroundGeofenceUtil.getHttpClient(webHook);
         JSONObject payload = toJSONObject();
@@ -236,14 +239,27 @@ public class BackgroundGeofenceTransition implements Serializable {
             requestBuild.put(requestBody);
         }
         Request request = requestBuild.build();
+        final Boolean[] result = {true};
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                result[0] = false;
+                countDownLatch.countDown();
+            }
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                handleStopGeofenceTrackingResponse(context, response);
+                if (response.isSuccessful() || response.code() == 312) {
+                    result[0] = true;
+                    countDownLatch.countDown();
+                }
+            }
+        });
         try {
-            Response response = client.newCall(request).execute();
-            handleStopGeofenceTrackingResponse(context, response);
-            if (response.isSuccessful() || response.code() == 312) return true;
-            Log.v(TAG, "Request failed with payload:\n" + payload.toString());
-            return false;
+            countDownLatch.await();
+            return result[0];
         } catch (Exception e) {
-            e.printStackTrace();
             return false;
         }
     }

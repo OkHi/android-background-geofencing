@@ -10,9 +10,13 @@ import androidx.core.content.ContextCompat;
 import androidx.work.BackoffPolicy;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
+import androidx.work.Operation;
 import androidx.work.WorkManager;
 
+import com.google.common.util.concurrent.ListenableFuture;
+
 import java.util.ArrayList;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
@@ -35,8 +39,23 @@ import io.okhi.android_core.models.OkHiCoreUtil;
 public class BackgroundGeofencing {
   private static ArrayList<BackgroundGeofence> appOpenGeofences;
 
-  public static void init(final Context context, BackgroundGeofencingNotification notification) {
-    WorkManager.getInstance(context).cancelAllWork();
+  public static void init(final Context context, final BackgroundGeofencingNotification notification) {
+    Operation operation = WorkManager.getInstance(context).cancelAllWork();
+    ListenableFuture<Operation.State.SUCCESS> future = operation.getResult();
+    future.addListener(new Runnable() {
+      @Override
+      public void run() {
+        BackgroundGeofencing.startUpSequence(context, notification);
+      }
+    }, new Executor() {
+      @Override
+      public void execute(Runnable command) {
+        command.run();
+      }
+    });
+  }
+
+  private static void startUpSequence(final Context context, BackgroundGeofencingNotification notification) {
     BackgroundGeofencingDB.saveNotification(notification, context);
     BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(context);
     boolean isAppOnForeground = BackgroundGeofenceUtil.isAppOnForeground(context);

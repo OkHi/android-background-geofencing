@@ -79,7 +79,7 @@ public class Constant {
     public static final long LOCATION_REQUEST_EXPIRATION_DURATION = 10000;
 
     // init
-    public static final String INIT_GEOFENCE_TRANSITION_SOURCE_NAME = "appOpen";
+    public static final String APP_OPEN_GEOFENCE_TRANSITION_SOURCE_NAME = "appOpen";
 
     // foreground service
     public static final String FOREGROUND_SERVICE_ACTION = "action";

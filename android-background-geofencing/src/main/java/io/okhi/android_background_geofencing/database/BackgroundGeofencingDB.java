@@ -14,10 +14,12 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceSetting;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceSource;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
+import io.okhi.android_background_geofencing.models.WebHookType;
 
 // TODO: implement strategy to dump the current db if we bump up the version
 
@@ -124,10 +126,10 @@ public class BackgroundGeofencingDB {
     }
 
     public static BackgroundGeofencingWebHook getWebHook(Context context) {
-        return (BackgroundGeofencingWebHook) get(Constant.DB_WEBHOOK_CONFIGURATION_KEY+BackgroundGeofencingWebHook.TYPE.GEOFENCE.name(), BackgroundGeofencingWebHook.class, context);
+        return (BackgroundGeofencingWebHook) get(Constant.DB_WEBHOOK_CONFIGURATION_KEY+ WebHookType.GEOFENCE.name(), BackgroundGeofencingWebHook.class, context);
     }
 
-    public static BackgroundGeofencingWebHook getWebHook(Context context, BackgroundGeofencingWebHook.TYPE webhookType) {
+    public static BackgroundGeofencingWebHook getWebHook(Context context, WebHookType webhookType) {
         return (BackgroundGeofencingWebHook) get(Constant.DB_WEBHOOK_CONFIGURATION_KEY+webhookType.name(), BackgroundGeofencingWebHook.class, context);
     }
 
@@ -250,17 +252,37 @@ public class BackgroundGeofencingDB {
         return (BackgroundGeofenceSetting) get(key, BackgroundGeofenceSetting.class, context);
     }
 
-  public static void saveDeviceId(Context context) {
-      String key = Constant.DB_DEVICE_ID_CONFIGURATION_KEY;
-      String deviceId = (String) get(key, String.class, context);
-      if (deviceId == null) {
-          deviceId = UUID.randomUUID().toString();
-          save(key, deviceId, context);
-      }
-  }
+    public static void saveDeviceId(Context context) {
+        String key = Constant.DB_DEVICE_ID_CONFIGURATION_KEY;
+        String deviceId = (String) get(key, String.class, context);
+        if (deviceId == null) {
+            deviceId = UUID.randomUUID().toString();
+            save(key, deviceId, context);
+        }
+    }
 
-  public static String getDeviceId(Context context) {
-      String key = Constant.DB_DEVICE_ID_CONFIGURATION_KEY;
-      return (String) get(key, String.class, context);
-  }
+    public static String getDeviceId(Context context) {
+        String key = Constant.DB_DEVICE_ID_CONFIGURATION_KEY;
+        return (String) get(key, String.class, context);
+    }
+
+    public static ArrayList<BackgroundGeofence> getGeofences(Context context, BackgroundGeofenceSource source) {
+        ArrayList<BackgroundGeofence> geofences = new ArrayList<>();
+        ArrayList<BackgroundGeofence> savedGeofences = BackgroundGeofencingDB.getAllGeofences(context);
+        for(BackgroundGeofence geofence: savedGeofences) {
+            if (source == BackgroundGeofenceSource.APP_OPEN && geofence.isWithAppOpenTracking()) {
+                geofences.add(geofence);
+            }
+            if (source == BackgroundGeofenceSource.NATIVE_GEOFENCE && geofence.isWithNativeGeofenceTracking()) {
+                geofences.add(geofence);
+            }
+            if (source == BackgroundGeofenceSource.FOREGROUND_PING && geofence.isWithForegroundPingTracking()) {
+                geofences.add(geofence);
+            }
+            if (source == BackgroundGeofenceSource.FOREGROUND_WATCH && geofence.isWithForegroundWatchTracking()) {
+                geofences.add(geofence);
+            }
+        }
+        return geofences;
+    }
 }

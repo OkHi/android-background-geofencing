@@ -37,11 +37,7 @@ import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.receivers.BackgroundGeofenceBroadcastReceiver;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
-<<<<<<< HEAD
-import io.okhi.android_core.models.OkHiCoreUtil;
-=======
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
->>>>>>> b5db79ff3233fe8295e40bf6b2a1e02e2a2dab8f
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiCoreUtil;
 import io.okhi.android_core.models.OkHiException;

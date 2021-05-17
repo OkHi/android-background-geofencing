@@ -40,19 +40,7 @@ public class BackgroundGeofencing {
   private static ArrayList<BackgroundGeofence> appOpenGeofences;
 
   public static void init(final Context context, final BackgroundGeofencingNotification notification) {
-    Operation operation = WorkManager.getInstance(context).cancelAllWork();
-    ListenableFuture<Operation.State.SUCCESS> future = operation.getResult();
-    future.addListener(new Runnable() {
-      @Override
-      public void run() {
-        BackgroundGeofencing.startUpSequence(context, notification);
-      }
-    }, new Executor() {
-      @Override
-      public void execute(Runnable command) {
-        command.run();
-      }
-    });
+    BackgroundGeofencing.startUpSequence(context, notification);
   }
 
   private static void startUpSequence(final Context context, BackgroundGeofencingNotification notification) {

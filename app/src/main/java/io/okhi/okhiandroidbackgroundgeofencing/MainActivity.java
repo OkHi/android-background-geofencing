@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         BackgroundGeofencingWebHook geofenceWebHook = new BackgroundGeofencingWebHook(
-            "https://30f68eb01ead.ngrok.io/transits",
+            "https://4bdcb053fbc3.ngrok.io/transits",
             10000,
             headers,
             null,
@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
         );
         geofenceWebHook.save(this);
         BackgroundGeofencingWebHook deviceMetaWebHook = new BackgroundGeofencingWebHook(
-            "https://30f68eb01ead.ngrok.io/device-meta",
+            "https://4bdcb053fbc3.ngrok.io/device-meta",
             10000,
             headers,
             null,
@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
         );
         deviceMetaWebHook.save(this);
         BackgroundGeofencingWebHook stopVerificationWebHook = new BackgroundGeofencingWebHook(
-            "https://30f68eb01ead.ngrok.io/stop/${id}/verification",
+            "https://4bdcb053fbc3.ngrok.io/stop/${id}/verification",
             10000,
             headers,
             null,
@@ -116,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
                 .setNotificationResponsiveness(5)
                 .setLoiteringDelay(60000)
                 .setInitialTriggerTransitionTypes(0)
-                .setWithNativeGeofenceTracking(false)
+                .setWithNativeGeofenceTracking(true)
                 .build();
 //        BackgroundGeofence workGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("work2", -1.313339237582541, 36.842414181487776)
 //                .setNotificationResponsiveness(5)

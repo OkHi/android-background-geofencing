@@ -14,6 +14,7 @@ import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceSetting;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceSource;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_core.models.OkHiCoreUtil;
@@ -26,7 +27,7 @@ public class DeviceRebootBroadcastReceiver extends BroadcastReceiver {
         if (Objects.equals(intent.getAction(), Intent.ACTION_BOOT_COMPLETED)) {
             Log.v(TAG, "Device reboot detected");
             // TODO: refactor this to a static method
-            ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(context);
+            ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.NATIVE_GEOFENCE);
             for (final BackgroundGeofence geofence : geofences) {
                 geofence.restart(context, new RequestHandler() {
                     @Override
@@ -43,7 +44,7 @@ public class DeviceRebootBroadcastReceiver extends BroadcastReceiver {
                     }
                 });
             }
-            BackgroundGeofencing.init(context, null);
+            BackgroundGeofencing.performBackgroundWork(context);
         }
         BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(context);
         if (setting != null && setting.isWithForegroundService() && !BackgroundGeofencing.isForegroundServiceRunning(context)) {

@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
+import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
@@ -52,13 +53,34 @@ public class BackgroundGeofenceTransitionUploadWorker extends Worker {
         try {
             // attempt to upload all transitions
             for (BackgroundGeofenceTransition transition : transitions) {
-                if (transition != null && transition.syncUpload(webHook)) {
-                    // remove from db if upload succeeds
-                    BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
+                if (transition != null) {
+                    BackgroundGeofence geofence = transition.getTriggeringGeofence(context);
+                    if (geofence == null) {
+                        BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
+                    } else {
+                        if (!geofence.isWithAppOpenTracking() && transition.getGeoPointSource().equals("appOpen")) {
+                            BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
+                        } else if (!geofence.isWithNativeGeofenceTracking() && transition.getGeoPointSource().equals("geofence")) {
+                            BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
+                        } else if (!geofence.isWithForegroundWatchTracking() && transition.getGeoPointSource().equals("foregroundWatch")) {
+                            BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
+                        } else if (!geofence.isWithForegroundPingTracking() && transition.getGeoPointSource().equals("foregroundPing")) {
+                            BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
+                        } else {
+                            boolean result = transition.syncUpload(context, webHook);
+                            if (result) {
+                                // remove from db if upload succeeds
+                                BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
+                            }
+                            else {
+                                // break if upload process fails
+                                uploadSuccess = false;
+                                break;
+                            }
+                        }
+                    }
                 } else {
-                    // break if upload process fails
-                    uploadSuccess = false;
-                    break;
+                    BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
                 }
             }
             // check status, attempt retry based on back-off policy

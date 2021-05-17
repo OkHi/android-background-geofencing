@@ -22,10 +22,13 @@ import java.util.HashMap;
 import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
+import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
+import io.okhi.android_background_geofencing.models.WebHookRequest;
+import io.okhi.android_background_geofencing.models.WebHookType;
 import io.okhi.android_core.OkHi;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
@@ -33,7 +36,6 @@ import io.okhi.android_core.models.OkHiException;
 public class MainActivity extends AppCompatActivity {
 
     OkHi okHi;
-    BackgroundGeofencingWebHook webHook;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -80,15 +82,41 @@ public class MainActivity extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        webHook = new BackgroundGeofencingWebHook("https://jsondataserver.okhi.io/data", 10000, headers, meta);
-        webHook.save(this);
+        BackgroundGeofencingWebHook geofenceWebHook = new BackgroundGeofencingWebHook(
+            "https://30f68eb01ead.ngrok.io/transits",
+            10000,
+            headers,
+            null,
+            WebHookType.GEOFENCE,
+            WebHookRequest.POST
+        );
+        geofenceWebHook.save(this);
+        BackgroundGeofencingWebHook deviceMetaWebHook = new BackgroundGeofencingWebHook(
+            "https://30f68eb01ead.ngrok.io/device-meta",
+            10000,
+            headers,
+            null,
+            WebHookType.DEVICE_PING,
+            WebHookRequest.PUT
+        );
+        deviceMetaWebHook.save(this);
+        BackgroundGeofencingWebHook stopVerificationWebHook = new BackgroundGeofencingWebHook(
+            "https://30f68eb01ead.ngrok.io/stop/${id}/verification",
+            10000,
+            headers,
+            null,
+            WebHookType.STOP,
+            WebHookRequest.PATCH
+        );
+        stopVerificationWebHook.save(this);
     }
 
     private void startGeofence() {
-        BackgroundGeofence homeGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("home1", -1.314593 , 36.836299)
+        BackgroundGeofence homeGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("home1", -1.314711 , 36.836425)
                 .setNotificationResponsiveness(5)
                 .setLoiteringDelay(60000)
                 .setInitialTriggerTransitionTypes(0)
+                .setWithNativeGeofenceTracking(false)
                 .build();
 //        BackgroundGeofence workGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("work2", -1.313339237582541, 36.842414181487776)
 //                .setNotificationResponsiveness(5)
@@ -191,14 +219,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void stopGeofence(View view) {
-        BackgroundGeofence.stop(getApplicationContext(), "home1");
+        BackgroundGeofence.stop(getApplicationContext(), "home1", new ResultHandler<String>() {
+            @Override
+            public void onSuccess(String result) {
+                showMessage("Stopped: " + result);
+            }
+
+            @Override
+            public void onError(BackgroundGeofencingException exception) {
+                showMessage("Something went wrong: " + exception.getCode() + "\n" + exception.getMessage());
+            }
+        });
     }
 
     public void stopService (View v) {
         BackgroundGeofencing.stopForegroundService(getApplicationContext());
     }
 
-    private void showMessage(String s) {
-        Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
+    private void showMessage(final String s) {
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }

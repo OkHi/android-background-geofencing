@@ -31,6 +31,7 @@ import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceSetting;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceSource;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
@@ -162,7 +163,7 @@ public class BackgroundGeofenceForegroundService extends Service {
         try {
             ArrayList<BackgroundGeofence> failedGeofences = new ArrayList<>();
             if (BackgroundGeofenceUtil.canRestartGeofences(getApplicationContext())) {
-                ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(getApplicationContext());
+                ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getGeofences(getApplicationContext(), BackgroundGeofenceSource.NATIVE_GEOFENCE);
                 for (BackgroundGeofence geofence : geofences) {
                     if (geofence.isFailing()) {
                         failedGeofences.add(geofence);
@@ -187,7 +188,7 @@ public class BackgroundGeofenceForegroundService extends Service {
                 OkHiLocationService.getCurrentLocation(getApplicationContext(), new OkHiRequestHandler<Location>() {
                     @Override
                     public void onResult(Location location) {
-                        ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(getApplicationContext());
+                        ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getGeofences(getApplicationContext(), BackgroundGeofenceSource.FOREGROUND_PING);
                         ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofenceTransition.generateTransitions(
                                 Constant.FOREGROUND_SERVICE_PING_GEOFENCE_SOURCE,
                                 location,
@@ -258,7 +259,7 @@ public class BackgroundGeofenceForegroundService extends Service {
     }
 
     private void generateGeofenceTransitions(Location location) {
-        ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(getApplicationContext());
+        ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getGeofences(getApplicationContext(), BackgroundGeofenceSource.FOREGROUND_WATCH);
         ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofenceTransition.generateTransitions(
                 Constant.FOREGROUND_SERVICE_WATCH_GEOFENCE_SOURCE,
                 location,

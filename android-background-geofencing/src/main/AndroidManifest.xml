@@ -22,9 +22,8 @@
         </receiver>
         <receiver
             android:name=".receivers.BackgroundGeofenceBroadcastReceiver"
-            android:enabled="true"
-            android:exported="true" />
-        <service android:name=".services.BackgroundGeofenceForegroundService" android:enabled="true" android:exported="true" />
+            android:enabled="true" />
+        <service android:name=".services.BackgroundGeofenceForegroundService" android:enabled="true" />
     </application>
 
 </manifest>

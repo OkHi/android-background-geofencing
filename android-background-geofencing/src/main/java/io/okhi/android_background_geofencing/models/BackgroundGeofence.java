@@ -262,7 +262,9 @@ public class BackgroundGeofence implements Serializable {
         }
 
         if (this.isWithAppOpenTracking() && !silently) {
-            triggerInitialAppOpen(context);
+            BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(context);
+            if (webHook == null) return;
+            BackgroundGeofenceAppOpen.transmitAppOpenEvent(context, webHook, this);
         }
     }
 
@@ -371,6 +373,7 @@ public class BackgroundGeofence implements Serializable {
                             OkHiException exception = OkHiCoreUtil.generateOkHiException(response);
                             handler.onError(new BackgroundGeofencingException(exception.getCode(), exception.getMessage()));
                         }
+                        response.close();
                     }
                 });
             } catch (Exception e) {
@@ -464,38 +467,5 @@ public class BackgroundGeofence implements Serializable {
 
     public void setWithAppOpenTracking(boolean withAppOpenTracking) {
         this.withAppOpenTracking = withAppOpenTracking;
-    }
-
-    private void triggerInitialAppOpen (final Context context) {
-        final BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(context);
-        if (webHook != null && BackgroundGeofenceUtil.isLocationServicesEnabled(context) && BackgroundGeofenceUtil.isLocationPermissionGranted(context)) {
-            final ArrayList<BackgroundGeofence> geofences = new ArrayList<>();
-            geofences.add(this);
-            BackgroundGeofenceUtil.getCurrentLocation(context, new ResultHandler<Location>() {
-                @Override
-                public void onSuccess(Location location) {
-                    ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofenceTransition.generateTransitions(
-                        Constant.APP_OPEN_GEOFENCE_TRANSITION_SOURCE_NAME,
-                        location,
-                        geofences,
-                        false,
-                        context
-                    );
-                    Log.v("InitCount", transitions.size() + "");
-                    for (BackgroundGeofenceTransition transition : transitions) {
-                        transition.save(context);
-                    }
-                    try {
-                        BackgroundGeofenceTransitionUploadWorker.uploadTransitions(context);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-                @Override
-                public void onError(BackgroundGeofencingException exception) {
-                    exception.printStackTrace();
-                }
-            });
-        }
     }
 }

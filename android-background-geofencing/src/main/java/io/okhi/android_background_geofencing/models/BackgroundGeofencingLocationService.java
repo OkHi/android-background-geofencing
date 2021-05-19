@@ -18,6 +18,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
+import io.okhi.android_core.models.OkHiLocationService;
+import io.okhi.android_core.models.OkHiPermissionService;
 
 public class BackgroundGeofencingLocationService {
     private LocationRequest watchLocationRequest;
@@ -65,7 +67,7 @@ public class BackgroundGeofencingLocationService {
 
     private void handleOnLocationResult(Location location) {
         this.location = location;
-        if (this.handler != null && location.getAccuracy() < 10) {
+        if (this.handler != null && location.getAccuracy() < 100) {
             handleOnLocationSuccess();
         }
     }
@@ -77,6 +79,18 @@ public class BackgroundGeofencingLocationService {
     }
 
     public void fetchCurrentLocation (Context context, final ResultHandler<Location> handler) {
+        if (!OkHiLocationService.isLocationServicesEnabled(context)) {
+            handler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE, "Location services are unavailable"));
+            return;
+        }
+        if (BackgroundGeofenceUtil.isAppOnForeground(context) && !OkHiPermissionService.isLocationPermissionGranted(context)) {
+            handler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.PERMISSION_DENIED_CODE, "Location permission not granted"));
+            return;
+        }
+        if (!BackgroundGeofenceUtil.isAppOnForeground(context) && !OkHiPermissionService.isBackgroundLocationPermissionGranted(context)) {
+            handler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.PERMISSION_DENIED_CODE, "Location permission not granted"));
+            return;
+        }
         this.context = context;
         this.handler = handler;
         startForegroundLocationWatch();

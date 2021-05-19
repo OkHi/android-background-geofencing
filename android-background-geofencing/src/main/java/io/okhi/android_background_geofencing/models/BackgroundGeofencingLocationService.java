@@ -7,6 +7,7 @@ import android.location.Location;
 import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -93,7 +94,12 @@ public class BackgroundGeofencingLocationService {
         }
         this.context = context;
         this.handler = handler;
-        startForegroundLocationWatch();
         timer.scheduleAtFixedRate(task, 20000, 20000);
+        ContextCompat.getMainExecutor(context).execute(new Runnable() {
+            @Override
+            public void run() {
+                startForegroundLocationWatch();
+            }
+        });
     }
 }

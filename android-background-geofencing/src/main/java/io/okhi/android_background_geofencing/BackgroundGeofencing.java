@@ -51,7 +51,7 @@ public class BackgroundGeofencing {
     }, new Executor() {
       @Override
       public void execute(Runnable command) {
-        ContextCompat.getMainExecutor(context).execute(command);
+        command.run();
       }
     });
 

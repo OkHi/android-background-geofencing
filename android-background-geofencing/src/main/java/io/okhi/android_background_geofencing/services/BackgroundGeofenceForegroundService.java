@@ -127,17 +127,13 @@ public class BackgroundGeofenceForegroundService extends Service {
     private void startGeofenceTransitionWork(final boolean restartGeofences) {
         try {
             manageDeviceWake(true);
-            Thread transitionWork = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    startGeofenceTransitionUpload();
-                    if (restartGeofences) {
-                        restartFailedGeofences();
-                    }
-                }
-            });
-            transitionWork.start();
-            transitionWork.join();
+            boolean result = BackgroundGeofenceTransitionUploadWorker.uploadTransitions(getApplicationContext());
+            if (!result) {
+                BackgroundGeofenceTransition.scheduleGeofenceTransitionUploadWork(getApplicationContext());
+            }
+            if (restartGeofences) {
+                restartFailedGeofences();
+            }
             Log.v(TAG, "Transition work complete.");
         } catch (Exception e) {
             e.printStackTrace();
@@ -145,18 +141,6 @@ public class BackgroundGeofenceForegroundService extends Service {
         } finally {
             manageDeviceWake(false);
             stopService(false);
-        }
-    }
-
-    private void startGeofenceTransitionUpload() {
-        try {
-            boolean result = BackgroundGeofenceTransitionUploadWorker.uploadTransitions(getApplicationContext());
-            if (!result) {
-                BackgroundGeofenceTransition.scheduleGeofenceTransitionUploadWork(getApplicationContext());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            OkHiCoreUtil.captureException(e);
         }
     }
 

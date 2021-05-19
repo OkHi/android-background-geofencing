@@ -23,13 +23,16 @@ import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceAppOpen;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceDeviceMeta;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceSetting;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceSource;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
+import io.okhi.android_background_geofencing.models.BackgroundGeofencingLocationService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
+import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceForegroundService;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
@@ -37,75 +40,44 @@ import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransiti
 import io.okhi.android_core.models.OkHiCoreUtil;
 
 public class BackgroundGeofencing {
-  private static ArrayList<BackgroundGeofence> appOpenGeofences;
 
   public static void init(final Context context, final BackgroundGeofencingNotification notification) {
-    BackgroundGeofencing.startUpSequence(context, notification);
+    Operation operation = WorkManager.getInstance(context).cancelAllWork();
+    operation.getResult().addListener(new Runnable() {
+      @Override
+      public void run() {
+        BackgroundGeofencing.startUpSequence(context, notification);
+      }
+    }, new Executor() {
+      @Override
+      public void execute(Runnable command) {
+        ContextCompat.getMainExecutor(context).execute(command);
+      }
+    });
+
   }
 
   private static void startUpSequence(final Context context, BackgroundGeofencingNotification notification) {
     BackgroundGeofencingDB.saveNotification(notification, context);
     BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(context);
-    boolean isAppOnForeground = BackgroundGeofenceUtil.isAppOnForeground(context);
-    boolean hasWebhook = BackgroundGeofencingDB.getWebHook(context) != null;
-    boolean canRestartGeofences  = BackgroundGeofenceUtil.canRestartGeofences(context);
-    boolean canPerformInitWork = isAppOnForeground && hasWebhook && canRestartGeofences;
+    BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(context);
     ArrayList<BackgroundGeofence> allGeofences = BackgroundGeofencingDB.getAllGeofences(context);
+    boolean isAppOnForeground = BackgroundGeofenceUtil.isAppOnForeground(context);
+    boolean canRestartGeofences  = BackgroundGeofenceUtil.canRestartGeofences(context);
     if (!allGeofences.isEmpty()) {
       new BackgroundGeofenceDeviceMeta(context, allGeofences).syncUpload();
-    }
-    appOpenGeofences = BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.APP_OPEN);
-    if (canPerformInitWork) {
-      performInitWork(context, new RequestHandler() {
-        @Override
-        public void onSuccess() {
-          performBackgroundWork(context);
+      BackgroundGeofenceAppOpen.transmitAppOpenEvent(context, webHook);
+      if (setting != null && setting.isWithForegroundService()) {
+        try {
+          startForegroundService(context);
+        } catch (BackgroundGeofencingException e) {
+          e.printStackTrace();
         }
-
-        @Override
-        public void onError(BackgroundGeofencingException exception) {
-          performBackgroundWork(context);
-        }
-      });
-    } else {
-      performBackgroundWork(context);
-    }
-    if (setting != null && setting.isWithForegroundService()) {
-      try {
-        startForegroundService(context);
-      } catch (BackgroundGeofencingException e) {
-        e.printStackTrace();
+      }
+      if (isAppOnForeground && webHook != null && canRestartGeofences) {
+        performBackgroundWork(context);
       }
     }
-  }
-
-  private static void performInitWork(final Context context, final RequestHandler handler) {
-    BackgroundGeofenceUtil.getCurrentLocation(context, new ResultHandler<Location>() {
-      @Override
-      public void onSuccess(Location location) {
-        triggerInitGeofenceEvents(location, context, handler);
-      }
-      @Override
-      public void onError(BackgroundGeofencingException exception) {
-        handler.onError(exception);
-      }
-    });
-  }
-
-  private static void triggerInitGeofenceEvents(Location location, Context context, RequestHandler handler) {
-    if (!appOpenGeofences.isEmpty()) {
-      ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofenceTransition.generateTransitions(
-          Constant.APP_OPEN_GEOFENCE_TRANSITION_SOURCE_NAME,
-          location,
-          appOpenGeofences,
-          false,
-          context
-      );
-      for (BackgroundGeofenceTransition transition : transitions) {
-        transition.save(context);
-      }
-    }
-    handler.onSuccess();
   }
 
   public static void performBackgroundWork(Context context) {

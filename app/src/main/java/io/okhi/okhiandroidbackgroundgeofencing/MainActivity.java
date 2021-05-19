@@ -32,6 +32,7 @@ import io.okhi.android_background_geofencing.models.WebHookType;
 import io.okhi.android_core.OkHi;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
+import io.okhi.android_core.models.OkHiPermissionService;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -83,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         BackgroundGeofencingWebHook geofenceWebHook = new BackgroundGeofencingWebHook(
-            "https://100b5d4692ad.ngrok.io/transits",
+            "https://0056fcfd5703.ngrok.io/transits",
             10000,
             headers,
             null,
@@ -92,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
         );
         geofenceWebHook.save(this);
         BackgroundGeofencingWebHook deviceMetaWebHook = new BackgroundGeofencingWebHook(
-            "https://100b5d4692ad.ngrok.io/device-meta",
+            "https://0056fcfd5703.ngrok.io/device-meta",
             10000,
             headers,
             null,
@@ -101,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
         );
         deviceMetaWebHook.save(this);
         BackgroundGeofencingWebHook stopVerificationWebHook = new BackgroundGeofencingWebHook(
-            "https://100b5d4692ad.ngrok.io/stop/${id}/verification",
+            "https://0056fcfd5703.ngrok.io/stop/${id}/verification",
             10000,
             headers,
             null,
@@ -112,12 +113,39 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startGeofence() {
-        BackgroundGeofence homeGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("home1", -1.314711 , 36.836425)
-                .setNotificationResponsiveness(5)
-                .setLoiteringDelay(60000)
-                .setInitialTriggerTransitionTypes(0)
-                .setWithNativeGeofenceTracking(false)
-                .build();
+        okHi.requestBackgroundLocationPermission("Hi", "There", new OkHiRequestHandler<Boolean>() {
+            @Override
+            public void onResult(Boolean result) {
+                BackgroundGeofence homeGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("home1", -1.314711 , 36.836425)
+                    .setNotificationResponsiveness(5)
+                    .setLoiteringDelay(60000)
+                    .setInitialTriggerTransitionTypes(0)
+                    .setWithNativeGeofenceTracking(false)
+                    .build();
+                final BackgroundGeofence[] geofences = {homeGeofence};
+                for (BackgroundGeofence geofence: geofences) {
+                    geofence.start(getApplicationContext(), new RequestHandler() {
+                        @Override
+                        public void onSuccess() {
+                            Log.v("MainActivity", "Work geofence started");
+//                            BackgroundGeofencing.startForegroundService(getApplicationContext());
+                        }
+
+                        @Override
+                        public void onError(BackgroundGeofencingException exception) {
+                            exception.printStackTrace();
+                            Log.v("MainActivity", exception.getMessage());
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onError(OkHiException exception) {
+
+            }
+        });
+
 //        BackgroundGeofence workGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("work2", -1.313339237582541, 36.842414181487776)
 //                .setNotificationResponsiveness(5)
 //                .setLoiteringDelay(60000)
@@ -143,29 +171,10 @@ public class MainActivity extends AppCompatActivity {
 //                .setLoiteringDelay(60000)
 //                .setInitialTriggerTransitionTypes(0)
 //                .build();
-        final BackgroundGeofence[] geofences = {homeGeofence};
+
 //        final BackgroundGeofence[] geofences = {homeGeofence, workGeofence, homeGeofence1, workGeofence2, homeGeofence3, workGeofence4};
         
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for (BackgroundGeofence geofence: geofences) {
-                    geofence.start(getApplicationContext(), new RequestHandler() {
-                        @Override
-                        public void onSuccess() {
-                            Log.v("MainActivity", "Work geofence started");
-//                            BackgroundGeofencing.startForegroundService(getApplicationContext());
-                        }
 
-                        @Override
-                        public void onError(BackgroundGeofencingException exception) {
-                            exception.printStackTrace();
-                            Log.v("MainActivity", exception.getMessage());
-                        }
-                    });
-                }
-            }
-        }).start();
 
 //        new Thread(new Runnable() {
 //            @Override

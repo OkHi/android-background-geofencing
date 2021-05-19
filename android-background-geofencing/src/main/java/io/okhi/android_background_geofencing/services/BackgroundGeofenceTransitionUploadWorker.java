@@ -23,9 +23,6 @@ import io.okhi.android_core.models.OkHiCoreUtil;
 
 public class BackgroundGeofenceTransitionUploadWorker extends Worker {
 
-    private static Lock lock = new ReentrantLock();
-    private static Condition condition = lock.newCondition();
-
     public BackgroundGeofenceTransitionUploadWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
     }
@@ -47,7 +44,6 @@ public class BackgroundGeofenceTransitionUploadWorker extends Worker {
 
     // TODO: is this the best place to put this?
     public static boolean uploadTransitions(Context context) throws JSONException {
-        lock.lock();
         // get webhook configuration
         BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(context);
         // get all transitions from db
@@ -104,8 +100,6 @@ public class BackgroundGeofenceTransitionUploadWorker extends Worker {
         } catch (Exception e) {
             // fail if we have any other exceptions
             throw e;
-        } finally {
-            lock.unlock();
         }
     }
 }

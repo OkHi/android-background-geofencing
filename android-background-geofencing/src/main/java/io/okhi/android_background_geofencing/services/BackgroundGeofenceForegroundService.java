@@ -29,12 +29,14 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
+import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceSetting;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceSource;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
+import io.okhi.android_background_geofencing.models.BackgroundGeofencingLocationService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.Constant;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
@@ -238,13 +240,13 @@ public class BackgroundGeofenceForegroundService extends Service {
         if (location.hasAccuracy() && location.getAccuracy() < 100) {
             generateGeofenceTransitions(location);
         } else {
-            OkHiLocationService.getCurrentLocation(getApplicationContext(), new OkHiRequestHandler<Location>() {
+            new BackgroundGeofencingLocationService().fetchCurrentLocation(getApplicationContext(), new ResultHandler<Location>() {
                 @Override
-                public void onResult(Location result) {
+                public void onSuccess(Location result) {
                     generateGeofenceTransitions(result);
                 }
                 @Override
-                public void onError(OkHiException exception) {
+                public void onError(BackgroundGeofencingException exception) {
                     exception.printStackTrace();
                     generateGeofenceTransitions(location);
                 }

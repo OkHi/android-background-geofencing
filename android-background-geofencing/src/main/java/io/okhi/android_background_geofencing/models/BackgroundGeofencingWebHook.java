@@ -118,4 +118,8 @@ public class BackgroundGeofencingWebHook implements Serializable {
         }
         return WebHookRequest.POST;
     }
+
+    public static BackgroundGeofencingWebHook getWebHook (Context context, WebHookType type) {
+        return BackgroundGeofencingDB.getWebHook(context, type);
+    }
 }

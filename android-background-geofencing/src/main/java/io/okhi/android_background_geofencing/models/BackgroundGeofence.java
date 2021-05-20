@@ -229,6 +229,13 @@ public class BackgroundGeofence implements Serializable {
             return;
         }
 
+        if (this.isWithAppOpenTracking() && !silently) {
+            BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(context);
+            if (webHook != null) {
+                BackgroundGeofenceAppOpen.transmitAppOpenEvent(context, webHook, this);
+            }
+        }
+
         if (this.isWithNativeGeofenceTracking()) {
             GeofencingClient geofencingClient = LocationServices.getGeofencingClient(context);
             ArrayList<Geofence> geofenceList = new ArrayList<>();
@@ -259,12 +266,6 @@ public class BackgroundGeofence implements Serializable {
         } else {
             save(context);
             requestHandler.onSuccess();
-        }
-
-        if (this.isWithAppOpenTracking() && !silently) {
-            BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(context);
-            if (webHook == null) return;
-            BackgroundGeofenceAppOpen.transmitAppOpenEvent(context, webHook, this);
         }
     }
 

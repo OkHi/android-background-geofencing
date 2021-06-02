@@ -32,7 +32,7 @@ public class BackgroundGeofenceDeviceMeta {
   private String deviceManufacturer = Build.MANUFACTURER;
   private String deviceModel = Build.MODEL;
   private String deviceName = Build.PRODUCT;
-  private int deviceBatteryLevel = -1;
+  private double deviceBatteryLevel = -1;
 
   private String deviceOsName = "Android";
   private String deviceOsVersion = Build.VERSION.RELEASE;
@@ -60,7 +60,7 @@ public class BackgroundGeofenceDeviceMeta {
     this.networkCarrierName = manager.getNetworkOperatorName();
     this.networkSimOperatorName = manager.getSimOperatorName();
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-      this.deviceBatteryLevel = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) / 100;
+      this.deviceBatteryLevel = (double) bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) / 100.0;
     }
     ConnectivityManager connManager = (ConnectivityManager) this.context.getSystemService(Context.CONNECTIVITY_SERVICE);
     NetworkInfo wifiNetworkInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);

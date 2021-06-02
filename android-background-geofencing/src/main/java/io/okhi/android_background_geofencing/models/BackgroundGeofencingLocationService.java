@@ -23,6 +23,7 @@ import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_core.models.OkHiLocationService;
 import io.okhi.android_core.models.OkHiPermissionService;
 
+// TODO: kiano move this to OkHiLocationService class
 public class BackgroundGeofencingLocationService {
     private LocationRequest watchLocationRequest;
     private FusedLocationProviderClient fusedLocationProviderClient;

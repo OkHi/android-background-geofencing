@@ -15,6 +15,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.TimeZone;
 
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_core.models.OkHiLocationService;
@@ -44,6 +45,7 @@ public class BackgroundGeofenceDeviceMeta {
   private String netWorkSSID;
   private ArrayList<HashMap<String, String>> permissions = new ArrayList<>();
 
+  private String timezone = TimeZone.getDefault().getID();
   private ArrayList<String> geofenceIds = new ArrayList<>();
   private Context context;
 
@@ -110,7 +112,7 @@ public class BackgroundGeofenceDeviceMeta {
       if (this.netWorkSSID != null) {
         networkInformation.put("wifiSSID", this.netWorkSSID);
       }
-
+      payload.put("timezone", timezone);
       payload.put("device", deviceInformation);
       payload.put("os", osInformation);
       payload.put("network", networkInformation);

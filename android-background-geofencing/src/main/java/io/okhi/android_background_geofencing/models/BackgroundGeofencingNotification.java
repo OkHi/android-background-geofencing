@@ -17,6 +17,8 @@ import androidx.core.app.NotificationCompat;
 import java.io.Serializable;
 import java.util.Objects;
 
+import io.okhi.android_background_geofencing.R;
+
 public class BackgroundGeofencingNotification implements Serializable {
     private String title;
     private String text;
@@ -82,6 +84,8 @@ public class BackgroundGeofencingNotification implements Serializable {
             int color = bundle.getInt(Constant.FOREGROUND_NOTIFICATION_COLOR_META_KEY);
             if (icon != 0) {
                 builder.setSmallIcon(icon);
+            } else {
+                builder.setSmallIcon(R.drawable.ic_person_pin);
             }
             if (color != 0) {
                 builder.setColor(context.getResources().getColor(color));

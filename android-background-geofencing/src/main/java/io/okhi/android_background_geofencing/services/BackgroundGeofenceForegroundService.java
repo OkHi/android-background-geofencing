@@ -23,14 +23,20 @@ import com.google.android.gms.location.LocationServices;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
+import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceSetting;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceSource;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
+import io.okhi.android_background_geofencing.models.BackgroundGeofencingLocationService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.Constant;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
@@ -54,6 +60,8 @@ public class BackgroundGeofenceForegroundService extends Service {
     private LocationRequest watchLocationRequest;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationCallback watchLocationCallback;
+    private static Lock lock = new ReentrantLock();
+    private static Condition condition = lock.newCondition();
 
     @Nullable
     @Override
@@ -78,11 +86,11 @@ public class BackgroundGeofenceForegroundService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent.hasExtra(Constant.FOREGROUND_SERVICE_ACTION) && Objects.equals(intent.getStringExtra(Constant.FOREGROUND_SERVICE_ACTION), Constant.FOREGROUND_SERVICE_STOP)) {
+        if (intent != null && intent.hasExtra(Constant.FOREGROUND_SERVICE_ACTION) && Objects.equals(intent.getStringExtra(Constant.FOREGROUND_SERVICE_ACTION), Constant.FOREGROUND_SERVICE_STOP)) {
             foregroundWorkStarted = false;
             stopService(true);
         }
-        if (intent.hasExtra(Constant.FOREGROUND_SERVICE_ACTION) && Objects.equals(intent.getStringExtra(Constant.FOREGROUND_SERVICE_ACTION), Constant.FOREGROUND_SERVICE_GEOFENCE_EVENT)) {
+        if (intent != null && intent.hasExtra(Constant.FOREGROUND_SERVICE_ACTION) && Objects.equals(intent.getStringExtra(Constant.FOREGROUND_SERVICE_ACTION), Constant.FOREGROUND_SERVICE_GEOFENCE_EVENT)) {
             startGeofenceTransitionWork(true);
         }
         if (isWithForegroundService && !foregroundWorkStarted) {
@@ -96,15 +104,21 @@ public class BackgroundGeofenceForegroundService extends Service {
     private void manageDeviceWake(boolean wake) {
         if (wake && !wakeLock.isHeld()) {
             try {
-                wakeLock.acquire(10 * 60 * 1000L /*10 minutes*/);
+                lock.lock();
+                wakeLock.acquire();
             } catch (Exception e) {
                 /// ignore
+            } finally {
+                lock.unlock();
             }
         } else {
             try {
+                lock.lock();
                 wakeLock.release();
             } catch (Exception e) {
                 /// ignore
+            } finally {
+                lock.unlock();
             }
         }
     }
@@ -112,17 +126,13 @@ public class BackgroundGeofenceForegroundService extends Service {
     private void startGeofenceTransitionWork(final boolean restartGeofences) {
         try {
             manageDeviceWake(true);
-            Thread transitionWork = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    startGeofenceTransitionUpload();
-                    if (restartGeofences) {
-                        restartFailedGeofences();
-                    }
-                }
-            });
-            transitionWork.start();
-            transitionWork.join();
+            boolean result = BackgroundGeofenceTransitionUploadWorker.uploadTransitions(getApplicationContext());
+            if (!result) {
+                BackgroundGeofenceTransition.scheduleGeofenceTransitionUploadWork(getApplicationContext());
+            }
+            if (restartGeofences) {
+                restartFailedGeofences();
+            }
             Log.v(TAG, "Transition work complete.");
         } catch (Exception e) {
             e.printStackTrace();
@@ -132,23 +142,12 @@ public class BackgroundGeofenceForegroundService extends Service {
         }
     }
 
-    private void startGeofenceTransitionUpload() {
-        try {
-            boolean result = BackgroundGeofenceTransitionUploadWorker.uploadTransitions(getApplicationContext());
-            if (!result) {
-                BackgroundGeofenceTransition.scheduleGeofenceTransitionUploadWork(getApplicationContext());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     // TODO: refactor this to something cleaner
     private void restartFailedGeofences() {
         try {
             ArrayList<BackgroundGeofence> failedGeofences = new ArrayList<>();
             if (BackgroundGeofenceUtil.canRestartGeofences(getApplicationContext())) {
-                ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(getApplicationContext());
+                ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getGeofences(getApplicationContext(), BackgroundGeofenceSource.NATIVE_GEOFENCE);
                 for (BackgroundGeofence geofence : geofences) {
                     if (geofence.isFailing()) {
                         failedGeofences.add(geofence);
@@ -172,7 +171,7 @@ public class BackgroundGeofenceForegroundService extends Service {
                 OkHiLocationService.getCurrentLocation(getApplicationContext(), new OkHiRequestHandler<Location>() {
                     @Override
                     public void onResult(Location location) {
-                        ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(getApplicationContext());
+                        ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getGeofences(getApplicationContext(), BackgroundGeofenceSource.FOREGROUND_PING);
                         ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofenceTransition.generateTransitions(
                                 Constant.FOREGROUND_SERVICE_PING_GEOFENCE_SOURCE,
                                 location,
@@ -189,6 +188,7 @@ public class BackgroundGeofenceForegroundService extends Service {
                                 startGeofenceTransitionWork(false);
                             }
                         }).start();
+                        manageDeviceWake(false);
                     }
                     @Override
                     public void onError(OkHiException exception) {
@@ -225,13 +225,13 @@ public class BackgroundGeofenceForegroundService extends Service {
         if (location.hasAccuracy() && location.getAccuracy() < 100) {
             generateGeofenceTransitions(location);
         } else {
-            OkHiLocationService.getCurrentLocation(getApplicationContext(), new OkHiRequestHandler<Location>() {
+            new BackgroundGeofencingLocationService().fetchCurrentLocation(getApplicationContext(), new ResultHandler<Location>() {
                 @Override
-                public void onResult(Location result) {
+                public void onSuccess(Location result) {
                     generateGeofenceTransitions(result);
                 }
                 @Override
-                public void onError(OkHiException exception) {
+                public void onError(BackgroundGeofencingException exception) {
                     exception.printStackTrace();
                     generateGeofenceTransitions(location);
                 }
@@ -240,7 +240,7 @@ public class BackgroundGeofenceForegroundService extends Service {
     }
 
     private void generateGeofenceTransitions(Location location) {
-        ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(getApplicationContext());
+        ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getGeofences(getApplicationContext(), BackgroundGeofenceSource.FOREGROUND_WATCH);
         ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofenceTransition.generateTransitions(
                 Constant.FOREGROUND_SERVICE_WATCH_GEOFENCE_SOURCE,
                 location,

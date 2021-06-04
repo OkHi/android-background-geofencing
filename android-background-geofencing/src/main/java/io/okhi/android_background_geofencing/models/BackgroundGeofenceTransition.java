@@ -24,10 +24,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.CipherSuite;
 import okhttp3.ConnectionSpec;
 import okhttp3.MediaType;
@@ -211,52 +215,87 @@ public class BackgroundGeofenceTransition implements Serializable {
         return payload;
     }
 
-    public boolean syncUpload(BackgroundGeofencingWebHook webHook) throws JSONException, IOException {
+    public boolean syncUpload(final Context context, BackgroundGeofencingWebHook webHook) throws JSONException, IOException {
         JSONObject meta = webHook.getMeta();
-        OkHttpClient client = getHttpClient(webHook);
+        OkHttpClient client = BackgroundGeofenceUtil.getHttpClient(webHook);
         JSONObject payload = toJSONObject();
         if (meta != null) {
             payload.put("meta", meta);
         }
         RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), payload.toString());
-        Request request = new Request.Builder()
-                .url(webHook.getUrl())
-                .headers(webHook.getHeaders())
-                .post(requestBody)
-                .build();
-        Response response = client.newCall(request).execute();
-        response.close();
-        if (response.isSuccessful()) {
-            return true;
-        } else {
-            Log.v(TAG, "Request failed with payload:\n" + payload.toString());
+        Request.Builder requestBuild = new Request.Builder();
+        requestBuild.url(webHook.getUrl());
+        requestBuild.headers(webHook.getHeaders());
+        if (webHook.getWebHookRequest() == WebHookRequest.POST) {
+            requestBuild.post(requestBody);
+        }
+        if (webHook.getWebHookRequest() == WebHookRequest.PATCH) {
+            requestBuild.patch(requestBody);
+        }
+        if (webHook.getWebHookRequest() == WebHookRequest.DELETE) {
+            requestBuild.delete(requestBody);
+        }
+        if (webHook.getWebHookRequest() == WebHookRequest.PUT) {
+            requestBuild.put(requestBody);
+        }
+        Request request = requestBuild.build();
+        final Boolean[] result = {true};
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                result[0] = false;
+                countDownLatch.countDown();
+            }
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                handleStopGeofenceTrackingResponse(context, response);
+                if (response.isSuccessful() || response.code() == 312) {
+                    result[0] = true;
+                    countDownLatch.countDown();
+                }
+                response.close();
+            }
+        });
+        try {
+            countDownLatch.await();
+            return result[0];
+        } catch (Exception e) {
             return false;
         }
     }
 
-    private OkHttpClient getHttpClient(BackgroundGeofencingWebHook webHook) {
-        ConnectionSpec spec = new ConnectionSpec.Builder(ConnectionSpec.COMPATIBLE_TLS)
-                .supportsTlsExtensions(true)
-                .tlsVersions(TlsVersion.TLS_1_2, TlsVersion.TLS_1_1, TlsVersion.TLS_1_0)
-                .cipherSuites(
-                        CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-                        CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-                        CipherSuite.TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,
-                        CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
-                        CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
-                        CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
-                        CipherSuite.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-                        CipherSuite.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
-                        CipherSuite.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
-                        CipherSuite.TLS_DHE_RSA_WITH_AES_128_CBC_SHA,
-                        CipherSuite.TLS_DHE_DSS_WITH_AES_128_CBC_SHA,
-                        CipherSuite.TLS_DHE_RSA_WITH_AES_256_CBC_SHA)
-                .build();
-        return new OkHttpClient.Builder()
-                .connectionSpecs(Collections.singletonList(spec))
-                .connectTimeout(webHook.getTimeout(), TimeUnit.MILLISECONDS)
-                .writeTimeout(webHook.getTimeout(), TimeUnit.MILLISECONDS)
-                .readTimeout(webHook.getTimeout(), TimeUnit.MILLISECONDS).build();
+    private void handleStopGeofenceTrackingResponse (Context context, Response response) {
+        // TODO: refactor to something constant
+        if (response.code() != 312) return;
+        try {
+            JSONArray jsonArrayResponse = new JSONArray(response.body().string());
+            for (int i = 0; i < jsonArrayResponse.length(); i++) {
+                JSONObject item = jsonArrayResponse.getJSONObject(i);
+                String locationId = item.optString("location_id", null);
+                if (locationId == null) return;
+                JSONObject stop = item.has("stop") ? item.getJSONObject("stop") : null;
+                if (stop == null) return;
+                BackgroundGeofence geofence = BackgroundGeofencingDB.getBackgroundGeofence(locationId, context);
+                if (geofence == null) return;
+                Boolean stopForegroundWatch = stop.has("foregroundWatch") && stop.getBoolean("foregroundWatch");
+                Boolean stopForegroundPing = stop.has("foregroundPing") && stop.getBoolean("foregroundPing");
+                Boolean stopGeofence = stop.has("geofence") && stop.getBoolean("geofence");
+                Boolean stopAppOpen = stop.has("appOpen") && stop.getBoolean("appOpen");
+                if (geofence.isWithForegroundWatchTracking() == !stopForegroundWatch && geofence.isWithForegroundPingTracking() == !stopForegroundPing && geofence.isWithNativeGeofenceTracking() == !stopGeofence && geofence.isWithAppOpenTracking() == !stopAppOpen) {
+                    // nothing has changed following previous stop
+                    return;
+                }
+                geofence.setWithAppOpenTracking(!stopAppOpen);
+                geofence.setWithNativeGeofenceTracking(!stopGeofence);
+                geofence.setWithForegroundPingTracking(!stopForegroundPing);
+                geofence.setWithForegroundWatchTracking(!stopForegroundWatch);
+                geofence.save(context);
+                BackgroundGeofence.stop(context, geofence);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public String getTransitionEvent() {
@@ -342,7 +381,7 @@ public class BackgroundGeofenceTransition implements Serializable {
         ArrayList<String> exitIds = new ArrayList<>();
         ArrayList<BackgroundGeofenceTransition> transitions = new ArrayList<>();
         for (BackgroundGeofence geofence : geofences) {
-            if (isEnter(location, geofence)) {
+            if (BackgroundGeofenceUtil.isEnter(location, geofence)) {
                 enterIds.add(geofence.getId());
             } else {
                 exitIds.add(geofence.getId());
@@ -375,40 +414,15 @@ public class BackgroundGeofenceTransition implements Serializable {
         return transitions;
     }
 
+    public BackgroundGeofence getTriggeringGeofence (Context context) {
+        return BackgroundGeofencingDB.getBackgroundGeofence(ids.get(0), context);
+    }
+
     private static void removeGeofenceEnterTimestamp(BackgroundGeofence geofence, Context context) {
         BackgroundGeofencingDB.removeGeofenceEnterTimestamp(geofence, context);
     }
 
     private static void saveGeofenceEnterTimestamp(BackgroundGeofence geofence, Context context) {
         BackgroundGeofencingDB.saveGeofenceEnterTimestamp(geofence, context);
-    }
-
-    private static boolean isEnter(Location location, BackgroundGeofence geofence) {
-        double distance = distance(location.getLatitude(), geofence.getLat(), location.getLongitude(), geofence.getLng(), 0.0, 0.0);
-        return distance < geofence.getRadius();
-    }
-
-    /**
-     * Calculate distance between two points in latitude and longitude taking
-     * into account height difference. If you are not interested in height
-     * difference pass 0.0. Uses Haversine method as its base.
-     * https://stackoverflow.com/questions/3694380/calculating-distance-between-two-points-using-latitude-longitude
-     * lat1, lon1 Start point lat2, lon2 End point el1 Start altitude in meters
-     * el2 End altitude in meters
-     *
-     * @returns Distance in Meters
-     */
-    private static double distance(double lat1, double lat2, double lon1, double lon2, double el1, double el2) {
-        final int R = 6371; // Radius of the earth
-        double latDistance = Math.toRadians(lat2 - lat1);
-        double lonDistance = Math.toRadians(lon2 - lon1);
-        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        double distance = R * c * 1000; // convert to meters
-        double height = el1 - el2;
-        distance = Math.pow(distance, 2) + Math.pow(height, 2);
-        return Math.sqrt(distance);
     }
 }

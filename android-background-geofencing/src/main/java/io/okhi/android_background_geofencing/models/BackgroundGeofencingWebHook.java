@@ -6,7 +6,6 @@ import org.json.JSONObject;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
@@ -18,6 +17,8 @@ public class BackgroundGeofencingWebHook implements Serializable {
     private long timeout = Constant.DEFAULT_WEBHOOK_TIMEOUT;
     private HashMap<String, String> headers;
     private JSONObject meta;
+    private WebHookType webhookType = WebHookType.GEOFENCE;
+    private String webHookRequest = WebHookRequest.POST.name();
 
     BackgroundGeofencingWebHook() {
     }
@@ -42,6 +43,23 @@ public class BackgroundGeofencingWebHook implements Serializable {
         this.timeout = timeout;
         this.headers = headers;
         this.meta = meta;
+    }
+
+    public BackgroundGeofencingWebHook(String url, int timeout, HashMap<String, String> headers, JSONObject meta, WebHookType webhookType) {
+        this.url = url;
+        this.timeout = timeout;
+        this.headers = headers;
+        this.meta = meta;
+        this.webhookType = webhookType;
+    }
+
+    public BackgroundGeofencingWebHook(String url, int timeout, HashMap<String, String> headers, JSONObject meta, WebHookType webhookType, WebHookRequest webHookRequest) {
+        this.url = url;
+        this.timeout = timeout;
+        this.headers = headers;
+        this.meta = meta;
+        this.webhookType = webhookType;
+        this.webHookRequest = webHookRequest.name();
     }
 
     public void save(Context context) {
@@ -75,5 +93,37 @@ public class BackgroundGeofencingWebHook implements Serializable {
 
     public String getUrl() {
         return url;
+    }
+
+    public String getUrl(String geofenceId) {
+        if (url.contains("${id}")) {
+            return url.replace("${id}", geofenceId);
+        }
+        return url;
+    }
+
+    public WebHookType getWebhookType() {
+        return webhookType;
+    }
+
+    public WebHookRequest getWebHookRequest() {
+        if (webHookRequest.equals(WebHookRequest.PATCH.name())) {
+            return WebHookRequest.PATCH;
+        }
+        if (webHookRequest.equals(WebHookRequest.DELETE.name())) {
+            return WebHookRequest.DELETE;
+        }
+        if (webHookRequest.equals(WebHookRequest.PUT.name())) {
+            return WebHookRequest.PUT;
+        }
+        return WebHookRequest.POST;
+    }
+
+    public static BackgroundGeofencingWebHook getWebHook (Context context, WebHookType type) {
+        return BackgroundGeofencingDB.getWebHook(context, type);
+    }
+
+    public HashMap<String, String> getHeadersHashMap () {
+        return headers;
     }
 }

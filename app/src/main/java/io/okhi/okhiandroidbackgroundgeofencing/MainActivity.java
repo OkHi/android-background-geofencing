@@ -22,19 +22,21 @@ import java.util.HashMap;
 import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
+import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
-import io.okhi.android_background_geofencing.models.BackgroundGeofenceSetting;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
+import io.okhi.android_background_geofencing.models.WebHookRequest;
+import io.okhi.android_background_geofencing.models.WebHookType;
 import io.okhi.android_core.OkHi;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
+import io.okhi.android_core.models.OkHiPermissionService;
 
 public class MainActivity extends AppCompatActivity {
 
     OkHi okHi;
-    BackgroundGeofencingWebHook webHook;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -50,9 +52,8 @@ public class MainActivity extends AppCompatActivity {
                 "OkHi Channel",
                 "My channel description",
                 NotificationManager.IMPORTANCE_HIGH,
-                R.mipmap.ic_launcher,
-                123,
-                456
+            123,
+            456
         );
 
         BackgroundGeofencing.init(this, notification);
@@ -82,16 +83,68 @@ public class MainActivity extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        webHook = new BackgroundGeofencingWebHook("https://jsondataserver.okhi.io/data", 10000, headers, meta);
-        webHook.save(this);
+        BackgroundGeofencingWebHook geofenceWebHook = new BackgroundGeofencingWebHook(
+            "https://ef01706dd51c.ngrok.io/transits",
+            10000,
+            headers,
+            null,
+            WebHookType.GEOFENCE,
+            WebHookRequest.POST
+        );
+        geofenceWebHook.save(this);
+        BackgroundGeofencingWebHook deviceMetaWebHook = new BackgroundGeofencingWebHook(
+            "https://ef01706dd51c.ngrok.io/device-meta",
+            10000,
+            headers,
+            null,
+            WebHookType.DEVICE_PING,
+            WebHookRequest.PUT
+        );
+        deviceMetaWebHook.save(this);
+        BackgroundGeofencingWebHook stopVerificationWebHook = new BackgroundGeofencingWebHook(
+            "https://ef01706dd51c.ngrok.io/stop/${id}/verification",
+            10000,
+            headers,
+            null,
+            WebHookType.STOP,
+            WebHookRequest.PATCH
+        );
+        stopVerificationWebHook.save(this);
     }
 
     private void startGeofence() {
-        BackgroundGeofence homeGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("home1", -1.314593 , 36.836299)
-                .setNotificationResponsiveness(5)
-                .setLoiteringDelay(60000)
-                .setInitialTriggerTransitionTypes(0)
-                .build();
+        okHi.requestBackgroundLocationPermission("Hi", "There", new OkHiRequestHandler<Boolean>() {
+            @Override
+            public void onResult(Boolean result) {
+                BackgroundGeofence homeGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("home1", -1.314711 , 36.836425)
+                    .setNotificationResponsiveness(5)
+                    .setLoiteringDelay(60000)
+                    .setInitialTriggerTransitionTypes(0)
+                    .build();
+                final BackgroundGeofence[] geofences = {homeGeofence};
+                for (BackgroundGeofence geofence: geofences) {
+                    geofence.start(getApplicationContext(), new RequestHandler() {
+                        @Override
+                        public void onSuccess() {
+                            Log.v("MainActivity", "Work geofence started");
+//                            BackgroundGeofencing.startForegroundService(getApplicationContext());
+                        }
+
+                        @Override
+                        public void onError(BackgroundGeofencingException exception) {
+                            exception.printStackTrace();
+                            Log.v("MainActivity", exception.getMessage());
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onError(OkHiException exception) {
+
+            }
+        });
+
 //        BackgroundGeofence workGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("work2", -1.313339237582541, 36.842414181487776)
 //                .setNotificationResponsiveness(5)
 //                .setLoiteringDelay(60000)
@@ -117,29 +170,10 @@ public class MainActivity extends AppCompatActivity {
 //                .setLoiteringDelay(60000)
 //                .setInitialTriggerTransitionTypes(0)
 //                .build();
-        final BackgroundGeofence[] geofences = {homeGeofence};
+
 //        final BackgroundGeofence[] geofences = {homeGeofence, workGeofence, homeGeofence1, workGeofence2, homeGeofence3, workGeofence4};
         
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for (BackgroundGeofence geofence: geofences) {
-                    geofence.start(getApplicationContext(), new RequestHandler() {
-                        @Override
-                        public void onSuccess() {
-                            Log.v("MainActivity", "Work geofence started");
-//                            BackgroundGeofencing.startForegroundService(getApplicationContext());
-                        }
 
-                        @Override
-                        public void onError(BackgroundGeofencingException exception) {
-                            exception.printStackTrace();
-                            Log.v("MainActivity", exception.getMessage());
-                        }
-                    });
-                }
-            }
-        }).start();
 
 //        new Thread(new Runnable() {
 //            @Override
@@ -193,14 +227,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void stopGeofence(View view) {
-        BackgroundGeofence.stop(getApplicationContext(), "home1");
+        BackgroundGeofence.stop(getApplicationContext(), "home1", new ResultHandler<String>() {
+            @Override
+            public void onSuccess(String result) {
+                showMessage("Stopped: " + result);
+            }
+
+            @Override
+            public void onError(BackgroundGeofencingException exception) {
+                showMessage("Something went wrong: " + exception.getCode() + "\n" + exception.getMessage());
+            }
+        });
     }
 
     public void stopService (View v) {
         BackgroundGeofencing.stopForegroundService(getApplicationContext());
     }
 
-    private void showMessage(String s) {
-        Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
+    private void showMessage(final String s) {
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }

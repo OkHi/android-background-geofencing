@@ -6,13 +6,18 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 
 import java.io.Serializable;
 import java.util.Objects;
+
+import io.okhi.android_background_geofencing.R;
 
 public class BackgroundGeofencingNotification implements Serializable {
     private String title;
@@ -21,7 +26,6 @@ public class BackgroundGeofencingNotification implements Serializable {
     private String channelId;
     private String channelName;
     private String channelDescription;
-    private int icon = 0;
     private int notificationId;
     private int notificationRequestCode;
 
@@ -33,8 +37,7 @@ public class BackgroundGeofencingNotification implements Serializable {
             @NonNull String channelId,
             @NonNull String channelName,
             @NonNull String channelDescription,
-            int channelImportance,
-            int icon
+            int channelImportance
     ) {
         this.title = title;
         this.text = text;
@@ -42,7 +45,6 @@ public class BackgroundGeofencingNotification implements Serializable {
         this.channelName = channelName;
         this.channelDescription = channelDescription;
         this.channelImportance = channelImportance;
-        this.icon = icon;
         this.notificationId = 1;
         this.notificationRequestCode = 2;
     }
@@ -54,7 +56,6 @@ public class BackgroundGeofencingNotification implements Serializable {
             @NonNull String channelName,
             @NonNull String channelDescription,
             int channelImportance,
-            int icon,
             int notificationId,
             int notificationRequestCode
     ) {
@@ -64,7 +65,6 @@ public class BackgroundGeofencingNotification implements Serializable {
         this.channelName = channelName;
         this.channelDescription = channelDescription;
         this.channelImportance = channelImportance;
-        this.icon = icon;
         this.notificationId = notificationId;
         this.notificationRequestCode = notificationRequestCode;
     }
@@ -73,12 +73,27 @@ public class BackgroundGeofencingNotification implements Serializable {
         String packageName = context.getPackageName();
         Intent intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, notificationRequestCode, intent, 0);
-        return new NotificationCompat.Builder(context, channelId)
-                .setContentIntent(pendingIntent)
-                .setContentTitle(title)
-                .setContentText(text)
-                .setSmallIcon(icon)
-                .build();
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
+            .setContentIntent(pendingIntent)
+            .setContentTitle(title)
+            .setContentText(text);
+        try {
+            ApplicationInfo app = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            Bundle bundle = app.metaData;
+            int icon = bundle.getInt(Constant.FOREGROUND_NOTIFICATION_ICON_META_KEY);
+            int color = bundle.getInt(Constant.FOREGROUND_NOTIFICATION_COLOR_META_KEY);
+            if (icon != 0) {
+                builder.setSmallIcon(icon);
+            } else {
+                builder.setSmallIcon(R.drawable.ic_person_pin);
+            }
+            if (color != 0) {
+                builder.setColor(context.getResources().getColor(color));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return builder.build();
     }
 
     public void createNotificationChannel(Context context) {

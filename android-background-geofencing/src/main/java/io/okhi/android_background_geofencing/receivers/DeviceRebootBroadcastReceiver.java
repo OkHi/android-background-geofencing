@@ -24,20 +24,20 @@ public class DeviceRebootBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(final Context context, Intent intent) {
         if (Objects.equals(intent.getAction(), Intent.ACTION_BOOT_COMPLETED)) {
-            Log.v(TAG, "Device reboot detected");
+            BackgroundGeofenceUtil.log(context, TAG, "Device reboot detected");
             // TODO: refactor this to a static method
             ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.NATIVE_GEOFENCE);
             for (final BackgroundGeofence geofence : geofences) {
                 geofence.restart(context, new RequestHandler() {
                     @Override
                     public void onSuccess() {
-                        Log.v(TAG, "Successfully restarted: " + geofence.getId());
+                        BackgroundGeofenceUtil.log(context, TAG, "Successfully restarted: " + geofence.getId());
                         BackgroundGeofence.setIsFailing(geofence.getId(), false, context);
                     }
 
                     @Override
                     public void onError(BackgroundGeofencingException e) {
-                        Log.v(TAG, "Failed to start: " + geofence.getId());
+                        BackgroundGeofenceUtil.log(context, TAG, "Failed to start: " + geofence.getId());
                         BackgroundGeofence.setIsFailing(geofence.getId(), true, context);
                     }
                 });

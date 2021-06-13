@@ -254,6 +254,13 @@ public class BackgroundGeofence implements Serializable {
                     if (!silently) {
                         save(context);
                     }
+                    if (withForegroundPingTracking || withForegroundWatchTracking) {
+                        try {
+                            BackgroundGeofencing.startForegroundService(context);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
                     requestHandler.onSuccess();
                 }
             }).addOnFailureListener(new OnFailureListener() {
@@ -265,6 +272,13 @@ public class BackgroundGeofence implements Serializable {
             });
         } else {
             save(context);
+            if (withForegroundPingTracking || withForegroundWatchTracking) {
+                try {
+                    BackgroundGeofencing.startForegroundService(context);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
             requestHandler.onSuccess();
         }
     }

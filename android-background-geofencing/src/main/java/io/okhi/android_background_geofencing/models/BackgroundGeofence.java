@@ -382,8 +382,8 @@ public class BackgroundGeofence implements Serializable {
                             stopGeofences(context, id);
                             handler.onSuccess(id);
                         } else {
-                            Log.v("BackGeofenceStop", response.body().string());
-                            Log.v("BackGeofenceStop", "Code:" + response.code());
+                            BackgroundGeofenceUtil.log(context, "BackGeofenceStop", response.body().string());
+                            BackgroundGeofenceUtil.log(context,"BackGeofenceStop", "Code:" + response.code());
                             OkHiException exception = OkHiCoreUtil.generateOkHiException(response);
                             handler.onError(new BackgroundGeofencingException(exception.getCode(), exception.getMessage()));
                         }

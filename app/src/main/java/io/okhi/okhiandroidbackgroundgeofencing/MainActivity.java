@@ -65,7 +65,6 @@ public class MainActivity extends AppCompatActivity {
                 okHi.requestBackgroundLocationPermission("We need permission", "Pretty please", new OkHiRequestHandler<Boolean>() {
                     @Override
                     public void onResult(Boolean result) {
-                        Log.v("OKHI", result + "..Hmm");
                         if (result) startGeofence();
                     }
 

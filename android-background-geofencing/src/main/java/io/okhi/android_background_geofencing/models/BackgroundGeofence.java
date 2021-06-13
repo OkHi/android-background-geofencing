@@ -254,6 +254,13 @@ public class BackgroundGeofence implements Serializable {
                     if (!silently) {
                         save(context);
                     }
+                    if (withForegroundPingTracking || withForegroundWatchTracking) {
+                        try {
+                            BackgroundGeofencing.startForegroundService(context);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
                     requestHandler.onSuccess();
                 }
             }).addOnFailureListener(new OnFailureListener() {
@@ -265,6 +272,13 @@ public class BackgroundGeofence implements Serializable {
             });
         } else {
             save(context);
+            if (withForegroundPingTracking || withForegroundWatchTracking) {
+                try {
+                    BackgroundGeofencing.startForegroundService(context);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
             requestHandler.onSuccess();
         }
     }
@@ -368,8 +382,8 @@ public class BackgroundGeofence implements Serializable {
                             stopGeofences(context, id);
                             handler.onSuccess(id);
                         } else {
-                            Log.v("BackGeofenceStop", response.body().string());
-                            Log.v("BackGeofenceStop", "Code:" + response.code());
+                            BackgroundGeofenceUtil.log(context, "BackGeofenceStop", response.body().string());
+                            BackgroundGeofenceUtil.log(context,"BackGeofenceStop", "Code:" + response.code());
                             OkHiException exception = OkHiCoreUtil.generateOkHiException(response);
                             handler.onError(new BackgroundGeofencingException(exception.getCode(), exception.getMessage()));
                         }

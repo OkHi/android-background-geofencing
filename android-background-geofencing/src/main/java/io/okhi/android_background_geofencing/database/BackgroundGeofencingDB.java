@@ -16,6 +16,7 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceSetting;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceSource;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
@@ -36,7 +37,7 @@ public class BackgroundGeofencingDB {
             DB db = DBFactory.open(context, Constant.DB_NAME);
             db.put(key, object);
             db.close();
-            Log.v(TAG, "Successfully saved: " + key);
+            BackgroundGeofenceUtil.log(context, TAG, "Successfully saved: " + key);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -50,7 +51,7 @@ public class BackgroundGeofencingDB {
             DB db = DBFactory.open(context, Constant.DB_NAME);
             Object value = db.get(key, objectClass);
             db.close();
-            Log.v(TAG, "Successfully got: " + key);
+            BackgroundGeofenceUtil.log(context, TAG, "Successfully got: " + key);
             return value;
         } catch (Exception e) {
 //            e.printStackTrace();
@@ -81,7 +82,7 @@ public class BackgroundGeofencingDB {
             DB db = DBFactory.open(context, Constant.DB_NAME);
             db.del(key);
             db.close();
-            Log.v(TAG, "Successfully removed: " + key);
+            BackgroundGeofenceUtil.log(context, TAG, "Successfully removed: " + key);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -96,7 +97,7 @@ public class BackgroundGeofencingDB {
             DB db = DBFactory.open(context, Constant.DB_NAME);
             db.putLong(key, System.currentTimeMillis());
             db.close();
-            Log.v(TAG, "Successfully saved: " + key);
+            BackgroundGeofenceUtil.log(context, TAG, "Successfully saved: " + key);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -112,7 +113,7 @@ public class BackgroundGeofencingDB {
             DB db = DBFactory.open(context, Constant.DB_NAME);
             timestamp = db.getLong(key);
             db.close();
-            Log.v(TAG, "Successfully got: " + key);
+            BackgroundGeofenceUtil.log(context, TAG, "Successfully got: " + key);
         } catch (Exception e) {
 //            e.printStackTrace();
         } finally {

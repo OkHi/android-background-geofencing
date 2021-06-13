@@ -134,7 +134,7 @@ public class BackgroundGeofenceForegroundService extends Service {
             if (restartGeofences) {
                 restartFailedGeofences();
             }
-            Log.v(TAG, "Transition work complete.");
+            BackgroundGeofenceUtil.log(getApplicationContext(), TAG, "Transition work complete.");
         } catch (Exception e) {
             e.printStackTrace();
             OkHiCoreUtil.captureException(e);
@@ -293,7 +293,7 @@ public class BackgroundGeofenceForegroundService extends Service {
                     Runnable runnable = new Runnable() {
                         @Override
                         public void run() {
-                            Log.v(TAG, "Attempting to restart foreground service");
+                            BackgroundGeofenceUtil.log(getApplicationContext(), TAG, "Attempting to restart foreground service");
                             try {
                                 BackgroundGeofencing.startForegroundService(getApplicationContext());
                             } catch (BackgroundGeofencingException e) {
@@ -303,14 +303,14 @@ public class BackgroundGeofenceForegroundService extends Service {
                         }
                     };
                     handler.postDelayed(runnable, 60000);
-                    Log.v(TAG, "Restart scheduled in the next 1min");
+                    BackgroundGeofenceUtil.log(getApplicationContext(), TAG, "Restart scheduled in the next 1min");
                 }
             }).start();
         }
     }
 
     private void runCleanUp() {
-        Log.v(TAG, "Running clean up..");
+        BackgroundGeofenceUtil.log(getApplicationContext(), TAG, "Running clean up..");
         if (runnable != null) {
             handler.removeCallbacks(runnable);
         }
@@ -318,6 +318,6 @@ public class BackgroundGeofenceForegroundService extends Service {
             fusedLocationProviderClient.removeLocationUpdates(watchLocationCallback);
         }
         foregroundWorkStarted = false;
-        Log.v(TAG, "Clean up done");
+        BackgroundGeofenceUtil.log(getApplicationContext(), TAG, "Clean up done");
     }
 }

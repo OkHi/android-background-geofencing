@@ -55,11 +55,11 @@ public class BackgroundGeofenceRestartWorker extends Worker {
         }
 
         if (!isWithinThreshold) {
-            Log.v(TAG, "We haven't seen geofences in: " + Constant.GEOFENCE_TRANSITION_TIME_STAMP_THRESHOLD + "ms attempting ALL restart");
+            BackgroundGeofenceUtil.log(getApplicationContext(), TAG, "We haven't seen geofences in: " + Constant.GEOFENCE_TRANSITION_TIME_STAMP_THRESHOLD + "ms attempting ALL restart");
             restartGeofences(geofences, getApplicationContext());
             BackgroundGeofencingDB.removeLastGeofenceTransitionEvent(getApplicationContext());
         } else {
-            Log.v(TAG, "We have failing geofences, attempting to restart SOME");
+            BackgroundGeofenceUtil.log(getApplicationContext(), TAG, "We have failing geofences, attempting to restart SOME");
             restartGeofences(failedGeofences, getApplicationContext());
         }
 
@@ -72,13 +72,13 @@ public class BackgroundGeofenceRestartWorker extends Worker {
                 geofence.restart(context, new RequestHandler() {
                     @Override
                     public void onSuccess() {
-                        Log.v(TAG, "Successfully restarted: " + geofence.getId());
+                        BackgroundGeofenceUtil.log(context, TAG, "Successfully restarted: " + geofence.getId());
                         BackgroundGeofence.setIsFailing(geofence.getId(), false, context);
                     }
 
                     @Override
                     public void onError(BackgroundGeofencingException e) {
-                        Log.v(TAG, "Failed to restart: " + geofence.getId());
+                        BackgroundGeofenceUtil.log(context, TAG, "Failed to restart: " + geofence.getId());
                         BackgroundGeofence.setIsFailing(geofence.getId(), true, context);
                         OkHiCoreUtil.captureException(e);
                     }

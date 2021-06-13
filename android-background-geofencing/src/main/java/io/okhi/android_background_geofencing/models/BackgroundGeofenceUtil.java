@@ -2,8 +2,11 @@ package io.okhi.android_background_geofencing.models;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
 
 import androidx.work.ExistingPeriodicWorkPolicy;
@@ -16,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceForegroundRestartWorker;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
@@ -29,6 +33,9 @@ import okhttp3.OkHttpClient;
 import okhttp3.TlsVersion;
 
 public class BackgroundGeofenceUtil {
+
+    private static String env;
+
     public static boolean isAppOnForeground(Context context) {
         ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         if (activityManager == null) {
@@ -95,7 +102,6 @@ public class BackgroundGeofenceUtil {
         String[] devices = {"infinix", "tecno"};
         for (String device : devices) {
             if (Build.MANUFACTURER.toLowerCase().contains(device)) {
-                Log.v("Util", "Chinese phone detected..");
                 return true;
             }
         }
@@ -164,5 +170,30 @@ public class BackgroundGeofenceUtil {
         double height = el1 - el2;
         distance = Math.pow(distance, 2) + Math.pow(height, 2);
         return Math.sqrt(distance);
+    }
+
+    private static String fetchEnv (Context context) {
+        if (env == null) {
+            BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(context);
+            if (webHook != null && webHook.getUrl().contains("https://dev")) {
+                env = "dev";
+            } else {
+                env = "prod";
+            }
+        }
+        return env;
+    }
+
+    public static void log(Context context, String tag, String message) {
+        try {
+            ApplicationInfo app = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            Bundle bundle = app.metaData;
+            String debugLevel = bundle.getString("io.okhi.android_background_geofencing.debug_level", "none");
+            if (debugLevel.equals("verbose")) {
+                Log.v(tag, message);
+            }
+        } catch (Exception e) {
+            // shhh..
+        }
     }
 }

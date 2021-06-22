@@ -10,7 +10,7 @@ android {
         minSdkVersion 24
         targetSdkVersion 29
         versionCode 1
-        versionName "1.4.2"
+        versionName "1.4.3"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'
@@ -45,5 +45,5 @@ dependencies {
         force = true //API 19 support
     }
     implementation "androidx.work:work-runtime:2.4.0"
-    implementation 'com.github.okhi:android-core:ea6296dced9eb4ed18d5b09f018fd1b348cafb05'
+    implementation 'com.github.okhi:android-core:2079c3e7432dc8c41e33afacdaa1e579fec74d30'
 }

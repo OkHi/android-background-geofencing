@@ -9,7 +9,7 @@ android {
         minSdkVersion 24
         targetSdkVersion 29
         versionCode 1
-        versionName "1.0"
+        versionName "1.4.3"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -43,5 +43,5 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation project(path: ':android-background-geofencing')
-    implementation 'com.github.okhi:android-core:ea6296dced9eb4ed18d5b09f018fd1b348cafb05'
+    implementation 'com.github.okhi:android-core:2079c3e7432dc8c41e33afacdaa1e579fec74d30'
 }

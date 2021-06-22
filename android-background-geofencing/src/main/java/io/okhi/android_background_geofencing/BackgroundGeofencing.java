@@ -3,8 +3,6 @@ package io.okhi.android_background_geofencing;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
-import android.location.Location;
-import android.util.Log;
 
 import androidx.core.content.ContextCompat;
 import androidx.work.BackoffPolicy;
@@ -13,31 +11,24 @@ import androidx.work.OneTimeWorkRequest;
 import androidx.work.Operation;
 import androidx.work.WorkManager;
 
-import com.google.common.util.concurrent.ListenableFuture;
-
 import java.util.ArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
-import io.okhi.android_background_geofencing.interfaces.RequestHandler;
-import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceAppOpen;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceDeviceMeta;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceSetting;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceSource;
-import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
-import io.okhi.android_background_geofencing.models.BackgroundGeofencingLocationService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceForegroundService;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
-import io.okhi.android_core.models.OkHiCoreUtil;
 
 public class BackgroundGeofencing {
 
@@ -65,7 +56,7 @@ public class BackgroundGeofencing {
     boolean isAppOnForeground = BackgroundGeofenceUtil.isAppOnForeground(context);
     boolean canRestartGeofences  = BackgroundGeofenceUtil.canRestartGeofences(context);
     if (!allGeofences.isEmpty()) {
-      new BackgroundGeofenceDeviceMeta(context, allGeofences).syncUpload();
+      new BackgroundGeofenceDeviceMeta(context, allGeofences).asyncUpload();
       BackgroundGeofenceAppOpen.transmitAppOpenEvent(context, webHook);
       if (setting != null && setting.isWithForegroundService()) {
         try {
@@ -82,16 +73,6 @@ public class BackgroundGeofencing {
 
   public static void performBackgroundWork(Context context) {
     // TODO: refactor this to static methods to get request work
-    OneTimeWorkRequest failedGeofencesRestartWork = new OneTimeWorkRequest.Builder(BackgroundGeofenceRestartWorker.class)
-        .setConstraints(Constant.GEOFENCE_WORK_MANAGER_CONSTRAINTS)
-        .addTag(Constant.GEOFENCE_RESTART_WORK_TAG)
-        .setInitialDelay(5, TimeUnit.MILLISECONDS)
-        .setBackoffCriteria(
-            BackoffPolicy.LINEAR,
-            Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY,
-            Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY_TIME_UNIT
-        )
-        .build();
     OneTimeWorkRequest geofenceTransitionUploadWorkRequest = new OneTimeWorkRequest.Builder(BackgroundGeofenceTransitionUploadWorker.class)
         .setConstraints(Constant.GEOFENCE_WORK_MANAGER_INIT_CONSTRAINTS)
         .addTag(Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_TAG)
@@ -100,6 +81,16 @@ public class BackgroundGeofencing {
             BackoffPolicy.LINEAR,
             Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY,
             Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY_TIME_UNIT
+        )
+        .build();
+    OneTimeWorkRequest failedGeofencesRestartWork = new OneTimeWorkRequest.Builder(BackgroundGeofenceRestartWorker.class)
+        .setConstraints(Constant.GEOFENCE_WORK_MANAGER_CONSTRAINTS)
+        .addTag(Constant.GEOFENCE_RESTART_WORK_TAG)
+        .setInitialDelay(5, TimeUnit.MILLISECONDS)
+        .setBackoffCriteria(
+            BackoffPolicy.LINEAR,
+            Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY,
+            Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY_TIME_UNIT
         )
         .build();
     WorkManager.getInstance(context).beginUniqueWork(Constant.GEOFENCE_INIT_WORK_NAME, ExistingWorkPolicy.REPLACE, geofenceTransitionUploadWorkRequest)

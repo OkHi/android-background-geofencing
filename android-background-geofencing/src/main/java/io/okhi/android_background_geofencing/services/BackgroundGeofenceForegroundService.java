@@ -127,7 +127,7 @@ public class BackgroundGeofenceForegroundService extends Service {
     private void startGeofenceTransitionWork(final boolean restartGeofences) {
         try {
             manageDeviceWake(true);
-            boolean result = BackgroundGeofenceTransitionUploadWorker.uploadTransitions(getApplicationContext());
+            boolean result = BackgroundGeofenceTransition.syncUploadAllTransitions(getApplicationContext());
             if (!result) {
                 BackgroundGeofenceTransition.scheduleGeofenceTransitionUploadWork(getApplicationContext());
             }

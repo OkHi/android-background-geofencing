@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
+import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -215,89 +216,6 @@ public class BackgroundGeofenceTransition implements Serializable {
         return payload;
     }
 
-    public boolean syncUpload(final Context context, BackgroundGeofencingWebHook webHook) throws JSONException, IOException {
-        JSONObject meta = webHook.getMeta();
-        OkHttpClient client = BackgroundGeofenceUtil.getHttpClient(webHook);
-        JSONObject payload = toJSONObject();
-        if (meta != null) {
-            payload.put("meta", meta);
-        }
-        RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), payload.toString());
-        Request.Builder requestBuild = new Request.Builder();
-        requestBuild.url(webHook.getUrl());
-        requestBuild.headers(webHook.getHeaders());
-        if (webHook.getWebHookRequest() == WebHookRequest.POST) {
-            requestBuild.post(requestBody);
-        }
-        if (webHook.getWebHookRequest() == WebHookRequest.PATCH) {
-            requestBuild.patch(requestBody);
-        }
-        if (webHook.getWebHookRequest() == WebHookRequest.DELETE) {
-            requestBuild.delete(requestBody);
-        }
-        if (webHook.getWebHookRequest() == WebHookRequest.PUT) {
-            requestBuild.put(requestBody);
-        }
-        Request request = requestBuild.build();
-        final Boolean[] result = {true};
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                result[0] = false;
-                countDownLatch.countDown();
-            }
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                handleStopGeofenceTrackingResponse(context, response);
-                if (response.isSuccessful() || response.code() == 312) {
-                    result[0] = true;
-                    countDownLatch.countDown();
-                }
-                response.close();
-            }
-        });
-        try {
-            countDownLatch.await();
-            return result[0];
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    private void handleStopGeofenceTrackingResponse (Context context, Response response) {
-        // TODO: refactor to something constant
-        if (response.code() != 312) return;
-        try {
-            JSONArray jsonArrayResponse = new JSONArray(response.body().string());
-            for (int i = 0; i < jsonArrayResponse.length(); i++) {
-                JSONObject item = jsonArrayResponse.getJSONObject(i);
-                String locationId = item.optString("location_id", null);
-                if (locationId == null) return;
-                JSONObject stop = item.has("stop") ? item.getJSONObject("stop") : null;
-                if (stop == null) return;
-                BackgroundGeofence geofence = BackgroundGeofencingDB.getBackgroundGeofence(locationId, context);
-                if (geofence == null) return;
-                Boolean stopForegroundWatch = stop.has("foregroundWatch") && stop.getBoolean("foregroundWatch");
-                Boolean stopForegroundPing = stop.has("foregroundPing") && stop.getBoolean("foregroundPing");
-                Boolean stopGeofence = stop.has("geofence") && stop.getBoolean("geofence");
-                Boolean stopAppOpen = stop.has("appOpen") && stop.getBoolean("appOpen");
-                if (geofence.isWithForegroundWatchTracking() == !stopForegroundWatch && geofence.isWithForegroundPingTracking() == !stopForegroundPing && geofence.isWithNativeGeofenceTracking() == !stopGeofence && geofence.isWithAppOpenTracking() == !stopAppOpen) {
-                    // nothing has changed following previous stop
-                    return;
-                }
-                geofence.setWithAppOpenTracking(!stopAppOpen);
-                geofence.setWithNativeGeofenceTracking(!stopGeofence);
-                geofence.setWithForegroundPingTracking(!stopForegroundPing);
-                geofence.setWithForegroundWatchTracking(!stopForegroundWatch);
-                geofence.save(context);
-                BackgroundGeofence.stop(context, geofence);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     public String getTransitionEvent() {
         return transitionEvent;
     }
@@ -424,5 +342,195 @@ public class BackgroundGeofenceTransition implements Serializable {
 
     private static void saveGeofenceEnterTimestamp(BackgroundGeofence geofence, Context context) {
         BackgroundGeofencingDB.saveGeofenceEnterTimestamp(geofence, context);
+    }
+
+    private Request getRequest(BackgroundGeofencingWebHook webHook) throws JSONException {
+        JSONObject meta = webHook.getMeta();
+        JSONObject payload = toJSONObject();
+        if (meta != null) {
+            payload.put("meta", meta);
+        }
+        RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), payload.toString());
+        Request.Builder requestBuild = new Request.Builder();
+        requestBuild.url(webHook.getUrl());
+        requestBuild.headers(webHook.getHeaders());
+        if (webHook.getWebHookRequest() == WebHookRequest.POST) {
+            requestBuild.post(requestBody);
+        }
+        if (webHook.getWebHookRequest() == WebHookRequest.PATCH) {
+            requestBuild.patch(requestBody);
+        }
+        if (webHook.getWebHookRequest() == WebHookRequest.DELETE) {
+            requestBuild.delete(requestBody);
+        }
+        if (webHook.getWebHookRequest() == WebHookRequest.PUT) {
+            requestBuild.put(requestBody);
+        }
+        return requestBuild.build();
+    }
+
+    private void handleStopGeofenceTrackingResponse (Context context, Response response) {
+        // TODO: refactor to something constant
+        if (response.code() != 312) return;
+        try {
+            JSONArray jsonArrayResponse = new JSONArray(response.body().string());
+            for (int i = 0; i < jsonArrayResponse.length(); i++) {
+                JSONObject item = jsonArrayResponse.getJSONObject(i);
+                String locationId = item.optString("location_id", null);
+                if (locationId == null) return;
+                JSONObject stop = item.has("stop") ? item.getJSONObject("stop") : null;
+                if (stop == null) return;
+                BackgroundGeofence geofence = BackgroundGeofencingDB.getBackgroundGeofence(locationId, context);
+                if (geofence == null) return;
+                Boolean stopForegroundWatch = stop.has("foregroundWatch") && stop.getBoolean("foregroundWatch");
+                Boolean stopForegroundPing = stop.has("foregroundPing") && stop.getBoolean("foregroundPing");
+                Boolean stopGeofence = stop.has("geofence") && stop.getBoolean("geofence");
+                Boolean stopAppOpen = stop.has("appOpen") && stop.getBoolean("appOpen");
+                if (geofence.isWithForegroundWatchTracking() == !stopForegroundWatch && geofence.isWithForegroundPingTracking() == !stopForegroundPing && geofence.isWithNativeGeofenceTracking() == !stopGeofence && geofence.isWithAppOpenTracking() == !stopAppOpen) {
+                    // nothing has changed following previous stop
+                    return;
+                }
+                geofence.setWithAppOpenTracking(!stopAppOpen);
+                geofence.setWithNativeGeofenceTracking(!stopGeofence);
+                geofence.setWithForegroundPingTracking(!stopForegroundPing);
+                geofence.setWithForegroundWatchTracking(!stopForegroundWatch);
+                geofence.save(context);
+                BackgroundGeofence.stop(context, geofence);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean syncUpload(final Context context, BackgroundGeofencingWebHook webHook) throws JSONException, IOException {
+        OkHttpClient client = BackgroundGeofenceUtil.getHttpClient(webHook);
+        Request request = getRequest(webHook);
+        final Boolean[] result = {true};
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                result[0] = false;
+                countDownLatch.countDown();
+            }
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                handleStopGeofenceTrackingResponse(context, response);
+                if (response.isSuccessful() || response.code() == 312) {
+                    result[0] = true;
+                    countDownLatch.countDown();
+                }
+                response.close();
+            }
+        });
+        try {
+            countDownLatch.await();
+            return result[0];
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public void asyncUpload (final Context context, BackgroundGeofencingWebHook webHook, final ResultHandler<Boolean> handler) {
+        try {
+            OkHttpClient client = BackgroundGeofenceUtil.getHttpClient(webHook);
+            Request request = getRequest(webHook);
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    handler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE, e.getMessage()));
+                }
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    handleStopGeofenceTrackingResponse(context, response);
+                    if (response.isSuccessful() || response.code() == 312) {
+                        handler.onSuccess(true);
+                    }
+                    response.close();
+                }
+            });
+        } catch (JSONException exception) {
+            exception.printStackTrace();
+            handler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.UNKNOWN_EXCEPTION, exception.getMessage()));
+        }
+    }
+
+    public static void asyncUploadAllTransitions (final Context context) {
+        BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(context);
+        ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofencingDB.getAllGeofenceTransitions(context);
+        final boolean[] hasEncounteredError = {false};
+        if (webHook == null || transitions.isEmpty()) {
+            return;
+        }
+        for (final BackgroundGeofenceTransition transition: transitions) {
+            if (hasEncounteredError[0]) {
+                return;
+            }
+            BackgroundGeofence geofence = transition.getTriggeringGeofence(context);
+            if (geofence == null) {
+                BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
+            } else {
+                if (!geofence.isWithAppOpenTracking() && transition.getGeoPointSource().equals("appOpen")) {
+                    BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
+                } else if (!geofence.isWithNativeGeofenceTracking() && transition.getGeoPointSource().equals("geofence")) {
+                    BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
+                } else if (!geofence.isWithForegroundWatchTracking() && transition.getGeoPointSource().equals("foregroundWatch")) {
+                    BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
+                } else if (!geofence.isWithForegroundPingTracking() && transition.getGeoPointSource().equals("foregroundPing")) {
+                    BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
+                } else {
+                    transition.asyncUpload(context, webHook, new ResultHandler<Boolean>() {
+                        @Override
+                        public void onSuccess(Boolean result) {
+                            BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
+                        }
+                        @Override
+                        public void onError(BackgroundGeofencingException exception) {
+                            hasEncounteredError[0] = true;
+                            // TODO: schedule work manager to do this some other time? Maybe?
+                        }
+                    });
+                }
+            }
+        }
+    }
+
+    public static boolean syncUploadAllTransitions (final Context context) {
+        BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(context);
+        ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofencingDB.getAllGeofenceTransitions(context);
+        boolean result = true;
+        if (webHook == null || transitions.isEmpty()) {
+            return true;
+        }
+        for (final BackgroundGeofenceTransition transition: transitions) {
+            if (!result) {
+                return false;
+            }
+            BackgroundGeofence geofence = transition.getTriggeringGeofence(context);
+            if (geofence == null) {
+                BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
+            } else {
+                if (!geofence.isWithAppOpenTracking() && transition.getGeoPointSource().equals("appOpen")) {
+                    BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
+                } else if (!geofence.isWithNativeGeofenceTracking() && transition.getGeoPointSource().equals("geofence")) {
+                    BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
+                } else if (!geofence.isWithForegroundWatchTracking() && transition.getGeoPointSource().equals("foregroundWatch")) {
+                    BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
+                } else if (!geofence.isWithForegroundPingTracking() && transition.getGeoPointSource().equals("foregroundPing")) {
+                    BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
+                } else {
+                    try {
+                        result = transition.syncUpload(context, webHook);
+                    } catch (JSONException jsonException) {
+                        jsonException.printStackTrace();
+                        result = true;
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                        result = false;
+                    }
+                }
+            }
+        }
+        return result;
     }
 }

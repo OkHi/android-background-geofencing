@@ -124,7 +124,7 @@ public class BackgroundGeofenceDeviceMeta {
     }
   }
 
-  public void syncUpload() {
+  public void asyncUpload() {
     BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(this.context, WebHookType.DEVICE_PING);
     if (webHook == null) return;
     RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), this.toJSON());

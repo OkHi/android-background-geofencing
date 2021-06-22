@@ -40,11 +40,11 @@ public class BackgroundGeofenceAppOpen {
         });
     }
 
-    public static void transmitAppOpenEvent (Context context, Location location, BackgroundGeofencingWebHook webHook, ArrayList<BackgroundGeofence> geofences) {
+    public static void transmitAppOpenEvent (final Context context, Location location, BackgroundGeofencingWebHook webHook, ArrayList<BackgroundGeofence> geofences) {
         for (BackgroundGeofence geofence: geofences) {
             ArrayList<String> ids = new ArrayList<>();
             ids.add(geofence.getId());
-            BackgroundGeofenceTransition transition = new BackgroundGeofenceTransition.Builder(ids)
+            final BackgroundGeofenceTransition transition = new BackgroundGeofenceTransition.Builder(ids)
                 .setLocationDate(location.getTime())
                 .setGeoPointProvider(location.getProvider())
                 .setLat(location.getLatitude())
@@ -53,14 +53,16 @@ public class BackgroundGeofenceAppOpen {
                 .setTransitionEvent(BackgroundGeofenceUtil.isEnter(location,geofence) ? "enter" : "exit")
                 .setGeoPointSource("appOpen")
                 .build();
-            try {
-                Boolean result = transition.syncUpload(context, webHook);
-                if (!result) {
+            transition.asyncUpload(context, webHook, new ResultHandler<Boolean>() {
+                @Override
+                public void onSuccess(Boolean result) {
+
+                }
+                @Override
+                public void onError(BackgroundGeofencingException exception) {
                     transition.save(context);
                 }
-            } catch (Exception e) {
-                transition.save(context);
-            }
+            });
         }
     }
 }

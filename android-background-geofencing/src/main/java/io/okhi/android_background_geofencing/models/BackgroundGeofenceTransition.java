@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
+import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -272,28 +273,6 @@ public class BackgroundGeofenceTransition implements Serializable {
         return uuid;
     }
 
-    public static void scheduleGeofenceTransitionUploadWork(Context context, int duration, TimeUnit unit) {
-        schedule(context, duration, unit);
-    }
-
-    private static void schedule(Context context, long duration, TimeUnit unit) {
-        OneTimeWorkRequest geofenceTransitionUploadWorkRequest = new OneTimeWorkRequest.Builder(BackgroundGeofenceTransitionUploadWorker.class)
-                .setConstraints(Constant.GEOFENCE_WORK_MANAGER_CONSTRAINTS)
-                .addTag(Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_TAG)
-                .setInitialDelay(duration, unit)
-                .setBackoffCriteria(
-                        BackoffPolicy.LINEAR,
-                        Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY,
-                        Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY_TIME_UNIT
-                )
-                .build();
-        WorkManager.getInstance(context).enqueueUniqueWork(Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_NAME, ExistingWorkPolicy.REPLACE, geofenceTransitionUploadWorkRequest);
-    }
-
-    public static void scheduleGeofenceTransitionUploadWork(Context context) {
-        schedule(context, Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY, Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY_TIME_UNIT);
-    }
-
     public static ArrayList<BackgroundGeofenceTransition> generateTransitions(String geoPointSource, Location location, ArrayList<BackgroundGeofence> geofences, boolean withDwell, Context context) {
         ArrayList<String> enterIds = new ArrayList<>();
         ArrayList<String> exitIds = new ArrayList<>();
@@ -483,11 +462,12 @@ public class BackgroundGeofenceTransition implements Serializable {
                         @Override
                         public void onSuccess(Boolean result) {
                             BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
+                            scheduleGeofenceRestartWork(context);
                         }
                         @Override
                         public void onError(BackgroundGeofencingException exception) {
-                            hasEncounteredError[0] = true;
-                            // TODO: schedule work manager to do this some other time? Maybe?
+                            scheduleAsyncUploadTransition(context);
+                            scheduleGeofenceRestartWork(context);
                         }
                     });
                 }
@@ -495,42 +475,31 @@ public class BackgroundGeofenceTransition implements Serializable {
         }
     }
 
-    public static boolean syncUploadAllTransitions (final Context context) {
-        BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(context);
-        ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofencingDB.getAllGeofenceTransitions(context);
-        boolean result = true;
-        if (webHook == null || transitions.isEmpty()) {
-            return true;
-        }
-        for (final BackgroundGeofenceTransition transition: transitions) {
-            if (!result) {
-                return false;
-            }
-            BackgroundGeofence geofence = transition.getTriggeringGeofence(context);
-            if (geofence == null) {
-                BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
-            } else {
-                if (!geofence.isWithAppOpenTracking() && transition.getGeoPointSource().equals("appOpen")) {
-                    BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
-                } else if (!geofence.isWithNativeGeofenceTracking() && transition.getGeoPointSource().equals("geofence")) {
-                    BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
-                } else if (!geofence.isWithForegroundWatchTracking() && transition.getGeoPointSource().equals("foregroundWatch")) {
-                    BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
-                } else if (!geofence.isWithForegroundPingTracking() && transition.getGeoPointSource().equals("foregroundPing")) {
-                    BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
-                } else {
-                    try {
-                        result = transition.syncUpload(context, webHook);
-                    } catch (JSONException jsonException) {
-                        jsonException.printStackTrace();
-                        result = true;
-                    } catch (IOException ioException) {
-                        ioException.printStackTrace();
-                        result = false;
-                    }
-                }
-            }
-        }
-        return result;
+    private static void scheduleAsyncUploadTransition (Context context) {
+        OneTimeWorkRequest geofenceTransitionUploadWorkRequest = new OneTimeWorkRequest.Builder(BackgroundGeofenceTransitionUploadWorker.class)
+            .setConstraints(Constant.GEOFENCE_WORK_MANAGER_INIT_CONSTRAINTS)
+            .addTag(Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_TAG)
+            .setInitialDelay(1, TimeUnit.HOURS)
+            .setBackoffCriteria(
+                BackoffPolicy.LINEAR,
+                Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY,
+                Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY_TIME_UNIT
+            )
+            .build();
+        WorkManager.getInstance(context).beginUniqueWork(Constant.GEOFENCE_ASYNC_TRANSITION_UPLOAD_WORK_NAME, ExistingWorkPolicy.KEEP, geofenceTransitionUploadWorkRequest).enqueue();
+    }
+
+    private static void scheduleGeofenceRestartWork (Context context) {
+        OneTimeWorkRequest failedGeofencesRestartWork = new OneTimeWorkRequest.Builder(BackgroundGeofenceRestartWorker.class)
+            .setConstraints(Constant.GEOFENCE_WORK_MANAGER_CONSTRAINTS)
+            .addTag(Constant.GEOFENCE_RESTART_WORK_TAG)
+            .setInitialDelay(5, TimeUnit.MILLISECONDS)
+            .setBackoffCriteria(
+                BackoffPolicy.LINEAR,
+                Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY,
+                Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY_TIME_UNIT
+            )
+            .build();
+        WorkManager.getInstance(context).beginUniqueWork(Constant.GEOFENCE_ASYNC_TRANSITION_UPLOAD_WORK_NAME, ExistingWorkPolicy.KEEP, failedGeofencesRestartWork).enqueue();
     }
 }

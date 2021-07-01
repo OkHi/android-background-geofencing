@@ -50,6 +50,7 @@ public class Constant {
     // work manager constants - geofence transition upload work
     public static final String GEOFENCE_TRANSITION_UPLOAD_WORK_TAG = "GEOFENCE_TRANSITION_UPLOAD_WORK_TAG";
     public static final String GEOFENCE_TRANSITION_UPLOAD_WORK_NAME = "GEOFENCE_TRANSITION_UPLOAD_WORK_NAME";
+    public static final String GEOFENCE_ASYNC_TRANSITION_UPLOAD_WORK_NAME = "GEOFENCE_ASYNC_TRANSITION_UPLOAD_WORK";
     public static final long GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY = 15;
     public static final TimeUnit GEOFENCE_TRANSITION_UPLOAD_WORK_DELAY_TIME_UNIT = TimeUnit.SECONDS;
     public static final long GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY = 1; // TODO: change to 1
@@ -63,9 +64,9 @@ public class Constant {
     public static final TimeUnit GEOFENCE_RESTART_WORK_DELAY_TIME_UNIT = TimeUnit.HOURS; // TODO: change to hour
     public static final long GEOFENCE_RESTART_WORK_BACKOFF_DELAY = 1; // TODO: change to 1
     public static final TimeUnit GEOFENCE_RESTART_WORK_BACKOFF_DELAY_TIME_UNIT = TimeUnit.HOURS; // TODO: change to hour
-  public static final String DB_DEVICE_ID_CONFIGURATION_KEY = "DEVICE_ID_CONFIGURATION_KEY";
+    public static final String DB_DEVICE_ID_CONFIGURATION_KEY = "DEVICE_ID_CONFIGURATION_KEY";
 
-  // work manager constraints
+    // work manager constraints
     public static Constraints GEOFENCE_WORK_MANAGER_CONSTRAINTS = new Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .setRequiresBatteryNotLow(true)

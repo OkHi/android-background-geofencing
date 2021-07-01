@@ -21,6 +21,7 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofenceAppOpen;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceDeviceMeta;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceSetting;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceSource;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
@@ -72,30 +73,7 @@ public class BackgroundGeofencing {
   }
 
   public static void performBackgroundWork(Context context) {
-    // TODO: refactor this to static methods to get request work
-    OneTimeWorkRequest geofenceTransitionUploadWorkRequest = new OneTimeWorkRequest.Builder(BackgroundGeofenceTransitionUploadWorker.class)
-        .setConstraints(Constant.GEOFENCE_WORK_MANAGER_INIT_CONSTRAINTS)
-        .addTag(Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_TAG)
-        .setInitialDelay(5, TimeUnit.MILLISECONDS)
-        .setBackoffCriteria(
-            BackoffPolicy.LINEAR,
-            Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY,
-            Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_BACKOFF_DELAY_TIME_UNIT
-        )
-        .build();
-    OneTimeWorkRequest failedGeofencesRestartWork = new OneTimeWorkRequest.Builder(BackgroundGeofenceRestartWorker.class)
-        .setConstraints(Constant.GEOFENCE_WORK_MANAGER_CONSTRAINTS)
-        .addTag(Constant.GEOFENCE_RESTART_WORK_TAG)
-        .setInitialDelay(5, TimeUnit.MILLISECONDS)
-        .setBackoffCriteria(
-            BackoffPolicy.LINEAR,
-            Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY,
-            Constant.GEOFENCE_RESTART_WORK_BACKOFF_DELAY_TIME_UNIT
-        )
-        .build();
-    WorkManager.getInstance(context).beginUniqueWork(Constant.GEOFENCE_INIT_WORK_NAME, ExistingWorkPolicy.REPLACE, geofenceTransitionUploadWorkRequest)
-        .then(failedGeofencesRestartWork)
-        .enqueue();
+    BackgroundGeofenceTransition.asyncUploadAllTransitions(context);
   }
 
   public static void stopForegroundService (Context context) {

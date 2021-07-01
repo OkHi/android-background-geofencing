@@ -31,12 +31,7 @@ public class BackgroundGeofenceTransitionUploadWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        if (BackgroundGeofenceUtil.isAppOnForeground(getApplicationContext())) {
-            BackgroundGeofenceTransition.asyncUploadAllTransitions(getApplicationContext());
-            return Result.success();
-        } else {
-            boolean result = BackgroundGeofenceTransition.syncUploadAllTransitions(getApplicationContext());
-            return result ? Result.success() : Result.retry();
-        }
+        BackgroundGeofenceTransition.asyncUploadAllTransitions(getApplicationContext());
+        return Result.success();
     }
 }

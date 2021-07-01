@@ -37,7 +37,7 @@ public class BackgroundGeofenceBroadcastReceiver extends BroadcastReceiver {
         if (isNotificationAvailable && isInBackground) {
             startForegroundTask(context);
         } else {
-            scheduleBackgroundWork(context, geofencingEvent);
+            scheduleBackgroundWork(context);
         }
     }
 
@@ -47,12 +47,8 @@ public class BackgroundGeofenceBroadcastReceiver extends BroadcastReceiver {
         ContextCompat.startForegroundService(context, serviceIntent);
     }
 
-    private void scheduleBackgroundWork(Context context, GeofencingEvent geofencingEvent) {
-        if (geofencingEvent.hasError()) {
-            BackgroundGeofence.scheduleGeofenceRestartWork(context);
-        } else {
-            BackgroundGeofenceTransition.scheduleGeofenceTransitionUploadWork(context);
-        }
+    private void scheduleBackgroundWork(Context context) {
+        BackgroundGeofenceTransition.asyncUploadAllTransitions(context);
     }
 
 }

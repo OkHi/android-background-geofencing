@@ -27,24 +27,34 @@ public class BackgroundGeofenceBroadcastReceiver extends BroadcastReceiver {
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
         boolean isNotificationAvailable = BackgroundGeofencingDB.getNotification(context) != null;
         boolean isInBackground = !BackgroundGeofenceUtil.isAppOnForeground(context);
+        BackgroundGeofenceTransition transition = null;
         if (geofencingEvent.hasError()) {
             BackgroundGeofence.setIsFailing(geofencingEvent, true, context);
         } else {
-            BackgroundGeofenceTransition transition = new BackgroundGeofenceTransition.Builder(geofencingEvent).build();
-            BackgroundGeofenceUtil.log(context, TAG, "Received a " + transition.getTransitionEvent() + " geofence event");
+            transition = new BackgroundGeofenceTransition.Builder(geofencingEvent).build();
             transition.save(context);
+            BackgroundGeofenceUtil.log(context, TAG, "Received a " + transition.getTransitionEvent() + " geofence event");
         }
         if (isNotificationAvailable && isInBackground) {
-            startForegroundTask(context);
+            startForegroundTask(context, transition);
         } else {
             scheduleBackgroundWork(context);
         }
     }
 
-    private void startForegroundTask(Context context) {
-        Intent serviceIntent = new Intent(context, BackgroundGeofenceForegroundService.class);
-        serviceIntent.putExtra(Constant.FOREGROUND_SERVICE_ACTION, Constant.FOREGROUND_SERVICE_GEOFENCE_EVENT);
-        ContextCompat.startForegroundService(context, serviceIntent);
+    private void startForegroundTask(Context context, BackgroundGeofenceTransition transition) {
+        try {
+            Intent serviceIntent = new Intent(context, BackgroundGeofenceForegroundService.class);
+            if (transition == null) {
+                serviceIntent.putExtra(Constant.FOREGROUND_SERVICE_ACTION, Constant.FOREGROUND_SERVICE_GEOFENCE_EVENT);
+            } else {
+                serviceIntent.putExtra(Constant.FOREGROUND_SERVICE_ACTION, Constant.FOREGROUND_SERVICE_GEOFENCE_EVENT);
+                serviceIntent.putExtra(Constant.FOREGROUND_SERVICE_TRANSITION_SIGNATURE, transition.getSignature());
+            }
+            ContextCompat.startForegroundService(context, serviceIntent);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void scheduleBackgroundWork(Context context) {

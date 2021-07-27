@@ -38,6 +38,7 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingLocationService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
+import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiCoreUtil;
@@ -63,6 +64,7 @@ public class BackgroundGeofenceForegroundService extends Service {
     private LocationCallback watchLocationCallback;
     private static Lock lock = new ReentrantLock();
     private static Condition condition = lock.newCondition();
+    private BackgroundGeofencingWebHook webHook;
 
     @Nullable
     @Override
@@ -83,6 +85,10 @@ public class BackgroundGeofenceForegroundService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForeground(backgroundGeofencingNotification.getNotificationId(), backgroundGeofencingNotification.getNotification(getApplicationContext()));
         }
+
+        if (webHook == null) {
+            webHook = BackgroundGeofencingDB.getWebHook(getApplicationContext());
+        }
     }
 
     @Override
@@ -92,12 +98,19 @@ public class BackgroundGeofenceForegroundService extends Service {
             stopService(true);
         }
         if (intent != null && intent.hasExtra(Constant.FOREGROUND_SERVICE_ACTION) && Objects.equals(intent.getStringExtra(Constant.FOREGROUND_SERVICE_ACTION), Constant.FOREGROUND_SERVICE_GEOFENCE_EVENT)) {
-            startGeofenceTransitionWork(true);
+            if (intent.hasExtra(Constant.FOREGROUND_SERVICE_TRANSITION_SIGNATURE)) {
+                uploadGeofenceTransition(false, intent.getStringExtra(Constant.FOREGROUND_SERVICE_TRANSITION_SIGNATURE));
+            } else {
+                restartFailedGeofences();
+            }
         }
         if (isWithForegroundService && !foregroundWorkStarted) {
             foregroundWorkStarted = true;
             startForegroundPingService();
             startForegroundLocationWatch();
+        }
+        if (webHook == null) {
+            webHook = BackgroundGeofencingDB.getWebHook(getApplicationContext());
         }
         return isWithForegroundService ? START_STICKY : START_NOT_STICKY;
     }
@@ -124,20 +137,24 @@ public class BackgroundGeofenceForegroundService extends Service {
         }
     }
 
-    private void startGeofenceTransitionWork(final boolean restartGeofences) {
-        try {
+    private void uploadGeofenceTransition(final boolean restartGeofences, String transitionSignature) {
+        if (transitionSignature != null) {
             manageDeviceWake(true);
-            BackgroundGeofenceTransition.asyncUploadAllTransitions(getApplicationContext());
-            if (restartGeofences) {
-                restartFailedGeofences();
+            BackgroundGeofenceTransition transition = BackgroundGeofencingDB.getTransitionFromSignature(getApplicationContext(), transitionSignature);
+            if (transition != null) {
+                transition.asyncUpload(getApplicationContext(), webHook, new ResultHandler<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean result) {
+                        manageDeviceWake(false);
+                    }
+
+                    @Override
+                    public void onError(BackgroundGeofencingException exception) {
+                        BackgroundGeofenceTransition.scheduleAsyncUploadTransition(getApplicationContext());
+                        manageDeviceWake(false);
+                    }
+                });
             }
-            BackgroundGeofenceUtil.log(getApplicationContext(), TAG, "Transition work complete.");
-        } catch (Exception e) {
-            e.printStackTrace();
-            OkHiCoreUtil.captureException(e);
-        } finally {
-            manageDeviceWake(false);
-            stopService(false);
         }
     }
 
@@ -171,23 +188,7 @@ public class BackgroundGeofenceForegroundService extends Service {
                 OkHiLocationService.getCurrentLocation(getApplicationContext(), new OkHiRequestHandler<Location>() {
                     @Override
                     public void onResult(Location location) {
-                        ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getGeofences(getApplicationContext(), BackgroundGeofenceSource.FOREGROUND_PING);
-                        ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofenceTransition.generateTransitions(
-                                Constant.FOREGROUND_SERVICE_PING_GEOFENCE_SOURCE,
-                                location,
-                                geofences,
-                                false,
-                                getApplicationContext()
-                        );
-                        for (BackgroundGeofenceTransition transition : transitions) {
-                            transition.save(getApplicationContext());
-                        }
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                startGeofenceTransitionWork(false);
-                            }
-                        }).start();
+                        generateUploadGeofenceTransitions(location, Constant.FOREGROUND_SERVICE_PING_GEOFENCE_SOURCE);
                         manageDeviceWake(false);
                     }
                     @Override
@@ -224,42 +225,49 @@ public class BackgroundGeofenceForegroundService extends Service {
     private void handleOnLocationResult(final Location location) {
         // TODO: refactor 100 to a constant
         if (location.hasAccuracy() && location.getAccuracy() < 100) {
-            generateGeofenceTransitions(location);
+            generateUploadGeofenceTransitions(location, Constant.FOREGROUND_SERVICE_WATCH_GEOFENCE_SOURCE);
         } else {
             new BackgroundGeofencingLocationService().fetchCurrentLocation(getApplicationContext(), new ResultHandler<Location>() {
                 @Override
                 public void onSuccess(Location result) {
-                    generateGeofenceTransitions(result);
+                    generateUploadGeofenceTransitions(location, Constant.FOREGROUND_SERVICE_WATCH_GEOFENCE_SOURCE);
                 }
 
                 @Override
                 public void onError(BackgroundGeofencingException exception) {
                     OkHiCoreUtil.captureException(exception);
                     exception.printStackTrace();
-                    generateGeofenceTransitions(location);
+                    generateUploadGeofenceTransitions(location, Constant.FOREGROUND_SERVICE_WATCH_GEOFENCE_SOURCE);
                 }
             });
         }
     }
 
-    private void generateGeofenceTransitions(Location location) {
+    private void generateUploadGeofenceTransitions(Location location, String source) {
         ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getGeofences(getApplicationContext(), BackgroundGeofenceSource.FOREGROUND_WATCH);
         ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofenceTransition.generateTransitions(
-                Constant.FOREGROUND_SERVICE_WATCH_GEOFENCE_SOURCE,
+                source,
                 location,
                 geofences,
                 false,
                 getApplicationContext()
         );
-        for (BackgroundGeofenceTransition transition : transitions) {
-            transition.save(getApplicationContext());
+        for (final BackgroundGeofenceTransition transition : transitions) {
+            transition.asyncUpload(getApplicationContext(), webHook, new ResultHandler<Boolean>() {
+                @Override
+                public void onSuccess(Boolean result) {
+                    try {
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                @Override
+                public void onError(BackgroundGeofencingException exception) {
+                    BackgroundGeofenceTransition.scheduleAsyncUploadTransition(getApplicationContext());
+                    transition.save(getApplicationContext());
+                }
+            });
         }
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                startGeofenceTransitionWork(false);
-            }
-        }).start();
     }
 
     private void createLocationRequest() {

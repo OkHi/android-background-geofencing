@@ -84,6 +84,7 @@ public class Constant {
 
     // foreground service
     public static final String FOREGROUND_SERVICE_ACTION = "action";
+    public static final String FOREGROUND_SERVICE_TRANSITION_SIGNATURE = "FOREGROUND_SERVICE_TRANSITION_SIGNATURE";
     public static final String FOREGROUND_SERVICE_GEOFENCE_EVENT = "geofence_event";
     public static final String FOREGROUND_SERVICE_START_STICKY = "start_sticky";
     public static final String FOREGROUND_SERVICE_WAKE_LOCK_TAG = "BackgroundGeofenceForegroundService::WakeLock";

@@ -452,22 +452,6 @@ public class BackgroundGeofenceTransition implements Serializable {
         }
     }
 
-//    public boolean syncUpload (final Context context, BackgroundGeofencingWebHook webHook) {
-//        try {
-//            OkHttpClient client = BackgroundGeofenceUtil.getHttpClient(webHook);
-//            Request request = getRequest(webHook);
-//            Response response = client.newCall(request).execute();
-//            handleStopGeofenceTrackingResponse(context, response);
-//            if (response.isSuccessful() || response.code() == 312) {
-//                return true;
-//            }
-//            return false;
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return false;
-//        }
-//    }
-
     public static void asyncUploadAllTransitions (final Context context) {
         BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(context);
         ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofencingDB.getAllGeofenceTransitions(context);

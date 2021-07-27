@@ -3,6 +3,7 @@ package io.okhi.android_background_geofencing.models;
 import android.content.Context;
 import android.location.Location;
 import android.os.Build;
+import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -20,6 +21,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -61,6 +63,7 @@ public class BackgroundGeofenceTransition implements Serializable {
     private HashMap<String, Double> geoPoint;
     private String uuid = UUID.randomUUID().toString();
     private static String TAG = "GeofenceTransition";
+    private String hashIds;
 
     BackgroundGeofenceTransition() {
     }
@@ -271,6 +274,21 @@ public class BackgroundGeofenceTransition implements Serializable {
 
     public String getUUID() {
         return uuid;
+    }
+
+    public String getStringIds() {
+        String ids = "";
+        for(String id: this.ids) {
+            ids = ids + id;
+        }
+        // TODO: kiano gen md5 hash
+        return ids;
+    }
+
+    public String getSignature() throws UnsupportedEncodingException {
+        String key = getStringIds() + getTransitionDate() + getGeoPointSource();
+        byte[] data = key.getBytes("UTF-8");
+        return Base64.encodeToString(data, Base64.DEFAULT);
     }
 
     public static ArrayList<BackgroundGeofenceTransition> generateTransitions(String geoPointSource, Location location, ArrayList<BackgroundGeofence> geofences, boolean withDwell, Context context) {
@@ -505,7 +523,7 @@ public class BackgroundGeofenceTransition implements Serializable {
         }
     }
 
-    private static void scheduleAsyncUploadTransition (Context context) {
+    public static void scheduleAsyncUploadTransition (Context context) {
         OneTimeWorkRequest geofenceTransitionUploadWorkRequest = new OneTimeWorkRequest.Builder(BackgroundGeofenceTransitionUploadWorker.class)
             .setConstraints(Constant.GEOFENCE_WORK_MANAGER_INIT_CONSTRAINTS)
             .addTag(Constant.GEOFENCE_TRANSITION_UPLOAD_WORK_TAG)

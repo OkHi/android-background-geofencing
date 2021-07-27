@@ -139,12 +139,16 @@ public class BackgroundGeofencingDB {
     }
 
     public static void saveGeofenceTransitionEvent(BackgroundGeofenceTransition transition, Context context) {
-        String geofenceTransitionKey = Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY + transition.getUUID();
-        String lastGeofenceTransition = Constant.DB_BACKGROUND_GEOFENCE_LAST_TRANSITION_KEY;
-        BackgroundGeofenceTransition existingTransition = (BackgroundGeofenceTransition) get(geofenceTransitionKey, BackgroundGeofenceTransition.class, context);
-        if (existingTransition == null) {
-            save(geofenceTransitionKey, transition, context);
-            save(lastGeofenceTransition, transition, context);
+        try {
+            String geofenceTransitionKey = Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY + transition.getSignature();
+            String lastGeofenceTransition = Constant.DB_BACKGROUND_GEOFENCE_LAST_TRANSITION_KEY;
+            BackgroundGeofenceTransition existingTransition = (BackgroundGeofenceTransition) get(geofenceTransitionKey, BackgroundGeofenceTransition.class, context);
+            if (existingTransition == null) {
+                save(geofenceTransitionKey, transition, context);
+                save(lastGeofenceTransition, transition, context);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -285,5 +289,11 @@ public class BackgroundGeofencingDB {
             }
         }
         return geofences;
+    }
+
+    public static BackgroundGeofenceTransition getTransitionFromSignature(Context context, String transitionSignature) {
+        String geofenceTransitionKey = Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY + transitionSignature;
+        BackgroundGeofenceTransition existingTransition = (BackgroundGeofenceTransition) get(geofenceTransitionKey, BackgroundGeofenceTransition.class, context);
+        return existingTransition;
     }
 }

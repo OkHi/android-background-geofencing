@@ -98,7 +98,7 @@ public class BackgroundGeofenceForegroundService extends Service {
         }
         if (intent != null && intent.hasExtra(Constant.FOREGROUND_SERVICE_ACTION) && Objects.equals(intent.getStringExtra(Constant.FOREGROUND_SERVICE_ACTION), Constant.FOREGROUND_SERVICE_GEOFENCE_EVENT)) {
             if (intent.hasExtra(Constant.FOREGROUND_SERVICE_TRANSITION_SIGNATURE)) {
-                uploadGeofenceTransition(false, intent.getStringExtra(Constant.FOREGROUND_SERVICE_TRANSITION_SIGNATURE));
+                uploadGeofenceTransition(intent.getStringExtra(Constant.FOREGROUND_SERVICE_TRANSITION_SIGNATURE));
             } else {
                 restartFailedGeofences();
             }
@@ -136,7 +136,7 @@ public class BackgroundGeofenceForegroundService extends Service {
         }
     }
 
-    private void uploadGeofenceTransition(final boolean restartGeofences, String transitionSignature) {
+    private void uploadGeofenceTransition(String transitionSignature) {
         if (transitionSignature != null) {
             manageDeviceWake(true);
             BackgroundGeofenceTransition transition = BackgroundGeofencingDB.getTransitionFromSignature(getApplicationContext(), transitionSignature);

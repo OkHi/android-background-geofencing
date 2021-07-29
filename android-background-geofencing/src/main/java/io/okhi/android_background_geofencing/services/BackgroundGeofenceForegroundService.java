@@ -250,12 +250,7 @@ public class BackgroundGeofenceForegroundService extends Service {
         for (final BackgroundGeofenceTransition transition : transitions) {
             transition.asyncUpload(getApplicationContext(), webHook, new ResultHandler<Boolean>() {
                 @Override
-                public void onSuccess(Boolean result) {
-                    try {
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
+                public void onSuccess(Boolean result) { }
                 @Override
                 public void onError(BackgroundGeofencingException exception) {
                     BackgroundGeofenceTransition.scheduleAsyncUploadTransition(getApplicationContext());

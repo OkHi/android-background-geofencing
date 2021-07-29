@@ -139,14 +139,14 @@ public class BackgroundGeofenceForegroundService extends Service {
     private void uploadGeofenceTransition(String transitionSignature) {
         if (transitionSignature != null) {
             manageDeviceWake(true);
-            BackgroundGeofenceTransition transition = BackgroundGeofencingDB.getTransitionFromSignature(getApplicationContext(), transitionSignature);
+            final BackgroundGeofenceTransition transition = BackgroundGeofencingDB.getTransitionFromSignature(getApplicationContext(), transitionSignature);
             if (transition != null) {
                 transition.asyncUpload(getApplicationContext(), webHook, new ResultHandler<Boolean>() {
                     @Override
                     public void onSuccess(Boolean result) {
                         manageDeviceWake(false);
+                        BackgroundGeofencingDB.removeGeofenceTransition(transition, getApplicationContext());
                     }
-
                     @Override
                     public void onError(BackgroundGeofencingException exception) {
                         BackgroundGeofenceTransition.scheduleAsyncUploadTransition(getApplicationContext());

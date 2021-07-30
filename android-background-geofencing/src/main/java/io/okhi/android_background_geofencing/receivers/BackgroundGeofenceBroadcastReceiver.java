@@ -26,29 +26,22 @@ public class BackgroundGeofenceBroadcastReceiver extends BroadcastReceiver {
     private String TAG = "GeofenceReceiver";
 
     @Override
-    public void onReceive(final Context context, Intent intent) {
+    public void onReceive(Context context, Intent intent) {
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
-        final boolean isNotificationAvailable = BackgroundGeofencingDB.getNotification(context) != null;
-        final boolean isInBackground = !BackgroundGeofenceUtil.isAppOnForeground(context);
+        boolean isNotificationAvailable = BackgroundGeofencingDB.getNotification(context) != null;
+        boolean isInBackground = !BackgroundGeofenceUtil.isAppOnForeground(context);
+        BackgroundGeofenceTransition transition = null;
         if (geofencingEvent.hasError()) {
             BackgroundGeofence.setIsFailing(geofencingEvent, true, context);
         } else {
-            final BackgroundGeofenceTransition transition = new BackgroundGeofenceTransition.Builder(geofencingEvent).build();
+            transition = new BackgroundGeofenceTransition.Builder(geofencingEvent).build();
+            transition.save(context);
             BackgroundGeofenceUtil.log(context, TAG, "Received a " + transition.getTransitionEvent() + " geofence event");
-            BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(context);
-            transition.asyncUpload(context, webHook, new ResultHandler<Boolean>() {
-                @Override
-                public void onSuccess(Boolean result) { }
-                @Override
-                public void onError(BackgroundGeofencingException exception) {
-                    transition.save(context);
-                    if (isNotificationAvailable && isInBackground) {
-                        startForegroundTask(context, transition);
-                    } else {
-                        scheduleBackgroundWork(context);
-                    }
-                }
-            });
+        }
+        if (isNotificationAvailable && isInBackground) {
+            startForegroundTask(context, transition);
+        } else {
+            scheduleBackgroundWork(context);
         }
     }
 

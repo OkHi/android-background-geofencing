@@ -66,7 +66,6 @@ public class BackgroundGeofenceForegroundService extends Service {
     private static Condition condition = lock.newCondition();
     private BackgroundGeofencingWebHook webHook;
 
-    private HashMap<String, BackgroundGeofenceTransition> transitionTracker = new HashMap<>();
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -143,10 +142,6 @@ public class BackgroundGeofenceForegroundService extends Service {
             manageDeviceWake(true);
             final BackgroundGeofenceTransition transition = BackgroundGeofencingDB.getTransitionFromSignature(getApplicationContext(), transitionSignature);
             if (transition != null) {
-                if (!isWithinTimeThreshold(transition)) {
-                    BackgroundGeofencingDB.removeGeofenceTransition(transition, getApplicationContext());
-                    return;
-                }
                 transition.asyncUpload(getApplicationContext(), webHook, new ResultHandler<Boolean>() {
                     @Override
                     public void onSuccess(Boolean result) {
@@ -254,29 +249,16 @@ public class BackgroundGeofenceForegroundService extends Service {
                 getApplicationContext()
         );
         for (final BackgroundGeofenceTransition transition : transitions) {
-            if (isWithinTimeThreshold(transition)) {
-                transition.asyncUpload(getApplicationContext(), webHook, new ResultHandler<Boolean>() {
-                    @Override
-                    public void onSuccess(Boolean result) { }
-                    @Override
-                    public void onError(BackgroundGeofencingException exception) {
-                        BackgroundGeofenceTransition.scheduleAsyncUploadTransition(getApplicationContext());
-                        transition.save(getApplicationContext());
-                    }
-                });
-            }
+            transition.asyncUpload(getApplicationContext(), webHook, new ResultHandler<Boolean>() {
+                @Override
+                public void onSuccess(Boolean result) { }
+                @Override
+                public void onError(BackgroundGeofencingException exception) {
+                    BackgroundGeofenceTransition.scheduleAsyncUploadTransition(getApplicationContext());
+                    transition.save(getApplicationContext());
+                }
+            });
         }
-    }
-
-    private boolean isWithinTimeThreshold(BackgroundGeofenceTransition transition) {
-        if (transitionTracker.containsKey(transition.getGeoPointSource())) {
-            BackgroundGeofenceTransition lastTransition = transitionTracker.get(transition.getGeoPointSource());
-            if (lastTransition.getTransitionEvent().equals(transition.getTransitionEvent()) && transition.getTransitionDate() - lastTransition.getTransitionDate() < 60000) {
-                return false;
-            }
-        }
-        transitionTracker.put(transition.getGeoPointSource(), transition);
-        return true;
     }
 
     private void createLocationRequest() {

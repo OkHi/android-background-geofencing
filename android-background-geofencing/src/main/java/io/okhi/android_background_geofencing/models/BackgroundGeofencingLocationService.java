@@ -40,6 +40,7 @@ public class BackgroundGeofencingLocationService {
             }
         }
     };
+    private boolean handlerCalled = false;
 
     public BackgroundGeofencingLocationService () {}
 
@@ -78,7 +79,10 @@ public class BackgroundGeofencingLocationService {
     private void handleOnLocationSuccess () {
         timer.cancel();
         fusedLocationProviderClient.removeLocationUpdates(watchLocationCallback);
-        handler.onSuccess(location);
+        if (!handlerCalled) {
+            handlerCalled = true;
+            handler.onSuccess(location);
+        }
     }
 
     public void fetchCurrentLocation (Context context, final ResultHandler<Location> handler) {

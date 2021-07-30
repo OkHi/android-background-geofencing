@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
         okHi = new OkHi(this);
 
         BackgroundGeofencingNotification notification = new BackgroundGeofencingNotification(
-                "Hi Kiano",
+                "Yooooooo",
                 "Don't mind us",
                 "OkHi_Channel_id",
                 "OkHi Channel",
@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
         okHi.requestBackgroundLocationPermission("Hi", "There", new OkHiRequestHandler<Boolean>() {
             @Override
             public void onResult(Boolean result) {
-                BackgroundGeofence homeGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("home1", -1.461728,37.0146362)
+                BackgroundGeofence homeGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("home1", -1.2342871,36.8529034)
                     .setNotificationResponsiveness(5)
                     .setLoiteringDelay(60000)
                     .setInitialTriggerTransitionTypes(0)

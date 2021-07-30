@@ -22,6 +22,7 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -99,7 +100,7 @@ public class BackgroundGeofenceForegroundService extends Service {
         }
         if (intent != null && intent.hasExtra(Constant.FOREGROUND_SERVICE_ACTION) && Objects.equals(intent.getStringExtra(Constant.FOREGROUND_SERVICE_ACTION), Constant.FOREGROUND_SERVICE_GEOFENCE_EVENT)) {
             if (intent.hasExtra(Constant.FOREGROUND_SERVICE_TRANSITION_SIGNATURE)) {
-                uploadGeofenceTransition(false, intent.getStringExtra(Constant.FOREGROUND_SERVICE_TRANSITION_SIGNATURE));
+                uploadGeofenceTransition(intent.getStringExtra(Constant.FOREGROUND_SERVICE_TRANSITION_SIGNATURE));
             } else {
                 restartFailedGeofences();
             }
@@ -137,17 +138,17 @@ public class BackgroundGeofenceForegroundService extends Service {
         }
     }
 
-    private void uploadGeofenceTransition(final boolean restartGeofences, String transitionSignature) {
+    private void uploadGeofenceTransition(String transitionSignature) {
         if (transitionSignature != null) {
             manageDeviceWake(true);
-            BackgroundGeofenceTransition transition = BackgroundGeofencingDB.getTransitionFromSignature(getApplicationContext(), transitionSignature);
+            final BackgroundGeofenceTransition transition = BackgroundGeofencingDB.getTransitionFromSignature(getApplicationContext(), transitionSignature);
             if (transition != null) {
                 transition.asyncUpload(getApplicationContext(), webHook, new ResultHandler<Boolean>() {
                     @Override
                     public void onSuccess(Boolean result) {
                         manageDeviceWake(false);
+                        BackgroundGeofencingDB.removeGeofenceTransition(transition, getApplicationContext());
                     }
-
                     @Override
                     public void onError(BackgroundGeofencingException exception) {
                         BackgroundGeofenceTransition.scheduleAsyncUploadTransition(getApplicationContext());
@@ -230,7 +231,11 @@ public class BackgroundGeofenceForegroundService extends Service {
             new BackgroundGeofencingLocationService().fetchCurrentLocation(getApplicationContext(), new ResultHandler<Location>() {
                 @Override
                 public void onSuccess(Location result) {
-                    generateUploadGeofenceTransitions(location, Constant.FOREGROUND_SERVICE_WATCH_GEOFENCE_SOURCE);
+                    if (result.getAccuracy() < location.getAccuracy()) {
+                        generateUploadGeofenceTransitions(result, Constant.FOREGROUND_SERVICE_WATCH_GEOFENCE_SOURCE);
+                    } else {
+                        generateUploadGeofenceTransitions(location, Constant.FOREGROUND_SERVICE_WATCH_GEOFENCE_SOURCE);
+                    }
                 }
 
                 @Override
@@ -255,12 +260,7 @@ public class BackgroundGeofenceForegroundService extends Service {
         for (final BackgroundGeofenceTransition transition : transitions) {
             transition.asyncUpload(getApplicationContext(), webHook, new ResultHandler<Boolean>() {
                 @Override
-                public void onSuccess(Boolean result) {
-                    try {
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
+                public void onSuccess(Boolean result) { }
                 @Override
                 public void onError(BackgroundGeofencingException exception) {
                     BackgroundGeofenceTransition.scheduleAsyncUploadTransition(getApplicationContext());

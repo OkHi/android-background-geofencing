@@ -4,11 +4,15 @@ import android.content.Context;
 import android.location.Location;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 
 public class BackgroundGeofenceAppOpen {
+
+    private static HashMap<String, BackgroundGeofenceTransition> transitionTracker = new HashMap<>();
+
     public BackgroundGeofenceAppOpen () {}
 
     public static void transmitAppOpenEvent (final Context context, final BackgroundGeofencingWebHook webHook, BackgroundGeofence geofence) {
@@ -53,16 +57,30 @@ public class BackgroundGeofenceAppOpen {
                 .setTransitionEvent(BackgroundGeofenceUtil.isEnter(location,geofence) ? "enter" : "exit")
                 .setGeoPointSource("appOpen")
                 .build();
-            transition.asyncUpload(context, webHook, new ResultHandler<Boolean>() {
-                @Override
-                public void onSuccess(Boolean result) {
+            if (isWithinTimeThreshold(transition)) {
+                transition.asyncUpload(context, webHook, new ResultHandler<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean result) {
 
-                }
-                @Override
-                public void onError(BackgroundGeofencingException exception) {
-                    transition.save(context);
-                }
-            });
+                    }
+                    @Override
+                    public void onError(BackgroundGeofencingException exception) {
+                        transition.save(context);
+                    }
+                });
+            }
         }
+    }
+
+    // TODO: refactor this to own class
+    private static boolean isWithinTimeThreshold(BackgroundGeofenceTransition transition) {
+        if (transitionTracker.containsKey(transition.getGeoPointSource())) {
+            BackgroundGeofenceTransition lastTransition = transitionTracker.get(transition.getGeoPointSource());
+            if (lastTransition.getTransitionEvent().equals(transition.getTransitionEvent()) && transition.getTransitionDate() - lastTransition.getTransitionDate() < 60000) {
+                return false;
+            }
+        }
+        transitionTracker.put(transition.getGeoPointSource(), transition);
+        return true;
     }
 }

@@ -228,7 +228,11 @@ public class BackgroundGeofenceForegroundService extends Service {
             new BackgroundGeofencingLocationService().fetchCurrentLocation(getApplicationContext(), new ResultHandler<Location>() {
                 @Override
                 public void onSuccess(Location result) {
-                    generateUploadGeofenceTransitions(location, Constant.FOREGROUND_SERVICE_WATCH_GEOFENCE_SOURCE);
+                    if (result.getAccuracy() < location.getAccuracy()) {
+                        generateUploadGeofenceTransitions(result, Constant.FOREGROUND_SERVICE_WATCH_GEOFENCE_SOURCE);
+                    } else {
+                        generateUploadGeofenceTransitions(location, Constant.FOREGROUND_SERVICE_WATCH_GEOFENCE_SOURCE);
+                    }
                 }
                 @Override
                 public void onError(BackgroundGeofencingException exception) {

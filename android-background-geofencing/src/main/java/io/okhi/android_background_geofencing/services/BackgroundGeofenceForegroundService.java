@@ -193,7 +193,7 @@ public class BackgroundGeofenceForegroundService extends Service {
                         manageDeviceWake(false);
                     }
                     @Override
-                    public void onError(OkHiException exception) {
+                    public void onError(BackgroundGeofencingException exception) {
                         OkHiCoreUtil.captureException(exception);
                         exception.printStackTrace();
                         manageDeviceWake(false);

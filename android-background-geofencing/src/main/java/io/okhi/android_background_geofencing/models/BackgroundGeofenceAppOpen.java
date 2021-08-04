@@ -76,7 +76,7 @@ public class BackgroundGeofenceAppOpen {
     private static boolean isWithinTimeThreshold(BackgroundGeofenceTransition transition) {
         if (transitionTracker.containsKey(transition.getGeoPointSource())) {
             BackgroundGeofenceTransition lastTransition = transitionTracker.get(transition.getGeoPointSource());
-            if (lastTransition.getTransitionEvent().equals(transition.getTransitionEvent()) && transition.getTransitionDate() - lastTransition.getTransitionDate() < 60000) {
+            if (lastTransition.getStringIds().equals(transition.getStringIds()) && lastTransition.getTransitionEvent().equals(transition.getTransitionEvent()) && transition.getTransitionDate() - lastTransition.getTransitionDate() < 60000) {
                 return false;
             }
         }

@@ -140,23 +140,24 @@ public class BackgroundGeofenceForegroundService extends Service {
     }
 
     private void uploadGeofenceTransition(String transitionSignature) {
-        if (transitionSignature != null) {
-            manageDeviceWake(true);
-            final BackgroundGeofenceTransition transition = BackgroundGeofencingDB.getTransitionFromSignature(getApplicationContext(), transitionSignature);
-            if (transition != null) {
-                BackgroundGeofencingDB.removeGeofenceTransition(transition, getApplicationContext());
-                try {
-                    boolean success = transition.syncUpload(getApplicationContext(), webHook);
-                    if (!success) {
-                        transition.save(getApplicationContext());
-                        BackgroundGeofenceTransition.scheduleAsyncUploadTransition(getApplicationContext());
-                    }
-                    manageDeviceWake(false);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        if (transitionSignature == null) return;
+        manageDeviceWake(true);
+        final BackgroundGeofenceTransition transition = BackgroundGeofencingDB.getTransitionFromSignature(getApplicationContext(), transitionSignature);
+        if (transition == null) return;
+        BackgroundGeofencingDB.removeGeofenceTransition(transition, getApplicationContext());
+        if (!BackgroundGeofencingDB.isWithinTimeThreshold(transition, getApplicationContext())) return;
+        transition.asyncUpload(getApplicationContext(), webHook, new ResultHandler<Boolean>() {
+            @Override
+            public void onSuccess(Boolean result) {
+                manageDeviceWake(false);
             }
-        }
+            @Override
+            public void onError(BackgroundGeofencingException exception) {
+                transition.save(getApplicationContext());
+                BackgroundGeofenceTransition.scheduleAsyncUploadTransition(getApplicationContext());
+                manageDeviceWake(false);
+            }
+        });
     }
 
     // TODO: refactor this to something cleaner
@@ -258,12 +259,23 @@ public class BackgroundGeofenceForegroundService extends Service {
                 getApplicationContext()
         );
         boolean hasError = false;
-        for (final BackgroundGeofenceTransition transition : transitions) {
-            if (hasError) {
-                transition.save(getApplicationContext());
+        for (final BackgroundGeofenceTransition transition: transitions) {
+            if (!BackgroundGeofencingDB.isWithinTimeThreshold(transition, getApplicationContext())) {
+                BackgroundGeofencingDB.removeGeofenceTransition(transition, getApplicationContext());
+            } else if (BackgroundGeofenceUtil.isAppOnForeground(getApplicationContext())) {
+                transition.asyncUpload(getApplicationContext(), webHook, new ResultHandler<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean result) { }
+                    @Override
+                    public void onError(BackgroundGeofencingException exception) { }
+                });
             } else {
                 try {
-                    hasError = transition.syncUpload(getApplicationContext(), webHook);
+                    if (!hasError) {
+                        hasError = !transition.syncUpload(getApplicationContext(), webHook);
+                    } else {
+                        transition.save(getApplicationContext());
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

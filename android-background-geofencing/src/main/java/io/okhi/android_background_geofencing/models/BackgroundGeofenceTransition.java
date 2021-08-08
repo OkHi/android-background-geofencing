@@ -460,6 +460,10 @@ public class BackgroundGeofenceTransition implements Serializable {
             return;
         }
         for (final BackgroundGeofenceTransition transition: transitions) {
+            if (!BackgroundGeofencingDB.isWithinTimeThreshold(transition, context)) {
+                BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
+                return;
+            }
             if (hasEncounteredError[0]) {
                 return;
             }

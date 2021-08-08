@@ -298,4 +298,17 @@ public class BackgroundGeofencingDB {
         BackgroundGeofenceTransition existingTransition = (BackgroundGeofenceTransition) get(geofenceTransitionKey, BackgroundGeofenceTransition.class, context);
         return existingTransition;
     }
+
+    public static boolean isWithinTimeThreshold(BackgroundGeofenceTransition transition, Context context) {
+        String key = Constant.DB_TRANSITION_TIME_TRACKER_PREFIX + transition.getGeoPointSource() + ":" + transition.getStringIds() + ":" + transition.getTransitionEvent();
+        BackgroundGeofenceTransition existingTransition = (BackgroundGeofenceTransition) get(key, BackgroundGeofenceTransition.class, context);
+        if (existingTransition == null || transition.getTransitionDate() - existingTransition.getTransitionDate() > 60000) {
+            Log.v("BackDB", "Transition within limit");
+            save(key, transition, context);
+            return true;
+        } else {
+            Log.v("BackDB", "Transition NOT within limit");
+            return false;
+        }
+    }
 }

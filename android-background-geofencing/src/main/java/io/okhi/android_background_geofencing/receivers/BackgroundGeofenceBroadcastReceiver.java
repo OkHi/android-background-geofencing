@@ -35,6 +35,7 @@ public class BackgroundGeofenceBroadcastReceiver extends BroadcastReceiver {
             BackgroundGeofence.setIsFailing(geofencingEvent, true, context);
         } else {
             transition = new BackgroundGeofenceTransition.Builder(geofencingEvent).build();
+            if (!BackgroundGeofencingDB.isWithinTimeThreshold(transition, context)) return;
             transition.save(context);
             BackgroundGeofenceUtil.log(context, TAG, "Received a " + transition.getTransitionEvent() + " geofence event");
         }

@@ -144,16 +144,17 @@ public class BackgroundGeofenceForegroundService extends Service {
         final BackgroundGeofenceTransition transition = BackgroundGeofencingDB.getTransitionFromSignature(getApplicationContext(), transitionSignature);
         if (transition == null) return;
         BackgroundGeofencingDB.removeGeofenceTransition(transition, getApplicationContext());
-        if (!BackgroundGeofencingDB.isWithinTimeThreshold(transition, getApplicationContext())) return;
         transition.asyncUpload(getApplicationContext(), webHook, new ResultHandler<Boolean>() {
             @Override
             public void onSuccess(Boolean result) {
+                handleServiceStop();
                 manageDeviceWake(false);
             }
             @Override
             public void onError(BackgroundGeofencingException exception) {
                 transition.save(getApplicationContext());
                 BackgroundGeofenceTransition.scheduleAsyncUploadTransition(getApplicationContext());
+                handleServiceStop();
                 manageDeviceWake(false);
             }
         });
@@ -335,5 +336,11 @@ public class BackgroundGeofenceForegroundService extends Service {
         }
         foregroundWorkStarted = false;
         BackgroundGeofenceUtil.log(getApplicationContext(), TAG, "Clean up done");
+    }
+
+    private void handleServiceStop() {
+        boolean hasGeofences = !BackgroundGeofencingDB.getGeofences(getApplicationContext(), BackgroundGeofenceSource.FOREGROUND_PING).isEmpty() || !BackgroundGeofencingDB.getGeofences(getApplicationContext(), BackgroundGeofenceSource.FOREGROUND_WATCH).isEmpty();
+        if (hasGeofences) return;
+        BackgroundGeofencing.stopForegroundService(getApplicationContext());
     }
 }

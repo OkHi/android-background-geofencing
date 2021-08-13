@@ -165,8 +165,12 @@ public class BackgroundGeofencingDB {
     }
 
     public static void removeGeofenceTransition(BackgroundGeofenceTransition transition, Context context) {
-        String key = Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY + transition.getUUID();
-        remove(key, context);
+        try {
+            String key = Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY + transition.getSignature();
+            remove(key, context);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static BackgroundGeofence getBackgroundGeofence(String geofenceId, Context context) {
@@ -300,12 +304,12 @@ public class BackgroundGeofencingDB {
     public static boolean isWithinTimeThreshold(BackgroundGeofenceTransition transition, Context context) {
         String key = Constant.DB_TRANSITION_TIME_TRACKER_PREFIX + transition.getGeoPointSource() + ":" + transition.getStringIds() + ":" + transition.getTransitionEvent();
         BackgroundGeofenceTransition existingTransition = (BackgroundGeofenceTransition) get(key, BackgroundGeofenceTransition.class, context);
-        if (existingTransition == null || transition.getTransitionDate() - existingTransition.getTransitionDate() > 60000) {
-            Log.v("BackDB", "Transition within limit");
+        if (existingTransition == null || transition.getTransitionDate() - existingTransition.getTransitionDate() > 30000) {
+            Log.v("BackDB", "Transition within limit:" + key);
             save(key, transition, context);
             return true;
         } else {
-            Log.v("BackDB", "Transition NOT within limit");
+            Log.v("BackDB", "Transition is NOT within limit:" + key);
             return false;
         }
     }

@@ -139,12 +139,16 @@ public class BackgroundGeofencingDB {
     }
 
     public static void saveGeofenceTransitionEvent(BackgroundGeofenceTransition transition, Context context) {
-        String geofenceTransitionKey = Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY + transition.getUUID();
-        String lastGeofenceTransition = Constant.DB_BACKGROUND_GEOFENCE_LAST_TRANSITION_KEY;
-        BackgroundGeofenceTransition existingTransition = (BackgroundGeofenceTransition) get(geofenceTransitionKey, BackgroundGeofenceTransition.class, context);
-        if (existingTransition == null) {
-            save(geofenceTransitionKey, transition, context);
-            save(lastGeofenceTransition, transition, context);
+        try {
+            String geofenceTransitionKey = Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY + transition.getSignature();
+            String lastGeofenceTransition = Constant.DB_BACKGROUND_GEOFENCE_LAST_TRANSITION_KEY;
+            BackgroundGeofenceTransition existingTransition = (BackgroundGeofenceTransition) get(geofenceTransitionKey, BackgroundGeofenceTransition.class, context);
+            if (existingTransition == null) {
+                save(geofenceTransitionKey, transition, context);
+                save(lastGeofenceTransition, transition, context);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -161,8 +165,12 @@ public class BackgroundGeofencingDB {
     }
 
     public static void removeGeofenceTransition(BackgroundGeofenceTransition transition, Context context) {
-        String key = Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY + transition.getUUID();
-        remove(key, context);
+        try {
+            String key = Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY + transition.getSignature();
+            remove(key, context);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static BackgroundGeofence getBackgroundGeofence(String geofenceId, Context context) {
@@ -285,5 +293,24 @@ public class BackgroundGeofencingDB {
             }
         }
         return geofences;
+    }
+
+    public static BackgroundGeofenceTransition getTransitionFromSignature(Context context, String transitionSignature) {
+        String geofenceTransitionKey = Constant.DB_BACKGROUND_GEOFENCE_TRANSITION_PREFIX_KEY + transitionSignature;
+        BackgroundGeofenceTransition existingTransition = (BackgroundGeofenceTransition) get(geofenceTransitionKey, BackgroundGeofenceTransition.class, context);
+        return existingTransition;
+    }
+
+    public static boolean isWithinTimeThreshold(BackgroundGeofenceTransition transition, Context context) {
+        String key = Constant.DB_TRANSITION_TIME_TRACKER_PREFIX + transition.getGeoPointSource() + ":" + transition.getStringIds() + ":" + transition.getTransitionEvent();
+        BackgroundGeofenceTransition existingTransition = (BackgroundGeofenceTransition) get(key, BackgroundGeofenceTransition.class, context);
+        if (existingTransition == null || transition.getTransitionDate() - existingTransition.getTransitionDate() > 30000) {
+            Log.v("BackDB", "Transition within limit:" + key);
+            save(key, transition, context);
+            return true;
+        } else {
+            Log.v("BackDB", "Transition is NOT within limit:" + key);
+            return false;
+        }
     }
 }

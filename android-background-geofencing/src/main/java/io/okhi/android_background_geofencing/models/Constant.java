@@ -34,6 +34,7 @@ public class Constant {
     public static final String DB_INIT_ENTER_GEOFENCE_PREFIX_KEY = "INIT_ENTER_GEOFENCE:";
     public static final String DB_NOTIFICATION_CONFIGURATION_KEY = "NOTIFICATION_CONFIGURATION_KEY";
     public static final String DB_SETTING_CONFIGURATION_KEY = "SETTING_CONFIGURATION_KEY";
+    public static final String DB_TRANSITION_TIME_TRACKER_PREFIX = "DB_TRANSITION_TIME_TRACKER_PREFIX:";
 
     // geofence defaults
     public static final long DEFAULT_GEOFENCE_EXPIRATION = Geofence.NEVER_EXPIRE;
@@ -84,6 +85,7 @@ public class Constant {
 
     // foreground service
     public static final String FOREGROUND_SERVICE_ACTION = "action";
+    public static final String FOREGROUND_SERVICE_TRANSITION_SIGNATURE = "FOREGROUND_SERVICE_TRANSITION_SIGNATURE";
     public static final String FOREGROUND_SERVICE_GEOFENCE_EVENT = "geofence_event";
     public static final String FOREGROUND_SERVICE_START_STICKY = "start_sticky";
     public static final String FOREGROUND_SERVICE_WAKE_LOCK_TAG = "BackgroundGeofenceForegroundService::WakeLock";

@@ -400,7 +400,9 @@ public class BackgroundGeofenceTransition implements Serializable {
     }
 
     public boolean syncUpload(final Context context, BackgroundGeofencingWebHook webHook) throws JSONException, IOException {
+        if (webHook == null) return true;
         OkHttpClient client = BackgroundGeofenceUtil.getHttpClient(webHook);
+        if (client == null) return true;
         Request request = getRequest(webHook);
         final Boolean[] result = {true};
         final CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -430,7 +432,15 @@ public class BackgroundGeofenceTransition implements Serializable {
 
     public void asyncUpload (final Context context, BackgroundGeofencingWebHook webHook, final ResultHandler<Boolean> handler) {
         try {
+            if (webHook == null) {
+                handler.onSuccess(true);
+                return;
+            }
             OkHttpClient client = BackgroundGeofenceUtil.getHttpClient(webHook);
+            if (client == null) {
+                handler.onSuccess(true);
+                return;
+            }
             Request request = getRequest(webHook);
             client.newCall(request).enqueue(new Callback() {
                 @Override

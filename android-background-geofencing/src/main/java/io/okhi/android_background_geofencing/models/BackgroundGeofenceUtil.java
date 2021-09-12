@@ -115,6 +115,9 @@ public class BackgroundGeofenceUtil {
     }
 
     public static OkHttpClient getHttpClient(BackgroundGeofencingWebHook webHook) {
+        if (webHook == null) {
+            return null;
+        }
         ConnectionSpec spec = new ConnectionSpec.Builder(ConnectionSpec.COMPATIBLE_TLS)
             .supportsTlsExtensions(true)
             .tlsVersions(TlsVersion.TLS_1_2, TlsVersion.TLS_1_1, TlsVersion.TLS_1_0)

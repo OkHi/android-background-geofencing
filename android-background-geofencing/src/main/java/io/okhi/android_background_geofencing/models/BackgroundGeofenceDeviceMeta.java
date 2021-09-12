@@ -145,15 +145,17 @@ public class BackgroundGeofenceDeviceMeta {
     }
     Request request = requestBuild.build();
     OkHttpClient client = BackgroundGeofenceUtil.getHttpClient(webHook);
-    client.newCall(request).enqueue(new Callback() {
-      @Override
-      public void onFailure(Call call, IOException e) {
-        e.printStackTrace();
-      }
-      @Override
-      public void onResponse(Call call, Response response) throws IOException {
-        response.close();
-      }
-    });
+    if (client != null) {
+      client.newCall(request).enqueue(new Callback() {
+        @Override
+        public void onFailure(Call call, IOException e) {
+          e.printStackTrace();
+        }
+        @Override
+        public void onResponse(Call call, Response response) throws IOException {
+          response.close();
+        }
+      });
+    }
   }
 }

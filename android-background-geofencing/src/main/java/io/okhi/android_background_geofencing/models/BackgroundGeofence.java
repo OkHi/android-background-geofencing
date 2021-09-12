@@ -342,6 +342,10 @@ public class BackgroundGeofence implements Serializable {
                 JSONObject payload = new JSONObject();
                 payload.put("state", "stop");
                 OkHttpClient client = BackgroundGeofenceUtil.getHttpClient(webHook);
+                if (client == null) {
+                    handler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.UNKNOWN_EXCEPTION, "Unable to stop running geofence."));
+                    return;
+                }
                 RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), payload.toString());
                 Request.Builder requestBuild = new Request.Builder();
                 requestBuild.url(webHook.getUrl(id));

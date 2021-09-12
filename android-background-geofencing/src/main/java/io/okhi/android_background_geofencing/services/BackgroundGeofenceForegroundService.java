@@ -83,18 +83,23 @@ public class BackgroundGeofenceForegroundService extends Service {
         isWithForegroundService = setting != null && setting.isWithForegroundService();
         PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constant.FOREGROUND_SERVICE_WAKE_LOCK_TAG);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForeground(backgroundGeofencingNotification.getNotificationId(), backgroundGeofencingNotification.getNotification(getApplicationContext()));
-        }
-
-        if (webHook == null) {
-            webHook = BackgroundGeofencingDB.getWebHook(getApplicationContext());
+        webHook = BackgroundGeofencingDB.getWebHook(getApplicationContext());
+        if (webHook != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForeground(backgroundGeofencingNotification.getNotificationId(), backgroundGeofencingNotification.getNotification(getApplicationContext()));
+            }
         }
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (webHook == null) {
+            webHook = BackgroundGeofencingDB.getWebHook(getApplicationContext());
+            if (webHook == null) {
+                foregroundWorkStarted = false;
+                stopService(true);
+            }
+        }
         if (intent != null && intent.hasExtra(Constant.FOREGROUND_SERVICE_ACTION) && Objects.equals(intent.getStringExtra(Constant.FOREGROUND_SERVICE_ACTION), Constant.FOREGROUND_SERVICE_STOP)) {
             foregroundWorkStarted = false;
             stopService(true);
@@ -110,9 +115,6 @@ public class BackgroundGeofenceForegroundService extends Service {
             foregroundWorkStarted = true;
             startForegroundPingService();
             startForegroundLocationWatch();
-        }
-        if (webHook == null) {
-            webHook = BackgroundGeofencingDB.getWebHook(getApplicationContext());
         }
         return isWithForegroundService ? START_STICKY : START_NOT_STICKY;
     }

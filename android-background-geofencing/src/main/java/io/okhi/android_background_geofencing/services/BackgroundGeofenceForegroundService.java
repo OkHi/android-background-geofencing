@@ -83,10 +83,8 @@ public class BackgroundGeofenceForegroundService extends Service {
         PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constant.FOREGROUND_SERVICE_WAKE_LOCK_TAG);
         webHook = BackgroundGeofencingDB.getWebHook(getApplicationContext());
-        if (webHook != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForeground(backgroundGeofencingNotification.getNotificationId(), backgroundGeofencingNotification.getNotification(getApplicationContext()));
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForeground(backgroundGeofencingNotification.getNotificationId(), backgroundGeofencingNotification.getNotification(getApplicationContext()));
         }
     }
 
@@ -94,26 +92,27 @@ public class BackgroundGeofenceForegroundService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (webHook == null) {
             webHook = BackgroundGeofencingDB.getWebHook(getApplicationContext());
-            if (webHook == null) {
+        }
+        if (webHook == null) {
+            foregroundWorkStarted = false;
+            stopService(true);
+        } else {
+            if (intent != null && intent.hasExtra(Constant.FOREGROUND_SERVICE_ACTION) && Objects.equals(intent.getStringExtra(Constant.FOREGROUND_SERVICE_ACTION), Constant.FOREGROUND_SERVICE_STOP)) {
                 foregroundWorkStarted = false;
                 stopService(true);
             }
-        }
-        if (intent != null && intent.hasExtra(Constant.FOREGROUND_SERVICE_ACTION) && Objects.equals(intent.getStringExtra(Constant.FOREGROUND_SERVICE_ACTION), Constant.FOREGROUND_SERVICE_STOP)) {
-            foregroundWorkStarted = false;
-            stopService(true);
-        }
-        if (intent != null && intent.hasExtra(Constant.FOREGROUND_SERVICE_ACTION) && Objects.equals(intent.getStringExtra(Constant.FOREGROUND_SERVICE_ACTION), Constant.FOREGROUND_SERVICE_GEOFENCE_EVENT)) {
-            if (intent.hasExtra(Constant.FOREGROUND_SERVICE_TRANSITION_SIGNATURE)) {
-                uploadGeofenceTransition(intent.getStringExtra(Constant.FOREGROUND_SERVICE_TRANSITION_SIGNATURE));
-            } else {
-                restartFailedGeofences();
+            if (intent != null && intent.hasExtra(Constant.FOREGROUND_SERVICE_ACTION) && Objects.equals(intent.getStringExtra(Constant.FOREGROUND_SERVICE_ACTION), Constant.FOREGROUND_SERVICE_GEOFENCE_EVENT)) {
+                if (intent.hasExtra(Constant.FOREGROUND_SERVICE_TRANSITION_SIGNATURE)) {
+                    uploadGeofenceTransition(intent.getStringExtra(Constant.FOREGROUND_SERVICE_TRANSITION_SIGNATURE));
+                } else {
+                    restartFailedGeofences();
+                }
             }
-        }
-        if (isWithForegroundService && !foregroundWorkStarted) {
-            foregroundWorkStarted = true;
-            startForegroundPingService();
-            startForegroundLocationWatch();
+            if (isWithForegroundService && !foregroundWorkStarted) {
+                foregroundWorkStarted = true;
+                startForegroundPingService();
+                startForegroundLocationWatch();
+            }
         }
         return isWithForegroundService ? START_STICKY : START_NOT_STICKY;
     }

@@ -64,7 +64,7 @@ public class BackgroundGeofenceTransition implements Serializable {
     private String uuid = UUID.randomUUID().toString();
     private static String TAG = "GeofenceTransition";
     private String hashIds;
-
+    private static Boolean isProcessingTransitResponse = false;
     BackgroundGeofenceTransition() {
     }
 
@@ -366,9 +366,9 @@ public class BackgroundGeofenceTransition implements Serializable {
         return requestBuild.build();
     }
 
-    private void handleStopGeofenceTrackingResponse (Context context, Response response) {
-        // TODO: refactor to something constant
-        if (response.code() != 312) return;
+    private static void processTransitResponse (Context context, Response response) {
+        if (isProcessingTransitResponse || response.code() != 312) return;
+        isProcessingTransitResponse = true;
         try {
             JSONArray jsonArrayResponse = new JSONArray(response.body().string());
             for (int i = 0; i < jsonArrayResponse.length(); i++) {
@@ -396,37 +396,8 @@ public class BackgroundGeofenceTransition implements Serializable {
             }
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
-    public boolean syncUpload(final Context context, BackgroundGeofencingWebHook webHook) throws JSONException, IOException {
-        if (webHook == null) return true;
-        OkHttpClient client = BackgroundGeofenceUtil.getHttpClient(webHook);
-        if (client == null) return true;
-        Request request = getRequest(webHook);
-        final Boolean[] result = {true};
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                result[0] = false;
-                countDownLatch.countDown();
-            }
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                handleStopGeofenceTrackingResponse(context, response);
-                if (response.isSuccessful() || response.code() == 312) {
-                    result[0] = true;
-                    countDownLatch.countDown();
-                }
-                response.close();
-            }
-        });
-        try {
-            countDownLatch.await();
-            return result[0];
-        } catch (Exception e) {
-            return false;
+        } finally {
+            isProcessingTransitResponse = false;
         }
     }
 
@@ -449,10 +420,8 @@ public class BackgroundGeofenceTransition implements Serializable {
                 }
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
-                    handleStopGeofenceTrackingResponse(context, response);
-                    if (response.isSuccessful() || response.code() == 312) {
-                        handler.onSuccess(true);
-                    }
+                    BackgroundGeofenceTransition.processTransitResponse(context, response);
+                    handler.onSuccess(true);
                     response.close();
                 }
             });
@@ -465,12 +434,10 @@ public class BackgroundGeofenceTransition implements Serializable {
     public static void asyncUploadAllTransitions (final Context context) {
         BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(context);
         ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofencingDB.getAllGeofenceTransitions(context);
-        final boolean[] hasEncounteredError = {false};
         if (webHook == null || transitions.isEmpty()) {
             return;
         }
         for (final BackgroundGeofenceTransition transition: transitions) {
-            if (hasEncounteredError[0]) return;
             BackgroundGeofence geofence = transition.getTriggeringGeofence(context);
             if (geofence == null) {
                 BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
@@ -484,32 +451,18 @@ public class BackgroundGeofenceTransition implements Serializable {
                 } else if (!geofence.isWithForegroundPingTracking() && transition.getGeoPointSource().equals("foregroundPing")) {
                     BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
                 } else {
-                    if (BackgroundGeofenceUtil.isAppOnForeground(context)) {
-                        transition.asyncUpload(context, webHook, new ResultHandler<Boolean>() {
-                            @Override
-                            public void onSuccess(Boolean result) {
-                                BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
-                                scheduleGeofenceRestartWork(context);
-                            }
-                            @Override
-                            public void onError(BackgroundGeofencingException exception) {
-                                scheduleAsyncUploadTransition(context);
-                                scheduleGeofenceRestartWork(context);
-                            }
-                        });
-                    } else {
-                        try {
-                            boolean result = transition.syncUpload(context, webHook);
-                            if (result) {
-                                BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
-                            } else {
-                                scheduleAsyncUploadTransition(context);
-                            }
-                            scheduleGeofenceRestartWork(context);
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                    transition.asyncUpload(context, webHook, new ResultHandler<Boolean>() {
+                        @Override
+                        public void onSuccess(Boolean result) {
+                            BackgroundGeofencingDB.removeGeofenceTransition(transition, context);
+                            BackgroundGeofenceTransition.scheduleGeofenceRestartWork(context);
                         }
-                    }
+                        @Override
+                        public void onError(BackgroundGeofencingException exception) {
+                            BackgroundGeofenceTransition.scheduleAsyncUploadTransition(context);
+                            BackgroundGeofenceTransition.scheduleGeofenceRestartWork(context);
+                        }
+                    });
                 }
             }
         }

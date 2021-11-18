@@ -474,4 +474,8 @@ public class BackgroundGeofence implements Serializable {
     public void setWithAppOpenTracking(boolean withAppOpenTracking) {
         this.withAppOpenTracking = withAppOpenTracking;
     }
+
+    public static ArrayList<BackgroundGeofence> getAllGeofences(Context context) {
+        return BackgroundGeofencingDB.getAllGeofences(context);
+    }
 }

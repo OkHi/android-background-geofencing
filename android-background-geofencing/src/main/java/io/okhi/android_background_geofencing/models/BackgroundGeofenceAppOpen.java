@@ -31,6 +31,7 @@ public class BackgroundGeofenceAppOpen {
     }
 
     public static void transmitAppOpenEvent (final Context context, final BackgroundGeofencingWebHook webHook) {
+        if (!BackgroundGeofenceUtil.isAppOnForeground(context)) return;
         new BackgroundGeofencingLocationService().fetchCurrentLocation(context, new ResultHandler<Location>() {
             @Override
             public void onSuccess(Location result) {
@@ -44,7 +45,7 @@ public class BackgroundGeofenceAppOpen {
         });
     }
 
-    public static void transmitAppOpenEvent (final Context context, Location location, BackgroundGeofencingWebHook webHook, ArrayList<BackgroundGeofence> geofences) {
+    private static void transmitAppOpenEvent (final Context context, Location location, BackgroundGeofencingWebHook webHook, ArrayList<BackgroundGeofence> geofences) {
         for (BackgroundGeofence geofence: geofences) {
             ArrayList<String> ids = new ArrayList<>();
             ids.add(geofence.getId());

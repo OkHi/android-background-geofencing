@@ -305,11 +305,9 @@ public class BackgroundGeofencingDB {
         String key = Constant.DB_TRANSITION_TIME_TRACKER_PREFIX + transition.getGeoPointSource() + ":" + transition.getStringIds() + ":" + transition.getTransitionEvent();
         BackgroundGeofenceTransition existingTransition = (BackgroundGeofenceTransition) get(key, BackgroundGeofenceTransition.class, context);
         if (existingTransition == null || transition.getTransitionDate() - existingTransition.getTransitionDate() > 30000) {
-            Log.v("BackDB", "Transition within limit:" + key);
             save(key, transition, context);
             return true;
         } else {
-            Log.v("BackDB", "Transition is NOT within limit:" + key);
             return false;
         }
     }

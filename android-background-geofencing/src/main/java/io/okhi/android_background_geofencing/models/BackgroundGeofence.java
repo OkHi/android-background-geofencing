@@ -52,6 +52,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import static io.okhi.android_background_geofencing.models.BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE;
+import static io.okhi.android_background_geofencing.models.BackgroundGeofencingException.ALREADY_EXISTS_CODE;
 
 public class BackgroundGeofence implements Serializable {
 
@@ -213,7 +214,10 @@ public class BackgroundGeofence implements Serializable {
         boolean isLocationServicesEnabled = BackgroundGeofenceUtil.isLocationServicesEnabled(context);
         boolean isBackgroundLocationPermissionGranted = BackgroundGeofenceUtil.isBackgroundLocationPermissionGranted(context);
         boolean isGooglePlayServicesAvailable = BackgroundGeofenceUtil.isGooglePlayServicesAvailable(context);
-
+        boolean isExistingGeofence = BackgroundGeofencingDB.getBackgroundGeofence(id, context) != null;
+        if (isExistingGeofence && !silently) {
+            requestHandler.onError(new BackgroundGeofencingException(ALREADY_EXISTS_CODE, "Geofence already tracking"));
+        }
         if (!isLocationServicesEnabled) {
             requestHandler.onError(new BackgroundGeofencingException(SERVICE_UNAVAILABLE_CODE, "Location services are unavailable"));
             return;
@@ -372,8 +376,6 @@ public class BackgroundGeofence implements Serializable {
                             stopGeofences(context, id);
                             handler.onSuccess(id);
                         } else {
-                            BackgroundGeofenceUtil.log(context, "BackGeofenceStop", response.body().string());
-                            BackgroundGeofenceUtil.log(context,"BackGeofenceStop", "Code:" + response.code());
                             OkHiException exception = OkHiCoreUtil.generateOkHiException(response);
                             handler.onError(new BackgroundGeofencingException(exception.getCode(), exception.getMessage()));
                         }

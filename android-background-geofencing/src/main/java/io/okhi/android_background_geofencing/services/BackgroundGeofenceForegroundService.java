@@ -259,27 +259,16 @@ public class BackgroundGeofenceForegroundService extends Service {
         for (final BackgroundGeofenceTransition transition: transitions) {
             if (!BackgroundGeofencingDB.isWithinTimeThreshold(transition, getApplicationContext())) {
                 BackgroundGeofencingDB.removeGeofenceTransition(transition, getApplicationContext());
-            } else if (BackgroundGeofenceUtil.isAppOnForeground(getApplicationContext())) {
+            } else {
                 transition.asyncUpload(getApplicationContext(), webHook, new ResultHandler<Boolean>() {
                     @Override
                     public void onSuccess(Boolean result) { }
                     @Override
-                    public void onError(BackgroundGeofencingException exception) { }
-                });
-            } else {
-                try {
-                    if (!hasError) {
-                        hasError = !transition.syncUpload(getApplicationContext(), webHook);
-                    } else {
-                        transition.save(getApplicationContext());
+                    public void onError(BackgroundGeofencingException exception) {
+                        BackgroundGeofenceTransition.scheduleAsyncUploadTransition(getApplicationContext());
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                });
             }
-        }
-        if (hasError) {
-            BackgroundGeofenceTransition.scheduleAsyncUploadTransition(getApplicationContext());
         }
     }
 

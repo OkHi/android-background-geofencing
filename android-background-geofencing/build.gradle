@@ -10,7 +10,7 @@ android {
         minSdkVersion 19
         targetSdkVersion 29
         versionCode 1
-        versionName "1.5.1"
+        versionName "1.5.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'
@@ -27,6 +27,7 @@ android {
 
 allprojects {
     repositories {
+        mavenCentral()
         maven { url 'https://jitpack.io' }
     }
 }

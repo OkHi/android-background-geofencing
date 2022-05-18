@@ -258,6 +258,7 @@ public class BackgroundGeofence implements Serializable {
                     if (!silently) {
                         save(context);
                     }
+                    BackgroundGeofenceDeviceMeta.asyncUpload(context);
                     requestHandler.onSuccess();
                 }
             }).addOnFailureListener(new OnFailureListener() {
@@ -268,6 +269,7 @@ public class BackgroundGeofence implements Serializable {
                 }
             });
         } else {
+            BackgroundGeofenceDeviceMeta.asyncUpload(context);
             save(context);
             requestHandler.onSuccess();
         }

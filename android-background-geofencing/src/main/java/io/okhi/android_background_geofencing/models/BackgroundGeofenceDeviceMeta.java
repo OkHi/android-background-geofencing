@@ -124,6 +124,11 @@ public class BackgroundGeofenceDeviceMeta {
     }
   }
 
+  public static void asyncUpload(Context context) {
+    final  ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(context);
+    new BackgroundGeofenceDeviceMeta(context, geofences).asyncUpload();
+  }
+
   public void asyncUpload() {
     BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(this.context, WebHookType.DEVICE_PING);
     if (webHook == null) return;

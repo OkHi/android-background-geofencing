@@ -32,6 +32,7 @@ import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceDeviceMeta;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceSetting;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceSource;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
@@ -187,6 +188,7 @@ public class BackgroundGeofenceForegroundService extends Service {
             public void run() {
                 /* do what you need to do */
                 manageDeviceWake(true);
+                BackgroundGeofenceDeviceMeta.asyncUpload(getApplicationContext());
                 new BackgroundGeofencingLocationService().fetchCurrentLocation(getApplicationContext(), new ResultHandler<Location>() {
                     @Override
                     public void onSuccess(Location result) {
@@ -213,6 +215,7 @@ public class BackgroundGeofenceForegroundService extends Service {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 if (locationResult != null) {
+                    BackgroundGeofenceDeviceMeta.asyncUpload(getApplicationContext());
                     handleOnLocationResult(locationResult.getLastLocation());
                 }
             }

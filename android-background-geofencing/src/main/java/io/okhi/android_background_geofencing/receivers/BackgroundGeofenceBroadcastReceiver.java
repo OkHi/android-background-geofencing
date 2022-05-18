@@ -14,6 +14,7 @@ import com.google.android.gms.location.GeofencingEvent;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceDeviceMeta;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
@@ -27,6 +28,7 @@ public class BackgroundGeofenceBroadcastReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        BackgroundGeofenceDeviceMeta.asyncUpload(context);
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
         boolean isNotificationAvailable = BackgroundGeofencingDB.getNotification(context) != null;
         boolean isInBackground = !BackgroundGeofenceUtil.isAppOnForeground(context);

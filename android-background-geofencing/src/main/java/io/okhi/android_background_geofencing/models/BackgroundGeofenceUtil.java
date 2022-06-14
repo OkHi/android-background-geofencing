@@ -1,7 +1,11 @@
 package io.okhi.android_background_geofencing.models;
 
 import android.app.ActivityManager;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -9,18 +13,21 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
+import io.okhi.android_background_geofencing.receivers.AlarmBroadcastReceiver;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceForegroundRestartWorker;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
@@ -96,6 +103,54 @@ public class BackgroundGeofenceUtil {
 
     public static void cancelForegroundRestartWorker (Context context) {
         WorkManager.getInstance(context).cancelUniqueWork(Constant.FOREGROUND_SERVICE_UNIQUE_WORK);
+    }
+
+    public static void scheduleServiceRestarts(Context context){
+
+        Calendar cal = Calendar.getInstance();
+        Intent intent = new Intent(context, AlarmBroadcastReceiver.class);
+
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(AppCompatActivity.ALARM_SERVICE);
+        int[] alarmMinTriggers = { 0, 15, 30, 45};
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                context,
+                (int) cal.getTimeInMillis(),
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        if(android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ){
+            for (int alarm = 0; alarm < 25;  alarm++) {
+                for( int alarmMin: alarmMinTriggers){
+                    cal.set(Calendar.HOUR_OF_DAY, alarm);
+                    cal.set(Calendar.MINUTE, alarmMin);
+
+                    alarmManager.setExactAndAllowWhileIdle(
+                            AlarmManager.RTC_WAKEUP,
+                            cal.getTimeInMillis(),
+                            pendingIntent
+                    );
+                }
+            }
+
+        }else if(android.os.Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP ){
+            alarmManager.setInexactRepeating(
+                    AlarmManager.RTC_WAKEUP,
+                    cal.getTimeInMillis(),
+                    AlarmManager.INTERVAL_HOUR,
+                    pendingIntent
+            );
+        }
+
+        ComponentName receiver = new ComponentName(context, AlarmBroadcastReceiver.class);
+        PackageManager pm = context.getPackageManager();
+
+        pm.setComponentEnabledSetting(
+                receiver,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP
+        );
     }
 
     public static boolean isChineseDevice() {

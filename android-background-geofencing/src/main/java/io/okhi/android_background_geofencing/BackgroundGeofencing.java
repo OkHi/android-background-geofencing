@@ -1,13 +1,17 @@
 package io.okhi.android_background_geofencing;
 
+import static io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil.scheduleServiceRestarts;
+
 import android.app.ActivityManager;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.os.Build;
 
 import androidx.core.content.ContextCompat;
-import androidx.work.BackoffPolicy;
-import androidx.work.ExistingWorkPolicy;
-import androidx.work.OneTimeWorkRequest;
 import androidx.work.Operation;
 import androidx.work.WorkManager;
 
@@ -27,9 +31,9 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofencingExceptio
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
+import io.okhi.android_background_geofencing.receivers.UserPresentBroadcastReceiver;
+import io.okhi.android_background_geofencing.services.AdminBackgroundGeofenceForegroundService;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceForegroundService;
-import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
-import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
 
 public class BackgroundGeofencing {
 
@@ -55,6 +59,8 @@ public class BackgroundGeofencing {
     ArrayList<BackgroundGeofence> allGeofences = BackgroundGeofencingDB.getAllGeofences(context);
     boolean isAppOnForeground = BackgroundGeofenceUtil.isAppOnForeground(context);
     boolean canRestartGeofences  = BackgroundGeofenceUtil.canRestartGeofences(context);
+    registerComponents(context);
+    registerReceivers(context);
     if (!allGeofences.isEmpty()) {
       new BackgroundGeofenceDeviceMeta(context, allGeofences).asyncUpload();
       BackgroundGeofenceAppOpen.transmitAppOpenEvent(context, webHook);
@@ -92,6 +98,7 @@ public class BackgroundGeofencing {
     boolean isGooglePlayServicesAvailable = BackgroundGeofenceUtil.isGooglePlayServicesAvailable(context);
     boolean isLocationServicesEnabled = BackgroundGeofenceUtil.isLocationServicesEnabled(context);
     boolean isNotificationAvailable = BackgroundGeofencingDB.getNotification(context) != null;
+    scheduleServiceRestarts(context);
     if (isForegroundServiceRunning(context)) {
       return;
     }
@@ -121,5 +128,54 @@ public class BackgroundGeofencing {
       }
     }
     return false;
+  }
+
+  public static void registerComponents(Context context){
+
+    ComponentName userPresent = new ComponentName(context, UserPresentBroadcastReceiver.class);
+    ComponentName backgroundService = new ComponentName(context, UserPresentBroadcastReceiver.class);
+
+    if(android.os.Build.VERSION.SDK_INT > Build.VERSION_CODES.O){
+      ComponentName adminService = new ComponentName(context, AdminBackgroundGeofenceForegroundService.class);
+      PackageManager om = context.getPackageManager();
+      om.setComponentEnabledSetting(
+              adminService,
+              PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+              PackageManager.DONT_KILL_APP
+      );
+    }
+
+    PackageManager pm = context.getPackageManager();
+    pm.setComponentEnabledSetting(
+            userPresent,
+            PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+            PackageManager.DONT_KILL_APP
+    );
+
+    PackageManager xm = context.getPackageManager();
+    xm.setComponentEnabledSetting(
+            backgroundService,
+            PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+            PackageManager.DONT_KILL_APP
+    );
+
+  }
+
+  public static void registerReceivers(Context context){
+
+    BroadcastReceiver br = new UserPresentBroadcastReceiver();
+
+    IntentFilter filter = new IntentFilter();
+    filter.addAction(Intent.ACTION_USER_PRESENT);
+
+    if(android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.N ){
+      filter.addAction(Intent.ACTION_USER_UNLOCKED);
+    }
+    filter.addAction(Intent.ACTION_DREAMING_STOPPED);
+    filter.addAction(Intent.ACTION_POWER_CONNECTED);
+    filter.addAction(Intent.ACTION_SCREEN_ON);
+
+    context.registerReceiver(br, filter);
+
   }
 }

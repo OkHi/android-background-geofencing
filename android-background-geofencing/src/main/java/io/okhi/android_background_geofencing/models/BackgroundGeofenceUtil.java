@@ -111,36 +111,35 @@ public class BackgroundGeofenceUtil {
         Intent intent = new Intent(context, AlarmBroadcastReceiver.class);
 
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(AppCompatActivity.ALARM_SERVICE);
-        int[] alarmMinTriggers = { 0, 15, 30, 45};
+        int[] alarmTriggers = { 6, 9, 12, 15, 18, 21, 23, 3};
 
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                context,
-                (int) cal.getTimeInMillis(),
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT
-        );
+        for (int alarm : alarmTriggers) {
+            // Hour
+                PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                        context,
+                        (int) cal.getTimeInMillis(),
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                );
+                // Min
+                Log.e("Alarm Func", "-------------------> Set Alarm for: " + alarm);
+                cal.set(Calendar.HOUR_OF_DAY, alarm);
+                cal.set(Calendar.MINUTE, 0);
 
-        if(android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ){
-            for (int alarm = 0; alarm < 25;  alarm++) {
-                for( int alarmMin: alarmMinTriggers){
-                    cal.set(Calendar.HOUR_OF_DAY, alarm);
-                    cal.set(Calendar.MINUTE, alarmMin);
-
+                if(android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ){
                     alarmManager.setExactAndAllowWhileIdle(
                             AlarmManager.RTC_WAKEUP,
                             cal.getTimeInMillis(),
                             pendingIntent
                     );
+                }else if(android.os.Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP ){
+                    alarmManager.setInexactRepeating(
+                            AlarmManager.RTC_WAKEUP,
+                            cal.getTimeInMillis(),
+                            AlarmManager.INTERVAL_HOUR,
+                            pendingIntent
+                    );
                 }
-            }
-
-        }else if(android.os.Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP ){
-            alarmManager.setInexactRepeating(
-                    AlarmManager.RTC_WAKEUP,
-                    cal.getTimeInMillis(),
-                    AlarmManager.INTERVAL_HOUR,
-                    pendingIntent
-            );
         }
 
         ComponentName receiver = new ComponentName(context, AlarmBroadcastReceiver.class);

@@ -3,6 +3,8 @@ package io.okhi.android_background_geofencing.receivers;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
@@ -21,6 +23,7 @@ public class AlarmBroadcastReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(final Context context, Intent intent) {
+        Log.e("Alarm Func", "-------------------> Alarm triggered Successfully");
         // TODO: refactor this to a static method
         ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.NATIVE_GEOFENCE);
         for (final BackgroundGeofence geofence : geofences) {

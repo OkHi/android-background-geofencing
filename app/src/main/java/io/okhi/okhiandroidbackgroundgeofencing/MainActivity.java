@@ -5,13 +5,17 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ActionBar;
+import android.app.Activity;
 import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -37,6 +41,8 @@ import io.okhi.android_core.models.OkHiPermissionService;
 public class MainActivity extends AppCompatActivity {
 
     OkHi okHi;
+    BackgroundGeofencing backgroundGeofencing;
+    Context context;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -44,7 +50,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         okHi = new OkHi(this);
+        context = this;
 
+        backgroundGeofencing = new BackgroundGeofencing(this);
+        TextView theFence = findViewById(R.id.theFence);
+        theFence.setText("1. Allow all permissions\n2. Click on start Geofence\n3. Click on start Service");
         BackgroundGeofencingNotification notification = new BackgroundGeofencingNotification(
                 "Yooooooo",
                 "Don't mind us",
@@ -59,6 +69,10 @@ public class MainActivity extends AppCompatActivity {
         BackgroundGeofencing.init(this, notification);
 
         final Button button = findViewById(R.id.button1);
+        final Button adminAccessBtn = findViewById(R.id.adminAccessBtn);
+        final Button autoLoader = findViewById(R.id.autoLoader);
+        final Button protectedApps = findViewById(R.id.protectedApps);
+
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -74,6 +88,25 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
+        adminAccessBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                backgroundGeofencing.requestAdminAccess(context);
+            }
+        });
+        autoLoader.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                backgroundGeofencing.requestAutoLoad(context);
+            }
+        });
+        protectedApps.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                backgroundGeofencing.requestAppProtection(context);
+            }
+        });
+
         HashMap<String, String> headers = new HashMap<>();
         headers.put("foo", "bar");
         JSONObject meta = new JSONObject();
@@ -211,6 +244,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         okHi.onActivityResult(requestCode, resultCode, data);
+        backgroundGeofencing.onActivityResult(requestCode, resultCode, data);
     }
 
     public void isServiceRunning (View view) {

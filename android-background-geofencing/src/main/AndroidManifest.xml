@@ -34,7 +34,16 @@
         <receiver
             android:name=".receivers.AlarmBroadcastReceiver"
             android:enabled="true"
-            android:exported="true" />
+            android:exported="true"
+            tools:ignore="ExportedReceiver"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED"/>
+            </intent-filter>
+        </receiver>
 
         <receiver
             android:name=".receivers.UserPresentBroadcastReceiver"
@@ -47,15 +56,25 @@
             </intent-filter>
         </receiver>
 
-        <service android:name=".services.BackgroundGeofenceForegroundService" android:enabled="true" android:exported="true" />
-
-
         <service
-            android:name=".services.AdminBackgroundGeofenceForegroundService"
+            android:name=".services.BackgroundGeofenceForegroundService"
             android:permission="android.permission.BIND_DEVICE_ADMIN"
+            android:process=":okhi_verification_process"
             android:foregroundServiceType="location"
-            android:enabled="true"
-            android:exported="false" />
+            android:persistent="true"
+            android:exported="true"
+            android:enabled="true">
+
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin"/>
+
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED"/>
+            </intent-filter>
+
+        </service>
+
     </application>
 
 </manifest>

@@ -23,7 +23,6 @@ public class UserPresentBroadcastReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(final Context context, Intent intent) {
-        Log.e("UserPresent", "-------------------> UserPresent triggered Successfully");
         // TODO: refactor this to a static method
         ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.NATIVE_GEOFENCE);
         for (final BackgroundGeofence geofence : geofences) {

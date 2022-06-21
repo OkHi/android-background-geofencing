@@ -2,7 +2,9 @@ package io.okhi.android_background_geofencing;
 
 import static io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil.scheduleServiceRestarts;
 
+import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.admin.DevicePolicyManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -10,7 +12,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.util.Log;
 
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.work.Operation;
 import androidx.work.WorkManager;
@@ -32,10 +36,20 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotifica
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
 import io.okhi.android_background_geofencing.receivers.UserPresentBroadcastReceiver;
-import io.okhi.android_background_geofencing.services.AdminBackgroundGeofenceForegroundService;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceForegroundService;
 
 public class BackgroundGeofencing {
+
+
+  private final int PHONE_CODE = 1001;
+  private final int DEVICE_ADMIN_CODE = 1002;
+  private final int DEVICE_PROTECTED_APPS = 1003;
+
+  private final Activity activity;
+
+  public BackgroundGeofencing(Activity activity) {
+    this.activity = activity;
+  }
 
   public static void init(final Context context, final BackgroundGeofencingNotification notification) {
     Operation operation = WorkManager.getInstance(context).cancelAllWork();
@@ -133,28 +147,10 @@ public class BackgroundGeofencing {
   public static void registerComponents(Context context){
 
     ComponentName userPresent = new ComponentName(context, UserPresentBroadcastReceiver.class);
-    ComponentName backgroundService = new ComponentName(context, UserPresentBroadcastReceiver.class);
-
-    if(android.os.Build.VERSION.SDK_INT > Build.VERSION_CODES.O){
-      ComponentName adminService = new ComponentName(context, AdminBackgroundGeofenceForegroundService.class);
-      PackageManager om = context.getPackageManager();
-      om.setComponentEnabledSetting(
-              adminService,
-              PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-              PackageManager.DONT_KILL_APP
-      );
-    }
 
     PackageManager pm = context.getPackageManager();
     pm.setComponentEnabledSetting(
             userPresent,
-            PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-            PackageManager.DONT_KILL_APP
-    );
-
-    PackageManager xm = context.getPackageManager();
-    xm.setComponentEnabledSetting(
-            backgroundService,
             PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
             PackageManager.DONT_KILL_APP
     );
@@ -178,4 +174,115 @@ public class BackgroundGeofencing {
     context.registerReceiver(br, filter);
 
   }
+
+  public void requestAutoLoad(Context context){
+
+    String manufacturer = Build.MANUFACTURER;
+    Intent intent = new Intent();
+    // Transsion Group
+    if (
+            manufacturer.toLowerCase().contains("infinix") ||
+            manufacturer.toLowerCase().contains("tecno") ||
+            manufacturer.toLowerCase().contains("itel")
+    ){
+      ComponentName component = new ComponentName("com.transsion.phonemaster", "com.cyin.himgr.autostart.AutoStartActivity");
+      intent.setComponent(component);
+      activity.startActivityForResult(intent, PHONE_CODE);
+    }
+
+    // XIAOMI (Redmi)
+    if (manufacturer.toLowerCase().contains("xiaomi")){
+      ComponentName component = new ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity");
+      intent.setComponent(component);
+      activity.startActivityForResult(intent, PHONE_CODE);
+    }
+
+    // OPPO
+    if (manufacturer.toLowerCase().contains("oppo")){
+      ComponentName component = new ComponentName("com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity");
+      intent.setClassName("com.coloros.oppoguardelf", "com.coloros.powermanager.fuelgaue.PowerConsumptionActivity");
+      intent.setComponent(component);
+      activity.startActivityForResult(intent, PHONE_CODE);
+    }
+
+    // VIVO
+    if (manufacturer.toLowerCase().contains("vivo")){
+      ComponentName component = new ComponentName("com.vivo.permissionmanager", "com.vivo.permissionmanager.activity.BgStartUpManagerActivity");
+      intent.setComponent(component);
+      activity.startActivityForResult(intent, PHONE_CODE);
+    }
+
+    // Letv
+    if (manufacturer.toLowerCase().contains("letv")){
+      ComponentName component = new ComponentName("com.letv.android.letvsafe", "com.letv.android.letvsafe.AutobootManageActivity");
+      intent.setComponent(component);
+      activity.startActivityForResult(intent, PHONE_CODE);
+    }
+
+  }
+
+  public void requestAdminAccess(Context context){
+
+    DevicePolicyManager mDPM = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+    ComponentName mAdminName = new ComponentName(context, BackgroundGeofenceForegroundService.class);
+
+    try {
+      if (!mDPM.isAdminActive(mAdminName)) {
+        try {
+          Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+          intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+          intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, mAdminName);
+          intent.putExtra( DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+                  "Click on Activate button to secure your application."
+          );
+          ComponentName componentName = new ComponentName("com.android.settings", "com.android.settings.DeviceAdminSettings");
+          intent.setComponent(componentName);
+          activity.startActivityForResult(intent, DEVICE_ADMIN_CODE);
+
+        } catch (Exception e) {
+          e.printStackTrace();
+          Log.e("Permissions error", e.toString());
+        }
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+      Log.e("RequestAdminAccess", e.toString());
+    }
+  }
+
+  public void requestAppProtection(Context context){
+      try {
+        Intent intent = new Intent();
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra( DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+                "Add Okhi to Protected apps for the app to work efficiently"
+        );
+        ComponentName componentName = new ComponentName("com.transsion.phonemaster", "com.cyin.himgr.powermanager.views.activity.PowerManagerActivity");
+        intent.setComponent(componentName);
+        activity.startActivityForResult(intent, DEVICE_PROTECTED_APPS);
+
+      } catch (Exception e) {
+        e.printStackTrace();
+        Log.e("Permissions error", e.toString());
+      }
+  }
+
+  public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+
+    switch(requestCode) {
+      case PHONE_CODE: {
+        Log.d("On Result", "--------------------> PHONE_CODE response Code " + resultCode);
+      }
+      case DEVICE_ADMIN_CODE: {
+
+        Log.d("On Result", "--------------------> DEVICE_ADMIN_CODE response Code " + resultCode);
+      }
+      case DEVICE_PROTECTED_APPS: {
+
+        Log.d("On Result", "--------------------> DEVICE_PROTECTED_APPS response Code " + resultCode);
+      }
+    }
+
+  }
+
 }

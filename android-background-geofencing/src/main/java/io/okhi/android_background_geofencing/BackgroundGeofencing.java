@@ -175,7 +175,7 @@ public class BackgroundGeofencing {
 
   }
 
-  public void requestAutoLoad(Context context){
+  public void requestAutoLoad(){
 
     String manufacturer = Build.MANUFACTURER;
     Intent intent = new Intent();
@@ -250,15 +250,24 @@ public class BackgroundGeofencing {
     }
   }
 
-  public void requestAppProtection(Context context){
+  public void requestAppProtection(){
+
+    String manufacturer = Build.MANUFACTURER;
+
       try {
         Intent intent = new Intent();
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra( DevicePolicyManager.EXTRA_ADD_EXPLANATION,
-                "Add Okhi to Protected apps for the app to work efficiently"
+                "Add Okhi to Protected Apps for the app to work efficiently"
         );
-        ComponentName componentName = new ComponentName("com.transsion.phonemaster", "com.cyin.himgr.powermanager.views.activity.PowerManagerActivity");
-        intent.setComponent(componentName);
+        // Transsion Group
+        if ( manufacturer.toLowerCase().contains("infinix") ||
+             manufacturer.toLowerCase().contains("tecno") ||
+             manufacturer.toLowerCase().contains("itel")
+        ){
+          ComponentName componentName = new ComponentName("com.transsion.phonemaster", "com.cyin.himgr.widget.activity.MainSettingGpActivity");
+          intent.setComponent(componentName);
+        }
         activity.startActivityForResult(intent, DEVICE_PROTECTED_APPS);
 
       } catch (Exception e) {

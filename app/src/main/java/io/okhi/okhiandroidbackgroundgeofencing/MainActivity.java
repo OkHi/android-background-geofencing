@@ -97,13 +97,13 @@ public class MainActivity extends AppCompatActivity {
         autoLoader.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                backgroundGeofencing.requestAutoLoad(context);
+                backgroundGeofencing.requestAutoLoad();
             }
         });
         protectedApps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                backgroundGeofencing.requestAppProtection(context);
+                backgroundGeofencing.requestAppProtection();
             }
         });
 

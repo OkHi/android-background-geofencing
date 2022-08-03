@@ -1,7 +1,12 @@
 package io.okhi.android_background_geofencing.models;
 
+import android.annotation.SuppressLint;
 import android.app.ActivityManager;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -9,18 +14,21 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
+import io.okhi.android_background_geofencing.receivers.AlarmBroadcastReceiver;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceForegroundRestartWorker;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
@@ -110,7 +118,7 @@ public class BackgroundGeofenceUtil {
 
     public static boolean isNetworkAvailable(Context context) {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        @SuppressLint("MissingPermission") NetworkInfo netInfo = cm.getActiveNetworkInfo();
         return (netInfo != null && netInfo.isConnected());
     }
 
@@ -149,6 +157,56 @@ public class BackgroundGeofenceUtil {
     public static boolean isEnter(Location location, BackgroundGeofence geofence) {
         double distance = distance(location.getLatitude(), geofence.getLat(), location.getLongitude(), geofence.getLng(), 0.0, 0.0);
         return distance < geofence.getRadius();
+    }
+
+
+    // BackgroundGeofenceUtil
+    public static void scheduleServiceRestarts(Context context){
+
+        Calendar cal = Calendar.getInstance();
+        Intent intent = new Intent(context, AlarmBroadcastReceiver.class);
+
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(AppCompatActivity.ALARM_SERVICE);
+        int[] alarmTriggers = { 1, 3, 6, 12, 15, 18, 21};
+
+        for (int alarm : alarmTriggers) {
+
+            Log.d("BackgroundGeofenceUtil", "scheduleServiceRestarts: " + alarm);
+
+            // Hour
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                    context,
+                    (int) cal.getTimeInMillis(),
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT
+            );
+            // Min
+            cal.set(Calendar.HOUR_OF_DAY, alarm);
+            cal.set(Calendar.MINUTE, 0);
+
+            if(android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ){
+                alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        cal.getTimeInMillis(),
+                        pendingIntent
+                );
+            }else {
+               alarmManager.set(
+                       AlarmManager.RTC_WAKEUP,
+                       cal.getTimeInMillis(),
+                       pendingIntent
+               );
+            }
+        }
+
+        ComponentName receiver = new ComponentName(context, AlarmBroadcastReceiver.class);
+        PackageManager pm = context.getPackageManager();
+
+        pm.setComponentEnabledSetting(
+                receiver,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP
+        );
     }
 
     /**

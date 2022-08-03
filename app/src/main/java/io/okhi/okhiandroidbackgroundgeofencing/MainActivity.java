@@ -33,6 +33,7 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotifica
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.WebHookRequest;
 import io.okhi.android_background_geofencing.models.WebHookType;
+import io.okhi.android_background_geofencing.ui.WebViewActivity;
 import io.okhi.android_core.OkHi;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
@@ -73,6 +74,11 @@ public class MainActivity extends AppCompatActivity {
         final Button autoLoader = findViewById(R.id.autoLoader);
         final Button protectedApps = findViewById(R.id.protectedApps);
 
+        final Button openWebView = findViewById(R.id.openWebView);
+        final Button protectNotify = findViewById(R.id.protectNotify);
+        final Button locationTrigger = findViewById(R.id.locationTrigger);
+
+
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -88,10 +94,11 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
+
         adminAccessBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                backgroundGeofencing.requestAdminAccess(context);
+               backgroundGeofencing.requestAdminAccess(context);
             }
         });
         autoLoader.setOnClickListener(new View.OnClickListener() {
@@ -103,7 +110,27 @@ public class MainActivity extends AppCompatActivity {
         protectedApps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                backgroundGeofencing.requestAppProtection();
+                backgroundGeofencing.requestAppProtection("com.transsion.phonemaster", "com.cyin.himgr.widget.activity.MainSettingGpActivity");
+            }
+        });
+
+        openWebView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+            Intent it = new Intent(context, WebViewActivity.class);
+            startActivity(it);
+            }
+        });
+        protectNotify.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // backgroundGeofencing.requestAppProtection();
+            }
+        });
+        locationTrigger.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // backgroundGeofencing.requestAppProtection();
             }
         });
 
@@ -237,6 +264,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         okHi.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 

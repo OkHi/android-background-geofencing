@@ -1,27 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="io.okhi.android_background_geofencing">
 
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
-    <uses-permission android:name="android.permission.BIND_DEVICE_ADMIN"
-        tools:ignore="ProtectedPermissions" />
 
     <application>
-        <receiver android:enabled="true"
+        <activity
+            android:name=".ui.WebViewActivity"
+            android:exported="false" />
+
+        <receiver
             android:name=".receivers.DeviceRebootBroadcastReceiver"
-            android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
+            android:enabled="true"
+            android:permission="android.permission.RECEIVE_BOOT_COMPLETED"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
@@ -35,21 +40,12 @@
             android:name=".receivers.AlarmBroadcastReceiver"
             android:enabled="true"
             android:exported="true"
-            tools:ignore="ExportedReceiver"
-            android:permission="android.permission.BIND_DEVICE_ADMIN">
-            <meta-data
-                android:name="android.app.device_admin"
-                android:resource="@xml/device_admin" />
-            <intent-filter>
-                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED"/>
-            </intent-filter>
+            tools:ignore="ExportedReceiver">
         </receiver>
-
         <receiver
             android:name=".receivers.UserPresentBroadcastReceiver"
             android:enabled="true"
             android:exported="true">
-
             <intent-filter android:priority="1">
                 <action android:name="android.intent.action.USER_PRESENT" />
                 <action android:name="android.intent.action.USER_UNLOCKED" />
@@ -58,23 +54,12 @@
 
         <service
             android:name=".services.BackgroundGeofenceForegroundService"
-            android:permission="android.permission.BIND_DEVICE_ADMIN"
-            android:process=":okhi_verification_process"
+            android:enabled="true"
+            android:exported="true"
             android:foregroundServiceType="location"
             android:persistent="true"
-            android:exported="true"
-            android:enabled="true">
-
-            <meta-data
-                android:name="android.app.device_admin"
-                android:resource="@xml/device_admin"/>
-
-            <intent-filter>
-                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED"/>
-            </intent-filter>
-
+            android:process=":okhi_verification_process">
         </service>
-
     </application>
 
 </manifest>

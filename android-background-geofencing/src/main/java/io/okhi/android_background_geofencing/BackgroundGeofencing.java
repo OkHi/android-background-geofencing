@@ -112,18 +112,20 @@ public class BackgroundGeofencing {
     boolean isGooglePlayServicesAvailable = BackgroundGeofenceUtil.isGooglePlayServicesAvailable(context);
     boolean isLocationServicesEnabled = BackgroundGeofenceUtil.isLocationServicesEnabled(context);
     boolean isNotificationAvailable = BackgroundGeofencingDB.getNotification(context) != null;
+
     scheduleServiceRestarts(context);
+
     if (isForegroundServiceRunning(context)) {
       return;
     }
-    if (!hasGeofences || !isBackgroundLocationPermissionGranted || !isGooglePlayServicesAvailable || !isLocationServicesEnabled || !isNotificationAvailable) {
-      String message = !hasGeofences ? "No saved viable foreground locations" :
-          !isBackgroundLocationPermissionGranted ? "Background location permission not granted" :
-              !isGooglePlayServicesAvailable ? "Google play services are currently unavailable" :
-                  !isNotificationAvailable ? "Notification configuration unavailable" :
-                      "Location services are unavailable" ;
-      throw new BackgroundGeofencingException(BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE, message);
-    }
+//    if (!hasGeofences || !isBackgroundLocationPermissionGranted || !isGooglePlayServicesAvailable || !isLocationServicesEnabled || !isNotificationAvailable) {
+//      String message = !hasGeofences ? "No saved viable foreground locations" :
+//          !isBackgroundLocationPermissionGranted ? "Background location permission not granted" :
+//              !isGooglePlayServicesAvailable ? "Google play services are currently unavailable" :
+//                  !isNotificationAvailable ? "Notification configuration unavailable" :
+//                      "Location services are unavailable" ;
+//      throw new BackgroundGeofencingException(BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE, message);
+//    }
     BackgroundGeofencingDB.saveSetting(new BackgroundGeofenceSetting.Builder().setWithForegroundService(true).build(), context);
     Intent serviceIntent = new Intent(context, BackgroundGeofenceForegroundService.class);
     serviceIntent.putExtra(Constant.FOREGROUND_SERVICE_ACTION, Constant.FOREGROUND_SERVICE_START_STICKY);
@@ -250,12 +252,13 @@ public class BackgroundGeofencing {
     }
   }
 
-  public void requestAppProtection(){
+  public void requestAppProtection(String pkgName, String className){
 
     String manufacturer = Build.MANUFACTURER;
 
       try {
         Intent intent = new Intent();
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra( DevicePolicyManager.EXTRA_ADD_EXPLANATION,
                 "Add Okhi to Protected Apps for the app to work efficiently"
@@ -265,7 +268,7 @@ public class BackgroundGeofencing {
              manufacturer.toLowerCase().contains("tecno") ||
              manufacturer.toLowerCase().contains("itel")
         ){
-          ComponentName componentName = new ComponentName("com.transsion.phonemaster", "com.cyin.himgr.widget.activity.MainSettingGpActivity");
+          ComponentName componentName = new ComponentName(pkgName, className);
           intent.setComponent(componentName);
         }
         activity.startActivityForResult(intent, DEVICE_PROTECTED_APPS);
@@ -288,7 +291,7 @@ public class BackgroundGeofencing {
       }
       case DEVICE_PROTECTED_APPS: {
 
-        Log.d("On Result", "--------------------> DEVICE_PROTECTED_APPS response Code " + resultCode);
+        Log.e("On Result", "--------------------> DEVICE_PROTECTED_APPS response Code " + resultCode);
       }
     }
 

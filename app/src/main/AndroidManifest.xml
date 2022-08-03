@@ -17,7 +17,9 @@
         android:theme="@style/AppTheme">
         <meta-data android:name="io.okhi.android_background_geofencing.foreground_notification_icon" android:resource="@drawable/ic_person_pin" />
         <meta-data android:name="io.okhi.android_background_geofencing.foreground_notification_color" android:resource="@color/colorAccent" />
-        <activity android:name=".MainActivity">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -32,13 +32,11 @@
 
         <receiver
             android:name=".receivers.AlarmBroadcastReceiver"
-            android:enabled="true"
-            android:exported="true"/>
+            android:enabled="true"/>
 
         <service
             android:name=".services.BackgroundGeofenceForegroundService"
             android:enabled="true"
-            android:exported="true"
             />
     </application>
 

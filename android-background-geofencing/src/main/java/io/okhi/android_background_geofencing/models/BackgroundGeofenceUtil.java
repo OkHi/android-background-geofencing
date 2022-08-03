@@ -170,9 +170,6 @@ public class BackgroundGeofenceUtil {
         int[] alarmTriggers = { 1, 3, 6, 12, 15, 18, 21};
 
         for (int alarm : alarmTriggers) {
-
-            Log.d("BackgroundGeofenceUtil", "scheduleServiceRestarts: " + alarm);
-
             // Hour
             PendingIntent pendingIntent = PendingIntent.getBroadcast(
                     context,

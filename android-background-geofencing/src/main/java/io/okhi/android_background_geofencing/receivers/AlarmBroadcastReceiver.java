@@ -23,26 +23,6 @@ public class AlarmBroadcastReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(final Context context, Intent intent) {
-        // TODO: refactor this to a static method
-        Log.d(TAG, "onReceive: Received success");
-        ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.NATIVE_GEOFENCE);
-        for (final BackgroundGeofence geofence : geofences) {
-            geofence.restart(context, new RequestHandler() {
-                @Override
-                public void onSuccess() {
-                    BackgroundGeofenceUtil.log(context, TAG, "Successfully restarted: " + geofence.getId());
-                    BackgroundGeofence.setIsFailing(geofence.getId(), false, context);
-                }
-
-                @Override
-                public void onError(BackgroundGeofencingException e) {
-                    BackgroundGeofenceUtil.log(context, TAG, "Failed to start: " + geofence.getId());
-                    BackgroundGeofence.setIsFailing(geofence.getId(), true, context);
-                }
-            });
-        }
-        BackgroundGeofencing.performBackgroundWork(context);
-
         BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(context);
         if (setting != null && setting.isWithForegroundService() && !BackgroundGeofencing.isForegroundServiceRunning(context)) {
             try {

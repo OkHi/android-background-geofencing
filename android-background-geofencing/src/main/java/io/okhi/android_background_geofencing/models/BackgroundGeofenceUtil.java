@@ -171,12 +171,23 @@ public class BackgroundGeofenceUtil {
 
         for (int alarm : alarmTriggers) {
             // Hour
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                    context,
-                    (int) cal.getTimeInMillis(),
-                    intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT
-            );
+            PendingIntent pendingIntent;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                pendingIntent = PendingIntent.getBroadcast(
+                        context,
+                        (int) cal.getTimeInMillis(),
+                        intent,
+                        PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+                );
+
+            }else {
+                pendingIntent = PendingIntent.getBroadcast(
+                        context,
+                        (int) cal.getTimeInMillis(),
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                );
+            }
             // Min
             cal.set(Calendar.HOUR_OF_DAY, alarm);
             cal.set(Calendar.MINUTE, 0);

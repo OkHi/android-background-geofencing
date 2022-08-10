@@ -72,7 +72,23 @@ public class BackgroundGeofencingNotification implements Serializable {
     public Notification getNotification(Context context) {
         String packageName = context.getPackageName();
         Intent intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, notificationRequestCode, intent, 0);
+        PendingIntent pendingIntent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            pendingIntent = PendingIntent.getActivity(
+                    context,
+                    notificationRequestCode,
+                    intent,
+                    PendingIntent.FLAG_IMMUTABLE
+            );
+
+        }else {
+            pendingIntent = PendingIntent.getActivity(
+                    context,
+                    notificationRequestCode,
+                    intent,
+                    0
+            );
+        }
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
             .setContentIntent(pendingIntent)
             .setContentTitle(title)

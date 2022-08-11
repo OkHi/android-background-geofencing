@@ -311,8 +311,10 @@ public class BackgroundGeofence implements Serializable {
 
     public static void setIsFailing(GeofencingEvent event, Boolean isFailing, Context context) {
         List<Geofence> geofences = event.getTriggeringGeofences();
-        for (Geofence geofence : geofences) {
-            setIsFailing(geofence.getRequestId(), isFailing, context);
+        if(geofences != null){
+            for (Geofence geofence : geofences) {
+                setIsFailing(geofence.getRequestId(), isFailing, context);
+            }
         }
     }
 

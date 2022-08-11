@@ -33,14 +33,18 @@ public class BackgroundGeofenceBroadcastReceiver extends BroadcastReceiver {
         boolean isNotificationAvailable = BackgroundGeofencingDB.getNotification(context) != null;
         boolean isInBackground = !BackgroundGeofenceUtil.isAppOnForeground(context);
         BackgroundGeofenceTransition transition = null;
-        if (geofencingEvent.hasError()) {
-            BackgroundGeofence.setIsFailing(geofencingEvent, true, context);
-        } else {
-            transition = new BackgroundGeofenceTransition.Builder(geofencingEvent).build();
-            if (!BackgroundGeofencingDB.isWithinTimeThreshold(transition, context)) return;
-            transition.save(context);
-            BackgroundGeofenceUtil.log(context, TAG, "Received a " + transition.getTransitionEvent() + " geofence event");
+
+        if(geofencingEvent != null){
+            if (geofencingEvent.hasError()) {
+                BackgroundGeofence.setIsFailing(geofencingEvent, true, context);
+            } else {
+                transition = new BackgroundGeofenceTransition.Builder(geofencingEvent).build();
+                if (!BackgroundGeofencingDB.isWithinTimeThreshold(transition, context)) return;
+                transition.save(context);
+                BackgroundGeofenceUtil.log(context, TAG, "Received a " + transition.getTransitionEvent() + " geofence event");
+            }
         }
+
         if (isNotificationAvailable && isInBackground) {
             startForegroundTask(context, transition);
         } else {

@@ -100,7 +100,7 @@ public class BackgroundGeofencing {
     if (isForegroundServiceRunning(context)) {
       return;
     }
-    if (!hasGeofences || !isBackgroundLocationPermissionGranted || !isGooglePlayServicesAvailable || !isLocationServicesEnabled || !isNotificationAvailable) {
+    if ( !hasGeofences || !isBackgroundLocationPermissionGranted || !isGooglePlayServicesAvailable || !isLocationServicesEnabled || !isNotificationAvailable) {
       String message = !hasGeofences ? "No saved viable foreground locations" :
           !isBackgroundLocationPermissionGranted ? "Background location permission not granted" :
               !isGooglePlayServicesAvailable ? "Google play services are currently unavailable" :

@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.provider.Settings;
 
 import io.okhi.android_background_geofencing.singletons.LocationSingleton;
@@ -75,6 +76,12 @@ public class NotificationStatusUpdate {
     }
 
     private BackgroundGeofencingNotification backgroundGeofencingNotification(){
+        int importance;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
+            importance = NotificationManager.IMPORTANCE_HIGH;
+        } else {
+            importance = 3;
+        }
 
         return new BackgroundGeofencingNotification(
                 title,
@@ -82,10 +89,11 @@ public class NotificationStatusUpdate {
                 Constant.PERSISTENT_NOTIFICATION_CHANNEL_ID,
                 "OkHi Channel",
                 "My channel description",
-                NotificationManager.IMPORTANCE_HIGH,
+                importance,
                 Constant.PERSISTENT_NOTIFICATION_ID,
                 456,
                 myIntent
         );
+
     }
 }

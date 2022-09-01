@@ -117,13 +117,20 @@ public class MainActivity extends AppCompatActivity {
 
         final Button update_progress = findViewById(R.id.update_progress);
         update_progress.setOnClickListener((v) -> {
+            int importance;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
+                importance = NotificationManager.IMPORTANCE_HIGH;
+            } else {
+                importance = 3;
+            }
+
             BackgroundGeofencingNotification notice = new BackgroundGeofencingNotification(
                     "Verifying...",
                     "Verification In Progress",
                     Constant.PERSISTENT_NOTIFICATION_CHANNEL_ID,
                     "OkHi Channel",
                     "My channel description",
-                    NotificationManager.IMPORTANCE_HIGH,
+                    importance,
                     Constant.PERSISTENT_NOTIFICATION_ID,
                     456,
                     intent

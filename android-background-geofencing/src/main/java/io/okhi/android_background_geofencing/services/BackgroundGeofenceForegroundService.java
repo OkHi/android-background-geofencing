@@ -4,8 +4,10 @@ import android.Manifest;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -42,6 +44,7 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofencingLocation
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
+import io.okhi.android_background_geofencing.receivers.GPSLocationReceiver;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
 import io.okhi.android_core.models.OkHiLocationService;
@@ -79,13 +82,19 @@ public class BackgroundGeofenceForegroundService extends Service {
         super.onCreate();
         BackgroundGeofencingNotification backgroundGeofencingNotification = BackgroundGeofencingDB.getNotification(getApplicationContext());
         backgroundGeofencingNotification.createNotificationChannel(getApplicationContext());
+
         BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(getApplicationContext());
         isWithForegroundService = setting != null && setting.isWithForegroundService();
         PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constant.FOREGROUND_SERVICE_WAKE_LOCK_TAG);
         webHook = BackgroundGeofencingDB.getWebHook(getApplicationContext());
+        IntentFilter intentFilter = new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION);
+
+        // register GPS Receiver
+        registerReceiver( new GPSLocationReceiver(), intentFilter);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForeground(backgroundGeofencingNotification.getNotificationId(), backgroundGeofencingNotification.getNotification(getApplicationContext()));
+            startForeground(backgroundGeofencingNotification.getNotificationId(), backgroundGeofencingNotification.getNotification(getApplicationContext(), false, false));
         }
     }
 

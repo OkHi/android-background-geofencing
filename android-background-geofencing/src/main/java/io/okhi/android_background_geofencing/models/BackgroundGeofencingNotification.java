@@ -8,8 +8,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
@@ -28,6 +33,7 @@ public class BackgroundGeofencingNotification implements Serializable {
     private String channelDescription;
     private int notificationId;
     private int notificationRequestCode;
+    private Intent intent;
 
     BackgroundGeofencingNotification() {}
 
@@ -57,7 +63,8 @@ public class BackgroundGeofencingNotification implements Serializable {
             @NonNull String channelDescription,
             int channelImportance,
             int notificationId,
-            int notificationRequestCode
+            int notificationRequestCode,
+            Intent intent
     ) {
         this.title = title;
         this.text = text;
@@ -67,12 +74,12 @@ public class BackgroundGeofencingNotification implements Serializable {
         this.channelImportance = channelImportance;
         this.notificationId = notificationId;
         this.notificationRequestCode = notificationRequestCode;
+        this.intent = intent;
     }
 
-    public Notification getNotification(Context context) {
-        String packageName = context.getPackageName();
-        Intent intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
+    public Notification getNotification(Context context, Boolean isError, Boolean isProgressing) {
         PendingIntent pendingIntent;
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             pendingIntent = PendingIntent.getActivity(
                     context,
@@ -89,26 +96,45 @@ public class BackgroundGeofencingNotification implements Serializable {
                     0
             );
         }
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
             .setContentIntent(pendingIntent)
             .setContentTitle(title)
             .setContentText(text);
+
         try {
             ApplicationInfo app = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
             Bundle bundle = app.metaData;
             int icon = bundle.getInt(Constant.FOREGROUND_NOTIFICATION_ICON_META_KEY);
             int color = bundle.getInt(Constant.FOREGROUND_NOTIFICATION_COLOR_META_KEY);
+
+            Bitmap largeIcon = BitmapFactory.decodeResource(context.getResources(), icon);
             if (icon != 0) {
                 builder.setSmallIcon(icon);
+
             } else {
                 builder.setSmallIcon(R.drawable.ic_person_pin);
             }
             if (color != 0) {
                 builder.setColor(context.getResources().getColor(color));
             }
+
+            if(isError){
+                builder.setColor(Color.argb(255, 255, 0, 0))
+                        .setColorized(true)
+                        .setLargeIcon(largeIcon);
+            }
+
+            if(isProgressing){
+                builder.setColor(Color.argb(255, 255,165,0))
+                        .setColorized(true)
+                        .setLargeIcon(largeIcon);
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         return builder.build();
     }
 
@@ -133,3 +159,4 @@ public class BackgroundGeofencingNotification implements Serializable {
         return notificationRequestCode;
     }
 }
+

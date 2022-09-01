@@ -1,5 +1,6 @@
 package io.okhi.android_background_geofencing.models;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.AlarmManager;
@@ -14,7 +15,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
@@ -23,9 +26,11 @@ import android.net.NetworkInfo;
 
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import io.okhi.android_background_geofencing.BuildConfig;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.receivers.AlarmBroadcastReceiver;
@@ -215,6 +220,20 @@ public class BackgroundGeofenceUtil {
                 PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
                 PackageManager.DONT_KILL_APP
         );
+    }
+
+    public static HashMap<String, Boolean> locationPermissionState(Context context){
+        HashMap<String, Boolean> locationState = new HashMap<>();
+        locationState.put("ACCESS_COARSE_LOCATION", ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED);
+        locationState.put("ACCESS_FINE_LOCATION", ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED);
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q){
+            locationState.put("ACCESS_BACKGROUND_LOCATION", ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED);
+        } else{
+            locationState.put("ACCESS_BACKGROUND_LOCATION", true);
+        }
+
+        return locationState;
     }
 
     /**

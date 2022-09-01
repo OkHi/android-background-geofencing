@@ -10,6 +10,10 @@ import java.util.concurrent.TimeUnit;
 
 public class Constant {
 
+    // Notification Codes
+    public static final int PERSISTENT_NOTIFICATION_ID = 1;
+    public static final String PERSISTENT_NOTIFICATION_CHANNEL_ID = "OkHi_Channel_id";
+
     // request codes
     public static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     public static final int ENABLE_LOCATION_SERVICES_REQUEST_CODE = 2;

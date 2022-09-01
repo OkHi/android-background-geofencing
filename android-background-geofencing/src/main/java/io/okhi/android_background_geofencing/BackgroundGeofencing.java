@@ -5,6 +5,7 @@ import static io.okhi.android_background_geofencing.models.BackgroundGeofenceUti
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 
 import androidx.core.content.ContextCompat;
 import androidx.work.BackoffPolicy;
@@ -70,6 +71,16 @@ public class BackgroundGeofencing {
       if (isAppOnForeground && webHook != null && canRestartGeofences) {
         performBackgroundWork(context);
       }
+    }
+  }
+
+  public static boolean isPackageInstalled(String packageName, Context context) {
+    PackageManager pm = context.getPackageManager();
+    try {
+      pm.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES);
+      return true;
+    } catch (PackageManager.NameNotFoundException e) {
+      return false;
     }
   }
 

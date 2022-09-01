@@ -4,8 +4,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
+import android.Manifest;
 import android.app.NotificationManager;
+import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -24,36 +29,42 @@ import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
+import io.okhi.android_background_geofencing.models.BackgroundGeofencingLocationService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
+import io.okhi.android_background_geofencing.models.Constant;
 import io.okhi.android_background_geofencing.models.WebHookRequest;
 import io.okhi.android_background_geofencing.models.WebHookType;
 import io.okhi.android_core.OkHi;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
-import io.okhi.android_core.models.OkHiPermissionService;
 
 public class MainActivity extends AppCompatActivity {
 
     OkHi okHi;
+    Context context;
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         okHi = new OkHi(this);
+        context = this;
 
+        String packageName = context.getPackageName();
+        Intent intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
         BackgroundGeofencingNotification notification = new BackgroundGeofencingNotification(
                 "Yooooooo",
                 "Don't mind us",
-                "OkHi_Channel_id",
+                Constant.PERSISTENT_NOTIFICATION_CHANNEL_ID,
                 "OkHi Channel",
                 "My channel description",
                 NotificationManager.IMPORTANCE_HIGH,
-            123,
-            456
+                Constant.PERSISTENT_NOTIFICATION_ID,
+            456,
+                intent
         );
 
         BackgroundGeofencing.init(this, notification);
@@ -74,6 +85,71 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
+
+        final Button phone_master = findViewById(R.id.phone_master);
+        phone_master.setOnClickListener((v) -> {
+            final String PACKAGE_NAME = "com.transsion.phonemaster";
+
+            if(BackgroundGeofencing.isPackageInstalled(PACKAGE_NAME, this)){
+                Toast.makeText(context, "Package Found", Toast.LENGTH_LONG).show();
+            }else{
+                Toast.makeText(context, "Package Not available", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        final Button protected_settings = findViewById(R.id.protected_settings);
+        protected_settings.setOnClickListener((v) -> {
+            final String PACKAGE_NAME = "com.transsion.phonemaster";
+            final String PROTECTED_APPS_CLASS_NAME = "com.cyin.himgr.widget.activity.MainSettingGpActivity";
+
+            Intent myIntent = new Intent();
+            myIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            myIntent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION,"Add the application to Protected Apps to enable verification");
+            ComponentName componentName = new ComponentName(PACKAGE_NAME, PROTECTED_APPS_CLASS_NAME);
+            myIntent.setComponent(componentName);
+            try {
+                startActivityForResult(myIntent, 100);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        final Button update_progress = findViewById(R.id.update_progress);
+        update_progress.setOnClickListener((v) -> {
+            BackgroundGeofencingNotification notice = new BackgroundGeofencingNotification(
+                    "Verifying...",
+                    "Verification In Progress",
+                    Constant.PERSISTENT_NOTIFICATION_CHANNEL_ID,
+                    "OkHi Channel",
+                    "My channel description",
+                    NotificationManager.IMPORTANCE_HIGH,
+                    Constant.PERSISTENT_NOTIFICATION_ID,
+                    456,
+                    intent
+            );
+
+            NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            mNotificationManager.notify(Constant.PERSISTENT_NOTIFICATION_ID, notice.getNotification(context, false,true));
+
+        });
+
+        final Button location_request = findViewById(R.id.location_request);
+        location_request.setOnClickListener((v) -> {
+            HashMap<String, Boolean> locationState = BackgroundGeofenceUtil.locationPermissionState(this);
+            Boolean ACCESS_COARSE_LOCATION = locationState.get("ACCESS_COARSE_LOCATION");
+            Boolean ACCESS_FINE_LOCATION = locationState.get("ACCESS_FINE_LOCATION");
+            Boolean ACCESS_BACKGROUND_LOCATION = locationState.get("ACCESS_BACKGROUND_LOCATION");
+
+            Log.d("ACCESS_COARSE_LOCATION", "The Value is: " + ACCESS_COARSE_LOCATION);
+            Log.d("ACCESS_FINE_LOCATION", "The Value is: " + ACCESS_FINE_LOCATION);
+            Log.d("ACCESS_BACKGROUND", "The Value is: " + ACCESS_BACKGROUND_LOCATION);
+            Log.d("Contains false", "The Value is : " + locationState.containsValue(false));
+
+            BackgroundGeofencingLocationService.checkLocationPermissions(this);
+        });
+
+
         HashMap<String, String> headers = new HashMap<>();
         headers.put("foo", "bar");
         JSONObject meta = new JSONObject();
@@ -204,6 +280,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         okHi.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 

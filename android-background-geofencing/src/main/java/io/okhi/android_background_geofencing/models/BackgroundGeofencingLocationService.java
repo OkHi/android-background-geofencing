@@ -16,10 +16,12 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 
+import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
+import io.okhi.android_background_geofencing.singletons.LocationSingleton;
 import io.okhi.android_core.models.OkHiLocationService;
 import io.okhi.android_core.models.OkHiPermissionService;
 
@@ -86,6 +88,9 @@ public class BackgroundGeofencingLocationService {
     }
 
     public void fetchCurrentLocation (Context context, final ResultHandler<Location> handler) {
+
+        checkLocationPermissions(context);
+
         if (!OkHiLocationService.isLocationServicesEnabled(context)) {
             handler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE, "Location services are unavailable"));
             return;
@@ -107,5 +112,40 @@ public class BackgroundGeofencingLocationService {
                 startForegroundLocationWatch();
             }
         });
+    }
+
+    public static void checkLocationPermissions(Context context){
+        // Update location permission status checker launch notification
+        LocationSingleton ls = LocationSingleton.getInstance();
+
+        HashMap<String, Boolean> locationState = BackgroundGeofenceUtil.locationPermissionState(context);
+        boolean ACCESS_COARSE_LOCATION = Boolean.TRUE.equals(locationState.get("ACCESS_COARSE_LOCATION"));
+        boolean ACCESS_FINE_LOCATION = Boolean.TRUE.equals(locationState.get("ACCESS_FINE_LOCATION"));
+        boolean ACCESS_BACKGROUND_LOCATION = Boolean.TRUE.equals(locationState.get("ACCESS_BACKGROUND_LOCATION"));
+
+        NotificationStatusUpdate notificationStatusUpdate = new NotificationStatusUpdate(context);
+
+        if(!ACCESS_COARSE_LOCATION){
+            // Base Location permission
+            // Location permission Required
+            notificationStatusUpdate.requestForLocationPermission();
+        }else{
+            if(!ACCESS_BACKGROUND_LOCATION){
+
+                // Location Permission Always Required
+                notificationStatusUpdate.requestForAlwaysLocation();
+            }else{
+
+                if(!ACCESS_FINE_LOCATION){
+                    // Location Precise permission Required
+                    notificationStatusUpdate.requestForPreciseLocation();
+                }else{
+                    if(ls.IS_NOTIFICATION_DISPLAYED){
+                        // Reset the notification values
+                        notificationStatusUpdate.resetNotification();
+                    }
+                }
+            }
+        }
     }
 }

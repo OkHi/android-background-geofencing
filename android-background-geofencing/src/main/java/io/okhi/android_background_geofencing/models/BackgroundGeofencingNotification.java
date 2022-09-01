@@ -16,8 +16,10 @@ import androidx.core.app.NotificationCompat;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.Random;
 
 import io.okhi.android_background_geofencing.R;
+import io.okhi.android_core.models.OkHiException;
 
 public class BackgroundGeofencingNotification implements Serializable {
     private String title;
@@ -131,5 +133,19 @@ public class BackgroundGeofencingNotification implements Serializable {
 
     public int getNotificationRequestCode() {
         return notificationRequestCode;
+    }
+
+    public static void launchLocalNotification(BackgroundGeofencingNotification backgroundGeofencingNotification, Context context) throws OkHiException {
+        try {
+            int randomID = new Random().nextInt();
+            backgroundGeofencingNotification.createNotificationChannel(context);
+            Notification localNotification = backgroundGeofencingNotification.getNotification(context);
+            NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            mNotificationManager.notify(randomID, localNotification);
+
+        } catch (Exception e){
+            e.printStackTrace();
+            throw new OkHiException(OkHiException.UNKNOWN_ERROR_CODE, OkHiException.UNKNOWN_ERROR_MESSAGE);
+        }
     }
 }

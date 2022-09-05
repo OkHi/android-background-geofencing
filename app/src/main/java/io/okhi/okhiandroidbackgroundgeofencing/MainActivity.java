@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.NotificationManager;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -84,11 +85,10 @@ public class MainActivity extends AppCompatActivity {
                         "OkHi Channel",
                         "My channel description",
                         NotificationManager.IMPORTANCE_HIGH,
-                        1256,
                         456
                 );
                 try {
-                    BackgroundGeofencingNotification.launchLocalNotification(notification, MainActivity.this);
+                    BackgroundGeofencingNotification.launchLocalNotification(notification, Color.RED,MainActivity.this);
 
                 } catch (OkHiException e) {
                     e.printStackTrace();

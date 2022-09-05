@@ -1,5 +1,7 @@
 package io.okhi.okhiandroidbackgroundgeofencing;
 
+import static io.okhi.android_background_geofencing.models.Constant.BACKGROUND_GEOFENCE_PERSISTENT_NOTIFICATION_ID;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -52,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
                 "OkHi Channel",
                 "My channel description",
                 NotificationManager.IMPORTANCE_HIGH,
-            123,
+                BACKGROUND_GEOFENCE_PERSISTENT_NOTIFICATION_ID,
             456
         );
 
@@ -87,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
                         NotificationManager.IMPORTANCE_HIGH,
                         456
                 );
+
                 try {
                     BackgroundGeofencingNotification.launchLocalNotification(notification, Color.RED,MainActivity.this);
 

@@ -35,6 +35,7 @@ public class BackgroundGeofencingNotification implements Serializable {
 
     BackgroundGeofencingNotification() {}
 
+    // Constructor override for localNotification
     public BackgroundGeofencingNotification(
             // Local Notifications
             @NonNull String title,
@@ -44,6 +45,7 @@ public class BackgroundGeofencingNotification implements Serializable {
             @NonNull String channelDescription,
             int notificationRequestCode,
             int channelImportance
+
     ) {
         this.title = title;
         this.text = text;
@@ -54,6 +56,7 @@ public class BackgroundGeofencingNotification implements Serializable {
         this.channelImportance = channelImportance;
     }
 
+    // Constructor override for Service/Persistent Notification
     public BackgroundGeofencingNotification(
             @NonNull String title,
             @NonNull String text,
@@ -104,6 +107,9 @@ public class BackgroundGeofencingNotification implements Serializable {
             Bundle bundle = app.metaData;
             int icon = bundle.getInt(Constant.FOREGROUND_NOTIFICATION_ICON_META_KEY);
             int color = bundle.getInt(Constant.FOREGROUND_NOTIFICATION_COLOR_META_KEY);
+
+            Bitmap largeIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_person_pin);
+
             if (icon != 0) {
                 builder.setSmallIcon(icon);
             } else {
@@ -113,6 +119,7 @@ public class BackgroundGeofencingNotification implements Serializable {
             if(color != 0){
                 builder.setColor(context.getResources().getColor(color));
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -145,6 +152,7 @@ public class BackgroundGeofencingNotification implements Serializable {
                     channelImportance
             );
             serviceChannel.setDescription(channelDescription);
+            serviceChannel.enableLights(true);
             NotificationManager manager = context.getSystemService(NotificationManager.class);
             Objects.requireNonNull(manager).createNotificationChannel(serviceChannel);
         }
@@ -166,12 +174,12 @@ public class BackgroundGeofencingNotification implements Serializable {
         try {
             backgroundGeofencingNotification.createNotificationChannel(context);
             Notification localNotification = backgroundGeofencingNotification.getNotification(context, notificationColor);
+
             NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             mNotificationManager.notify(new Random().nextInt(), localNotification);
 
         } catch (Exception e){
             e.printStackTrace();
-            throw new OkHiException(OkHiException.UNKNOWN_ERROR_CODE, OkHiException.UNKNOWN_ERROR_MESSAGE);
         }
     }
 }

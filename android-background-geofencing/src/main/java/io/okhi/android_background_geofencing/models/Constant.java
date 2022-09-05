@@ -10,6 +10,12 @@ import java.util.concurrent.TimeUnit;
 
 public class Constant {
 
+    // Address SharedPrefs details
+    public static final String PREFERENCE_NAME = "OKHI_ADDRESS_DETAILS";
+
+    // Persistent notification
+    public static final int BACKGROUND_GEOFENCE_PERSISTENT_NOTIFICATION_ID = 27505;
+
     // request codes
     public static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     public static final int ENABLE_LOCATION_SERVICES_REQUEST_CODE = 2;

@@ -126,14 +126,7 @@ public class BackgroundGeofencingNotification implements Serializable {
 
     public Notification getNotification(Context context, int customNotificationColor) {
         NotificationCompat.Builder builder = notificationBuilder(context);
-
-        try {
-            builder.setColor(customNotificationColor)
-                    .setColorized(true);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        builder.setColor(customNotificationColor).setColorized(true);
         return builder.build();
     }
 

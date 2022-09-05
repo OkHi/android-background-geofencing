@@ -71,7 +71,8 @@ public class BackgroundGeofencingNotification implements Serializable {
         this.notificationRequestCode = notificationRequestCode;
     }
 
-    public Notification getNotification(Context context) {
+    /** customNotificationColor if 0, no color passed*/
+    public Notification getNotification(Context context, int customNotificationColor) {
         String packageName = context.getPackageName();
         Intent intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
         PendingIntent pendingIntent;
@@ -105,8 +106,12 @@ public class BackgroundGeofencingNotification implements Serializable {
             } else {
                 builder.setSmallIcon(R.drawable.ic_person_pin);
             }
-            if (color != 0) {
-                builder.setColor(context.getResources().getColor(color));
+            if(customNotificationColor != 0){
+                builder.setColor(context.getResources().getColor(customNotificationColor));
+            }else{
+                if (color != 0) {
+                    builder.setColor(context.getResources().getColor(color));
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -139,7 +144,7 @@ public class BackgroundGeofencingNotification implements Serializable {
         try {
             int randomID = new Random().nextInt();
             backgroundGeofencingNotification.createNotificationChannel(context);
-            Notification localNotification = backgroundGeofencingNotification.getNotification(context);
+            Notification localNotification = backgroundGeofencingNotification.getNotification(context, 0);
             NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             mNotificationManager.notify(randomID, localNotification);
 

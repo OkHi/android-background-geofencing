@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">OkHi Android Background Geofencing</string>
-    <string name="presistent_notification">Presistent Notification</string>
-    <string name="launch_local_notification">Launch local Notification</string>
+    <string name="presistent_notification">Notifications</string>
+    <string name="launch_local_notification">Local Notification</string>
 </resources>

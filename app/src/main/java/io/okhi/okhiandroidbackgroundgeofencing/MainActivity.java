@@ -24,6 +24,7 @@ import java.util.HashMap;
 
 import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
+import io.okhi.android_background_geofencing.database.DataStore;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
@@ -99,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
         HashMap<String, String> headers = new HashMap<>();
         headers.put("foo", "bar");
         JSONObject meta = new JSONObject();
@@ -134,6 +136,21 @@ public class MainActivity extends AppCompatActivity {
             WebHookRequest.PATCH
         );
         stopVerificationWebHook.save(this);
+    }
+
+
+    public void dataStoreAdd (View view) {
+        DataStore okHiDataStore = new DataStore(this);
+        Log.e("DataStore String : ", "The Value is " + okHiDataStore.saveEntry("name", "Granson")); // String
+        Log.e("DataStore Int : ", "The Value is " + okHiDataStore.saveEntry("id", 100)); // Int
+        Log.e("DataStore Bool : ", "The Value is " + okHiDataStore.saveEntry("isGood", true)); // Bool
+    }
+
+    public void dataStoreFetch (View view) {
+        DataStore okHiDataStore = new DataStore(this);
+        Log.e("DataStore String : ", "The Value is " + okHiDataStore.readString("name"));
+        Log.e("DataStore Int : ", "The Value is " + okHiDataStore.readInt("id")); // Int
+        Log.e("DataStore Bool : ", "The Value is " + okHiDataStore.readBool("isGood")); // Long
     }
 
     private void startGeofence() {

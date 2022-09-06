@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.NotificationManager;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -32,7 +33,6 @@ import io.okhi.android_background_geofencing.models.WebHookType;
 import io.okhi.android_core.OkHi;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
-import io.okhi.android_core.models.OkHiPermissionService;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -74,6 +74,28 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
+        final Button local_notification = findViewById(R.id.local_notification);
+        local_notification.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                BackgroundGeofencingNotification notification = new BackgroundGeofencingNotification(
+                        "Yo Low",
+                        "Am locally triggered",
+                        "OkHi_Channel_id",
+                        "OkHi Channel",
+                        "My channel description",
+                        NotificationManager.IMPORTANCE_HIGH,
+                        456
+                );
+                try {
+                    BackgroundGeofencingNotification.launchLocalNotification(notification, Color.RED,MainActivity.this);
+
+                } catch (OkHiException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
         HashMap<String, String> headers = new HashMap<>();
         headers.put("foo", "bar");
         JSONObject meta = new JSONObject();
@@ -204,6 +226,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         okHi.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 

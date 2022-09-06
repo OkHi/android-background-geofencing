@@ -1,11 +1,9 @@
 package io.okhi.android_background_geofencing.database;
 
-import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 
 import io.okhi.android_background_geofencing.models.Constant;
-import io.okhi.android_core.models.OkHiException;
 
 public class DataStore {
 

@@ -1,17 +1,18 @@
 package io.okhi.android_background_geofencing.database;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.snappydb.DB;
 import com.snappydb.DBFactory;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.UUID;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceSetting;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceSource;
@@ -309,6 +310,25 @@ public class BackgroundGeofencingDB {
             return true;
         } else {
             return false;
+        }
+    }
+
+    public static void saveAddressDetails(String addressDetails, Context context) {
+        if (!addressDetails.isEmpty()) {
+            String key = Constant.DB_SAVED_ADDRESS_DETAILS;
+            save(key, addressDetails, context);
+        }
+    }
+
+    public static JSONObject getSavedAddress(Context context) {
+        String key = Constant.DB_SAVED_ADDRESS_DETAILS;
+        String addressList = (String) get(key, String.class, context);
+        try {
+            assert addressList != null;
+            return new JSONObject(addressList);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 }

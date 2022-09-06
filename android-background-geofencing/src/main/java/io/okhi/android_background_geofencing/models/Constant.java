@@ -41,6 +41,7 @@ public class Constant {
     public static final String DB_NOTIFICATION_CONFIGURATION_KEY = "NOTIFICATION_CONFIGURATION_KEY";
     public static final String DB_SETTING_CONFIGURATION_KEY = "SETTING_CONFIGURATION_KEY";
     public static final String DB_TRANSITION_TIME_TRACKER_PREFIX = "DB_TRANSITION_TIME_TRACKER_PREFIX:";
+    public static final String DB_SAVED_ADDRESS_DETAILS = "DB_SAVED_ADDRESS_DETAILS";
 
     // geofence defaults
     public static final long DEFAULT_GEOFENCE_EXPIRATION = Geofence.NEVER_EXPIRE;

@@ -20,6 +20,8 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import io.okhi.android_background_geofencing.BackgroundGeofencing;
@@ -144,6 +146,27 @@ public class MainActivity extends AppCompatActivity {
         Log.e("DataStore String : ", "The Value is " + okHiDataStore.saveEntry("name", "Granson")); // String
         Log.e("DataStore Int : ", "The Value is " + okHiDataStore.saveEntry("id", 100)); // Int
         Log.e("DataStore Bool : ", "The Value is " + okHiDataStore.saveEntry("isGood", true)); // Bool
+
+        try {
+            JSONObject addressJson1 = new JSONObject();
+            addressJson1.put("name", "Dennis Pritt");
+            addressJson1.put("id", "1xuai2345");
+
+            JSONObject addressJson2 = new JSONObject();
+            addressJson2.put("name", "Dennis Oval");
+            addressJson2.put("id", "tryuyw6578");
+
+            ArrayList<JSONObject> addresses = new ArrayList<JSONObject>();
+            addresses.add(addressJson1);
+            addresses.add(addressJson2);
+
+            JSONObject json = new JSONObject();
+            json.put("addresses", addresses);
+
+            BackgroundGeofencingDB.saveAddressDetails(json.toString(), this);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     public void dataStoreFetch (View view) {
@@ -151,6 +174,11 @@ public class MainActivity extends AppCompatActivity {
         Log.e("DataStore String : ", "The Value is " + okHiDataStore.readString("name"));
         Log.e("DataStore Int : ", "The Value is " + okHiDataStore.readInt("id")); // Int
         Log.e("DataStore Bool : ", "The Value is " + okHiDataStore.readBool("isGood")); // Long
+
+
+        JSONObject savedAddress = BackgroundGeofencingDB.getSavedAddress(this);
+        Log.e("Saved Addresses : ", "Values are " + savedAddress); // Long
+
     }
 
     private void startGeofence() {

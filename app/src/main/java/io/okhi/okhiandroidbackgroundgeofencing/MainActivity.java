@@ -6,6 +6,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
@@ -28,6 +29,7 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
+import io.okhi.android_background_geofencing.models.Constant;
 import io.okhi.android_background_geofencing.models.WebHookRequest;
 import io.okhi.android_background_geofencing.models.WebHookType;
 import io.okhi.android_core.OkHi;
@@ -36,6 +38,7 @@ import io.okhi.android_core.models.OkHiException;
 
 public class MainActivity extends AppCompatActivity {
 
+    Context context;
     OkHi okHi;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -44,15 +47,16 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         okHi = new OkHi(this);
+        context = this;
 
         BackgroundGeofencingNotification notification = new BackgroundGeofencingNotification(
                 "Yooooooo",
                 "Don't mind us",
-                "OkHi_Channel_id",
+                Constant.PERSISTENT_NOTIFICATION_CHANNEL_ID,
                 "OkHi Channel",
                 "My channel description",
                 NotificationManager.IMPORTANCE_HIGH,
-            123,
+                Constant.PERSISTENT_NOTIFICATION_ID,
             456
         );
 
@@ -88,7 +92,9 @@ public class MainActivity extends AppCompatActivity {
                         456
                 );
                 try {
-                    BackgroundGeofencingNotification.launchLocalNotification(notification, Color.RED,MainActivity.this);
+                    String packageName = context.getPackageName();
+                    Intent intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
+                    BackgroundGeofencingNotification.launchLocalNotification(notification, Color.RED,MainActivity.this, intent);
 
                 } catch (OkHiException e) {
                     e.printStackTrace();

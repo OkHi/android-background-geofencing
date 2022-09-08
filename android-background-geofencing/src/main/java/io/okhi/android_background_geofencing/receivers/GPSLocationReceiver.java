@@ -27,7 +27,7 @@ public class GPSLocationReceiver extends BroadcastReceiver {
                 if(!ls.IS_ERROR_DISPLAYED ){
                     int color = Color.argb(255, 255, 0, 0);
                     Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                    BackgroundGeofencingNotification.updatePersistentNotification(context, "Turn on GPS",  "Please turn on GPS to continue with the verification", color, myIntent);;
+                    BackgroundGeofencingNotification.updatePersistentNotification(context, "Turn on GPS",  "Please turn on GPS to continue with the verification", color, myIntent, false);;
                 }
                 ls.IS_ERROR_DISPLAYED = true;
             }

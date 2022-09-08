@@ -100,4 +100,11 @@ public class Constant {
 
     public static final String FOREGROUND_NOTIFICATION_ICON_META_KEY = "io.okhi.android_background_geofencing.foreground_notification_icon";
     public static final String FOREGROUND_NOTIFICATION_COLOR_META_KEY = "io.okhi.android_background_geofencing.foreground_notification_color";
+
+    // Notification Codes
+    public static final int PERSISTENT_NOTIFICATION_ID = 275;
+    public static final String PERSISTENT_NOTIFICATION_CHANNEL_ID = "io.okhi.foreground_service_channel";
+
+    public static final String PERSISTENT_NOTIFICATION_DB_KEY = "io.okhi.db.key";
+    public static final String PERSISTENT_NOTIFICATION_DELAY_KEY = "io.okhi.delay.key";
 }

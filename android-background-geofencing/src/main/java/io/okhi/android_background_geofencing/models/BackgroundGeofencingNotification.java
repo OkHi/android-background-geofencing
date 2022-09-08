@@ -189,12 +189,12 @@ public class BackgroundGeofencingNotification implements Serializable {
             throw new OkHiException(OkHiException.UNKNOWN_ERROR_CODE, OkHiException.UNKNOWN_ERROR_MESSAGE);
         }
     }
-    public static void updatePersistentNotification(Context context, String title, String text, int notificationColor, Intent intent){
+    public static void updatePersistentNotification(Context context, String title, String text, int notificationColor, Intent intent, Boolean isNotified){
 
         NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         BackgroundGeofencingNotification notification = backgroundGeofencingNotification(title, text);
         mNotificationManager.notify(Constant.PERSISTENT_NOTIFICATION_ID, notification.getNotification(context, notificationColor, intent));
-        BackgroundGeofencingDB.setPermissionNotified(context, true);
+        BackgroundGeofencingDB.setPermissionNotified(context, isNotified);
     }
 
     public static void resetNotification(Context context){

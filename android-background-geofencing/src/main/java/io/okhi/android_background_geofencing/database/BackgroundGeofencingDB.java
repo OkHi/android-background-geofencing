@@ -275,6 +275,14 @@ public class BackgroundGeofencingDB {
         return (String) get(key, String.class, context);
     }
 
+    public static void setPermissionNotified(Context context, Boolean isShowing) {
+        save(Constant.PERSISTENT_NOTIFICATION_DB_KEY, isShowing, context);
+    }
+
+    public static Boolean getPermissionNotified(Context context) {
+        return (Boolean) get(Constant.PERSISTENT_NOTIFICATION_DB_KEY, Boolean.class, context);
+    }
+
     public static ArrayList<BackgroundGeofence> getGeofences(Context context, BackgroundGeofenceSource source) {
         ArrayList<BackgroundGeofence> geofences = new ArrayList<>();
         ArrayList<BackgroundGeofence> savedGeofences = BackgroundGeofencingDB.getAllGeofences(context);

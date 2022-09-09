@@ -3,12 +3,12 @@ apply plugin: 'com.github.dcendents.android-maven'
 group='OkHi'
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 31
     buildToolsVersion "30.0.3"
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 32
+        targetSdkVersion 31
         versionCode 1
         versionName "1.5.9-beta-1"
 

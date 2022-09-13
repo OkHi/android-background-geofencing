@@ -22,21 +22,32 @@ public class GPSLocationReceiver extends BroadcastReceiver {
         LocationSingleton ls = LocationSingleton.getInstance();
         LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
-        if (intent.getAction().matches("android.location.PROVIDERS_CHANGED")) {
-            if( !locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ) {
-                if(!ls.IS_ERROR_DISPLAYED ){
-                    int color = Color.argb(255, 255, 0, 0);
-                    Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                    BackgroundGeofencingNotification.updatePersistentNotification(context, "Turn on GPS",  "Please turn on GPS to continue with the verification", color, myIntent, false);;
+        try{
+            if (intent.getAction().matches("android.location.PROVIDERS_CHANGED")) {
+                if( !locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ) {
+                    if(!ls.IS_ERROR_DISPLAYED ){
+                        int color = Color.argb(255, 255, 0, 0);
+                        Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                        BackgroundGeofencingNotification.updatePersistentNotification(
+                                context,
+                                "Turn on GPS",
+                                "Please turn on GPS to continue with the verification",
+                                color,
+                                myIntent,
+                                false
+                        );
+                    }
+                    ls.IS_ERROR_DISPLAYED = true;
                 }
-                ls.IS_ERROR_DISPLAYED = true;
-            }
-            else{
-                if(ls.IS_ERROR_DISPLAYED){
-                    ls.IS_ERROR_DISPLAYED = false;
-                    BackgroundGeofencingNotification.resetNotification(context);
+                else{
+                    if(ls.IS_ERROR_DISPLAYED){
+                        ls.IS_ERROR_DISPLAYED = false;
+                        BackgroundGeofencingNotification.resetNotification(context);
+                    }
                 }
             }
+        } catch (Exception e){
+            e.printStackTrace();
         }
     }
 }

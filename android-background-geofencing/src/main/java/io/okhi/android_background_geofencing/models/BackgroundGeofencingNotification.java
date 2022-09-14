@@ -167,7 +167,7 @@ public class BackgroundGeofencingNotification implements Serializable {
         return notificationRequestCode;
     }
 
-    public static void updatePersistentNotification(Context context, String title, String text, int notificationColor, Intent intent){
+    public static void updateNotification(Context context, String title, String text, int notificationColor, Intent intent){
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         BackgroundGeofencingNotification backgroundGeofencingNotification = BackgroundGeofencingDB.getNotification(context);
         notificationManager.notify(backgroundGeofencingNotification.getNotificationId(), backgroundGeofencingNotification.getNotification(context, notificationColor, intent));

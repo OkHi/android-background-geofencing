@@ -1,5 +1,7 @@
 package io.okhi.android_background_geofencing.activity;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
@@ -7,7 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.provider.Settings;
+import android.util.Log;
 import android.webkit.GeolocationPermissions;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
@@ -15,15 +17,32 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.Toast;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 import io.okhi.android_background_geofencing.R;
+import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.WebAppInterface;
+import io.okhi.android_background_geofencing.models.BackgroundGeofence;
+import io.okhi.android_core.OkHi;
+import io.okhi.android_core.interfaces.OkHiRequestHandler;
+import io.okhi.android_core.models.OkHiException;
+import io.okhi.android_core.models.OkHiLocationService;
+import io.okhi.android_core.models.OkHiPermissionService;
+import io.okhi.android_core.models.OkPreference;
 
 public class OkHiWebViewActivity extends AppCompatActivity {
-
     private WebView webView;
     Context context;
+    String webViewLaunchPayload;
+    String webViewUrl;
+    OkHiPermissionService permissionService;
+    OkHiLocationService locationService;
+    String LAUNCH_PAYLOAD;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +50,13 @@ public class OkHiWebViewActivity extends AppCompatActivity {
         setContentView(R.layout.activity_web_view);
         webView = findViewById(R.id.webview);
         context = this;
+        permissionService = new OkHiPermissionService(this);
+        locationService = new OkHiLocationService(this);
+        try {
+            LAUNCH_PAYLOAD = fetchStartPayload();
+        } catch (OkHiException e) {
+            finish();
+        }
         Bundle bundle = getIntent().getExtras();
         processBundle(bundle);
         setupWebView();
@@ -46,8 +72,7 @@ public class OkHiWebViewActivity extends AppCompatActivity {
         webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
         webView.setWebContentsDebuggingEnabled(false);
         webView.addJavascriptInterface(new WebAppInterface(OkHiWebViewActivity.this), "Android");
-        webView.loadUrl("https://google.com");
-
+        webView.loadUrl(webViewUrl);
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
             public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
@@ -58,16 +83,39 @@ public class OkHiWebViewActivity extends AppCompatActivity {
 
     private void processBundle(Bundle bundle){
         try {
-            // Show status page based on bundle passed
             String locationPermissionLevel = bundle.getString("locationPermissionLevel", "denied");
-            boolean isLocationServicesEnabled = bundle.getBoolean("locationServicesAvailable", false);
+            boolean locationServicesAvailable = bundle.getBoolean("locationServicesAvailable", false);
+            ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(getApplicationContext());
+            JSONArray locationIds = new JSONArray();
+            for (BackgroundGeofence geofence: geofences) {
+                locationIds.put(geofence.getId());
+            }
+            JSONObject launchPayload = new JSONObject(LAUNCH_PAYLOAD);
+            launchPayload.put("message", "verification_status");
+
+            JSONObject payload = launchPayload.getJSONObject("payload");
+            payload.put("locations", locationIds);
+
+            JSONObject context = payload.getJSONObject("context");
+            context.put("locationServicesAvailable", locationServicesAvailable);
+
+            JSONObject permissions = context.getJSONObject("permissions");
+            permissions.put("location", locationPermissionLevel);
+
+            context.put("permissions", permissions);
+            payload.put("context", context);
+            launchPayload.put("payload", payload);
+            webViewUrl = launchPayload.getString("url");
+            webViewLaunchPayload = launchPayload.toString().replace("\\", "");
+            Log.v("WebViewLog", webViewLaunchPayload);
         }
         catch (Exception e){
+            e.printStackTrace();
             finish();
         }
     }
 
-    private static class OkHiWebViewClient extends WebViewClient {
+    private class OkHiWebViewClient extends WebViewClient {
 
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
@@ -87,9 +135,101 @@ public class OkHiWebViewActivity extends AppCompatActivity {
         }
     }
 
-    public void toggleGPS() {
+    public void receiveMessage(String result) {
+        try {
+            Log.v("WEBVIEW", result);
+            JSONObject transmission = new JSONObject(result);
+            String message = transmission.optString("message");
+            JSONObject payload = transmission.optJSONObject("payload");
+            switch (message) {
+                case "request_location_permission":
+                    handleRequestLocationPermission(payload);
+                    break;
+                case "request_enable_location_services":
+                    handleRequestEnableLocationServices(payload);
+                    break;
+                case "app_state":
+                    handleLaunch();
+                    break;
+                default:
+                    finish();
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+            finish();
+        }
 
-        Intent locationServicesSettingsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-        startActivity(locationServicesSettingsIntent);
+    }
+
+    private void handleRequestEnableLocationServices(JSONObject payload) {
+        permissionService.requestBackgroundLocationPermission(new OkHiRequestHandler<Boolean>() {
+            @Override
+            public void onResult(Boolean result) {
+                if (result && OkHi.isLocationServicesEnabled(getApplicationContext())) {
+                    finish();
+                }
+            }
+            @Override
+            public void onError(OkHiException exception) {
+                finish();
+            }
+        });
+    }
+
+    private void handleRequestLocationPermission(JSONObject payload) {
+        locationService.requestEnableLocationServices(new OkHiRequestHandler<Boolean>() {
+            @Override
+            public void onResult(Boolean result) {
+                if (result && OkHi.isBackgroundLocationPermissionGranted(getApplicationContext())) {
+                    finish();
+                }
+            }
+            @Override
+            public void onError(OkHiException exception) {
+                finish();
+            }
+        });
+    }
+
+    private void handleLaunch() {
+        if (webViewLaunchPayload != null) {
+            Log.v("WEB_VIEW_ME", webViewLaunchPayload);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    webView.evaluateJavascript("javascript:receiveAndroidMessage(" + webViewLaunchPayload + ")", null);
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        permissionService.onRequestPermissionsResult(requestCode, permissions, grantResults, null);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        locationService.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private String fetchStartPayload() throws OkHiException {
+        String storedPayload = OkPreference.getItem("okcollect-launch-payload", getApplicationContext());
+        if (storedPayload != null) {
+            return storedPayload;
+        }
+        throw new OkHiException(OkHiException.UNKNOWN_ERROR_CODE, "Unable to launch");
+    }
+
+    public static Boolean canLaunchWebView(Context context) {
+        try {
+            String storedPayload = OkPreference.getItem("okcollect-launch-payload", context);
+            Log.v("WebViewLog", storedPayload);
+            return storedPayload != null;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

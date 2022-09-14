@@ -305,7 +305,6 @@ public class BackgroundGeofenceForegroundService extends Service {
     }
 
     private void stopService(boolean forceStop) {
-        Log.e("Tag", "BackgroundGeofencingLocationService Stopped Rudely");
         if (!isWithForegroundService || forceStop) {
            runCleanUp();
            stopSelf();

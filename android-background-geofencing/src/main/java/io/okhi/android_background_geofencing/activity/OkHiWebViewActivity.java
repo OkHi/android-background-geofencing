@@ -20,7 +20,7 @@ import android.widget.Toast;
 import io.okhi.android_background_geofencing.R;
 import io.okhi.android_background_geofencing.interfaces.WebAppInterface;
 
-public class OkHiWebActivity extends AppCompatActivity {
+public class OkHiWebViewActivity extends AppCompatActivity {
 
     private WebView webView;
     Context context;
@@ -28,10 +28,9 @@ public class OkHiWebActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        context = this;
-
         setContentView(R.layout.activity_web_view);
         webView = findViewById(R.id.webview);
+        context = this;
         Bundle bundle = getIntent().getExtras();
         processBundle(bundle);
         setupWebView();
@@ -39,15 +38,15 @@ public class OkHiWebActivity extends AppCompatActivity {
 
     @SuppressLint("SetJavaScriptEnabled")
     private void setupWebView(){
-        webView.setWebViewClient(new MyWebViewClient());
+        webView.setWebViewClient(new OkHiWebViewClient());
         WebSettings webSettings = webView.getSettings();
         webSettings.setLoadsImagesAutomatically(true);
         webSettings.setJavaScriptEnabled(true);
         webSettings.setGeolocationEnabled(true);
         webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
         webView.setWebContentsDebuggingEnabled(false);
-        webView.addJavascriptInterface(new WebAppInterface(OkHiWebActivity.this), "Android");
-        webView.loadUrl("https://gransono.github.io/okhi_web/oktest.html");
+        webView.addJavascriptInterface(new WebAppInterface(OkHiWebViewActivity.this), "Android");
+        webView.loadUrl("https://google.com");
 
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
@@ -60,15 +59,15 @@ public class OkHiWebActivity extends AppCompatActivity {
     private void processBundle(Bundle bundle){
         try {
             // Show status page based on bundle passed
-            String params = bundle.getString("params");
-            Toast.makeText(context, params, Toast.LENGTH_SHORT).show();
+            String locationPermissionLevel = bundle.getString("locationPermissionLevel", "denied");
+            boolean isLocationServicesEnabled = bundle.getBoolean("locationServicesAvailable", false);
         }
         catch (Exception e){
             finish();
         }
     }
 
-    private static class MyWebViewClient extends WebViewClient {
+    private static class OkHiWebViewClient extends WebViewClient {
 
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {

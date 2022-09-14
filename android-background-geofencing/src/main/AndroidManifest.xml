@@ -15,9 +15,9 @@
 
     <application>
         <activity
-            android:name=".activity.OkHiWebActivity"
+            android:name=".activity.OkHiWebViewActivity"
             android:exported="true"
-            android:theme="@style/OkCollectTheme" />
+            android:theme="@style/OkHiWebViewTheme" />
 
         <receiver
             android:name=".receivers.DeviceRebootBroadcastReceiver"

@@ -2,11 +2,11 @@ package io.okhi.android_background_geofencing.interfaces;
 
 import android.webkit.JavascriptInterface;
 
-import io.okhi.android_background_geofencing.activity.OkHiWebActivity;
+import io.okhi.android_background_geofencing.activity.OkHiWebViewActivity;
 
 public class WebAppInterface {
-    OkHiWebActivity mContext;
-    public WebAppInterface(OkHiWebActivity c) {
+    OkHiWebViewActivity mContext;
+    public WebAppInterface(OkHiWebViewActivity c) {
         mContext = c;
     }
 

@@ -11,8 +11,8 @@ public class WebAppInterface {
     }
 
     @JavascriptInterface
-    public void switchGPS() {
-        mContext.toggleGPS();
+    public void receiveMessage(String results) {
+        mContext.receiveMessage(results);
     }
 }
 

@@ -21,6 +21,7 @@ import java.util.Objects;
 import java.util.Random;
 
 import io.okhi.android_background_geofencing.R;
+import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_core.models.OkHiException;
 
 public class BackgroundGeofencingNotification implements Serializable {
@@ -74,9 +75,15 @@ public class BackgroundGeofencingNotification implements Serializable {
         this.notificationRequestCode = notificationRequestCode;
     }
 
-    private NotificationCompat.Builder notificationBuilder(Context context){
-        String packageName = context.getPackageName();
-        Intent intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+    }
+
+    private NotificationCompat.Builder notificationBuilder(Context context, Intent intent){
         PendingIntent pendingIntent;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             pendingIntent = PendingIntent.getActivity(
@@ -85,8 +92,7 @@ public class BackgroundGeofencingNotification implements Serializable {
                     intent,
                     PendingIntent.FLAG_IMMUTABLE
             );
-
-        }else {
+        } else {
             pendingIntent = PendingIntent.getActivity(
                     context,
                     notificationRequestCode,
@@ -94,7 +100,6 @@ public class BackgroundGeofencingNotification implements Serializable {
                     0
             );
         }
-
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
                 .setContentIntent(pendingIntent)
                 .setContentTitle(title)
@@ -109,24 +114,43 @@ public class BackgroundGeofencingNotification implements Serializable {
             } else {
                 builder.setSmallIcon(R.drawable.ic_person_pin);
             }
-
-            if(color != 0){
+            if (color != 0){
                 builder.setColor(context.getResources().getColor(color));
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return builder;
     }
 
+
     public Notification getNotification(Context context) {
-        return notificationBuilder(context).build();
+        String packageName = context.getPackageName();
+        Intent intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
+        return notificationBuilder(context, intent).build();
     }
 
-    public Notification getNotification(Context context, int customNotificationColor) {
-        NotificationCompat.Builder builder = notificationBuilder(context);
+    public Notification getNotification(Context context, int customNotificationColor, Intent intent) {
+        NotificationCompat.Builder builder = notificationBuilder(context, intent);
+
         builder.setColor(customNotificationColor).setColorized(true);
+
+        try {
+            ApplicationInfo app = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            Bundle bundle = app.metaData;
+            int icon = bundle.getInt(Constant.FOREGROUND_NOTIFICATION_ICON_META_KEY);
+            Bitmap largeIcon;
+
+            if (icon != 0) {
+                largeIcon = BitmapFactory.decodeResource(context.getResources(), icon);
+            } else {
+                largeIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_person_pin);
+            }
+            builder.setLargeIcon(largeIcon);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return builder.build();
     }
 
@@ -151,20 +175,17 @@ public class BackgroundGeofencingNotification implements Serializable {
         return notificationRequestCode;
     }
 
-    public static void launchLocalNotification(
-            BackgroundGeofencingNotification backgroundGeofencingNotification,
-            int notificationColor,
-            Context context
-    ) throws OkHiException {
-        try {
-            backgroundGeofencingNotification.createNotificationChannel(context);
-            Notification localNotification = backgroundGeofencingNotification.getNotification(context, notificationColor);
-            NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            mNotificationManager.notify(new Random().nextInt(), localNotification);
+    public static void updateNotification(Context context, String title, String text, int notificationColor, Intent intent){
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        BackgroundGeofencingNotification backgroundGeofencingNotification = BackgroundGeofencingDB.getNotification(context);
+        backgroundGeofencingNotification.setTitle(title);
+        backgroundGeofencingNotification.setText(text);
+        notificationManager.notify(backgroundGeofencingNotification.getNotificationId(), backgroundGeofencingNotification.getNotification(context, notificationColor, intent));
+    }
 
-        } catch (Exception e){
-            e.printStackTrace();
-            throw new OkHiException(OkHiException.UNKNOWN_ERROR_CODE, OkHiException.UNKNOWN_ERROR_MESSAGE);
-        }
+    public static void resetNotification(Context context){
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        BackgroundGeofencingNotification backgroundGeofencingNotification = BackgroundGeofencingDB.getNotification(context);
+        notificationManager.notify(backgroundGeofencingNotification.getNotificationId(), backgroundGeofencingNotification.getNotification(context));
     }
 }

@@ -75,6 +75,14 @@ public class BackgroundGeofencingNotification implements Serializable {
         this.notificationRequestCode = notificationRequestCode;
     }
 
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+    }
+
     private NotificationCompat.Builder notificationBuilder(Context context, Intent intent){
         PendingIntent pendingIntent;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -170,6 +178,8 @@ public class BackgroundGeofencingNotification implements Serializable {
     public static void updateNotification(Context context, String title, String text, int notificationColor, Intent intent){
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         BackgroundGeofencingNotification backgroundGeofencingNotification = BackgroundGeofencingDB.getNotification(context);
+        backgroundGeofencingNotification.setTitle(title);
+        backgroundGeofencingNotification.setText(text);
         notificationManager.notify(backgroundGeofencingNotification.getNotificationId(), backgroundGeofencingNotification.getNotification(context, notificationColor, intent));
     }
 

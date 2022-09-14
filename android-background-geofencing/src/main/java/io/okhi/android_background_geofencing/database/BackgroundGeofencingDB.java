@@ -311,12 +311,4 @@ public class BackgroundGeofencingDB {
             return false;
         }
     }
-
-    public static void setPermissionNotified(Context context, Boolean isShowing) {
-        save(Constant.PERSISTENT_NOTIFICATION_DB_KEY, isShowing, context);
-    }
-
-    public static Boolean getPermissionNotified(Context context) {
-        return (Boolean) get(Constant.PERSISTENT_NOTIFICATION_DB_KEY, Boolean.class, context);
-    }
 }

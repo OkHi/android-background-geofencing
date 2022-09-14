@@ -25,8 +25,10 @@ public class GPSLocationReceiver extends BroadcastReceiver {
               color,
               locationServicesSettingsIntent
             );
-        } else {
+        } else if (isForegroundServiceRunning) {
             BackgroundGeofencingNotification.resetNotification(context);
+        } else {
+            // Do nothing
         }
     }
 }

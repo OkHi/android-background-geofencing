@@ -2,9 +2,12 @@ package io.okhi.android_background_geofencing.models;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Looper;
+import android.provider.Settings;
 import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
@@ -16,9 +19,11 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 
+import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_core.models.OkHiLocationService;
 import io.okhi.android_core.models.OkHiPermissionService;
@@ -107,5 +112,60 @@ public class BackgroundGeofencingLocationService {
                 startForegroundLocationWatch();
             }
         });
+    }
+
+    public static void checkLocationPermissions(Context context){
+
+        HashMap<String, Boolean> locationState = BackgroundGeofenceUtil.locationPermissionState(context);
+        boolean ACCESS_COARSE_LOCATION = Boolean.TRUE.equals(locationState.get("ACCESS_COARSE_LOCATION"));
+        boolean ACCESS_FINE_LOCATION = Boolean.TRUE.equals(locationState.get("ACCESS_FINE_LOCATION"));
+        boolean ACCESS_BACKGROUND_LOCATION = Boolean.TRUE.equals(locationState.get("ACCESS_BACKGROUND_LOCATION"));
+
+        int color = Color.argb(255, 255, 0, 0);
+        Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+
+        Boolean isNotified = false;
+        if(BackgroundGeofencingDB.getPermissionNotified(context) != null){
+            isNotified = BackgroundGeofencingDB.getPermissionNotified(context);
+        }
+
+        if(isNotified && !locationState.containsValue(false)){
+            // Reset only if formerly updated
+            BackgroundGeofencingNotification.resetNotification(context);
+            BackgroundGeofencingDB.setPermissionNotified(context, false);
+        } else if(!isNotified){
+
+            // Location permission Required
+            if(!ACCESS_COARSE_LOCATION){
+                BackgroundGeofencingNotification.updateNotification(
+                        context,
+                        "Enable Location permission",
+                        "Location permission required to verify your address",
+                        color,
+                        myIntent
+                );
+                BackgroundGeofencingDB.setPermissionNotified(context, true);
+            }else if(!ACCESS_BACKGROUND_LOCATION){
+                // Location Permission Always Required
+                BackgroundGeofencingNotification.updateNotification(
+                        context,
+                        "Please allow \"All The Time\" Permission",
+                        "Allow Always permission to get verified swiftly",
+                        color,
+                        myIntent
+                );
+                BackgroundGeofencingDB.setPermissionNotified(context, true);
+            }else if(!ACCESS_FINE_LOCATION){
+                // Location Precise permission Required
+                BackgroundGeofencingNotification.updateNotification(
+                        context,
+                        "Enable Precise Location",
+                        "Precise Location permission required to verify your address",
+                        color,
+                        myIntent
+                );
+                BackgroundGeofencingDB.setPermissionNotified(context, true);
+            }
+        }
     }
 }

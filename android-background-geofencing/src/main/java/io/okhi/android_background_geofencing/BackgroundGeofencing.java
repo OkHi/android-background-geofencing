@@ -5,6 +5,8 @@ import static io.okhi.android_background_geofencing.models.BackgroundGeofenceUti
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.location.LocationManager;
 
 import androidx.core.content.ContextCompat;
 import androidx.work.BackoffPolicy;
@@ -29,6 +31,7 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofencingExceptio
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
+import io.okhi.android_background_geofencing.receivers.GPSLocationReceiver;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceForegroundService;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
@@ -95,11 +98,10 @@ public class BackgroundGeofencing {
     boolean isLocationServicesEnabled = BackgroundGeofenceUtil.isLocationServicesEnabled(context);
     boolean isNotificationAvailable = BackgroundGeofencingDB.getNotification(context) != null;
 
-    scheduleServiceRestarts(context);
-
     if (isForegroundServiceRunning(context)) {
       return;
     }
+
     if ( !hasGeofences || !isBackgroundLocationPermissionGranted || !isGooglePlayServicesAvailable || !isLocationServicesEnabled || !isNotificationAvailable) {
       String message = !hasGeofences ? "No saved viable foreground locations" :
           !isBackgroundLocationPermissionGranted ? "Background location permission not granted" :
@@ -108,6 +110,13 @@ public class BackgroundGeofencing {
                       "Location services are unavailable" ;
       throw new BackgroundGeofencingException(BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE, message);
     }
+
+    scheduleServiceRestarts(context);
+
+    // register GPS Receiver
+    IntentFilter intentFilter = new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION);
+    context.registerReceiver( new GPSLocationReceiver(), intentFilter);
+
     BackgroundGeofencingDB.saveSetting(new BackgroundGeofenceSetting.Builder().setWithForegroundService(true).build(), context);
     Intent serviceIntent = new Intent(context, BackgroundGeofenceForegroundService.class);
     serviceIntent.putExtra(Constant.FOREGROUND_SERVICE_ACTION, Constant.FOREGROUND_SERVICE_START_STICKY);

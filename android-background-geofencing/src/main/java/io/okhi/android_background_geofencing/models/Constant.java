@@ -106,5 +106,4 @@ public class Constant {
     public static final String PERSISTENT_NOTIFICATION_CHANNEL_ID = "io.okhi.foreground_service_channel";
 
     public static final String PERSISTENT_NOTIFICATION_DB_KEY = "io.okhi.db.key";
-    public static final String PERSISTENT_NOTIFICATION_DELAY_KEY = "io.okhi.delay.key";
 }

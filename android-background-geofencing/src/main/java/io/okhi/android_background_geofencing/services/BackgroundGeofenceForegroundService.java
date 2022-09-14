@@ -71,6 +71,8 @@ public class BackgroundGeofenceForegroundService extends Service {
     private BackgroundGeofencingWebHook webHook;
     private HashMap<String, BackgroundGeofenceTransition> transitionTracker = new HashMap<>();
 
+    final Handler permissionHandler = new Handler();
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -121,9 +123,20 @@ public class BackgroundGeofenceForegroundService extends Service {
                 foregroundWorkStarted = true;
                 startForegroundPingService();
                 startForegroundLocationWatch();
+                startPermissionChecks();
             }
         }
         return isWithForegroundService ? START_STICKY : START_NOT_STICKY;
+    }
+
+    private void startPermissionChecks() {
+        int delay = 2000;
+        permissionHandler.postDelayed(new Runnable() {
+            public void run() {
+                BackgroundGeofencingLocationService.checkLocationPermissions(getApplicationContext());
+                handler.postDelayed(this, delay);
+            }
+        }, delay);
     }
 
     private void manageDeviceWake(boolean wake) {
@@ -292,6 +305,7 @@ public class BackgroundGeofenceForegroundService extends Service {
     }
 
     private void stopService(boolean forceStop) {
+        Log.e("Tag", "BackgroundGeofencingLocationService Stopped Rudely");
         if (!isWithForegroundService || forceStop) {
            runCleanUp();
            stopSelf();

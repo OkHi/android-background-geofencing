@@ -21,8 +21,9 @@ public class GPSLocationReceiver extends BroadcastReceiver {
             boolean isForegroundServiceRunning = BackgroundGeofencing.isForegroundServiceRunning(context);
             boolean isConnected = BackgroundGeofenceUtil.isNetworkAvailable(context);
             boolean isLocationPermissionGranted = OkHi.isLocationPermissionGranted(context);
+            boolean canLaunchWebView = OkHiWebViewActivity.canLaunchWebView(context);
             Intent locationServicesSettingsIntent;
-            if (isConnected) {
+            if (isConnected && canLaunchWebView) {
                 boolean isBackgroundLocationPermissionGranted = OkHi.isBackgroundLocationPermissionGranted(context);
                 locationServicesSettingsIntent = new Intent(context, OkHiWebViewActivity.class);
                 locationServicesSettingsIntent.putExtra("locationPermissionLevel", isBackgroundLocationPermissionGranted ? "always" : isLocationPermissionGranted ? "whenInUse" : "denied");

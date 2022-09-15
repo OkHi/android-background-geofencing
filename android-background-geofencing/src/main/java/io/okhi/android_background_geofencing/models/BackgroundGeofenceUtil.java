@@ -16,7 +16,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
+import androidx.core.app.ActivityCompat;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
@@ -222,14 +222,9 @@ public class BackgroundGeofenceUtil {
 
     public static HashMap<String, Boolean> locationPermissionState(Context context){
         HashMap<String, Boolean> locationState = new HashMap<>();
-        locationState.put("ACCESS_COARSE_LOCATION", ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED);
-        locationState.put("ACCESS_FINE_LOCATION", ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED);
-
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q){
-            locationState.put("ACCESS_BACKGROUND_LOCATION", ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED);
-        } else{
-            locationState.put("ACCESS_BACKGROUND_LOCATION", true);
-        }
+        locationState.put("ACCESS_COARSE_LOCATION", ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED);
+        locationState.put("ACCESS_FINE_LOCATION", OkHiPermissionService.isLocationPermissionGranted(context));
+        locationState.put("ACCESS_BACKGROUND_LOCATION", OkHiPermissionService.isBackgroundLocationPermissionGranted(context));
 
         return locationState;
     }

@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
+import android.os.Build;
 import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
@@ -23,8 +24,10 @@ import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import io.okhi.android_background_geofencing.activity.OkHiWebViewActivity;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
+import io.okhi.android_core.OkHi;
 import io.okhi.android_core.models.OkHiLocationService;
 import io.okhi.android_core.models.OkHiPermissionService;
 
@@ -121,8 +124,16 @@ public class BackgroundGeofencingLocationService {
         boolean ACCESS_FINE_LOCATION = Boolean.TRUE.equals(locationState.get("ACCESS_FINE_LOCATION"));
         boolean ACCESS_BACKGROUND_LOCATION = Boolean.TRUE.equals(locationState.get("ACCESS_BACKGROUND_LOCATION"));
 
+        Intent myIntent;
         int color = Color.argb(255, 255, 0, 0);
-        Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+
+        myIntent = new Intent(context, OkHiWebViewActivity.class);
+
+        // Background & General location permission
+        myIntent.putExtra("locationPermissionLevel", ACCESS_BACKGROUND_LOCATION ? "always" : ACCESS_COARSE_LOCATION ? "whenInUse" : "denied");
+
+        // Precise || estimate location permission
+        myIntent.putExtra("locationPrecisionLevel", ACCESS_FINE_LOCATION ? "precise" : "approximate");
 
         Boolean isNotified = false;
         if(BackgroundGeofencingDB.getPermissionNotified(context) != null){
@@ -145,7 +156,7 @@ public class BackgroundGeofencingLocationService {
                         myIntent
                 );
                 BackgroundGeofencingDB.setPermissionNotified(context, true);
-            }else if(!ACCESS_BACKGROUND_LOCATION){
+            } else if(!ACCESS_BACKGROUND_LOCATION){
                 // Location Permission Always Required
                 BackgroundGeofencingNotification.updateNotification(
                         context,

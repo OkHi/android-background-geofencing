@@ -27,7 +27,6 @@ import java.util.TimerTask;
 import io.okhi.android_background_geofencing.activity.OkHiWebViewActivity;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
-import io.okhi.android_core.OkHi;
 import io.okhi.android_core.models.OkHiLocationService;
 import io.okhi.android_core.models.OkHiPermissionService;
 

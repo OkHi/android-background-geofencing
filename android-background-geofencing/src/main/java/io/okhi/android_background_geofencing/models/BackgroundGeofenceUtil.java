@@ -222,6 +222,7 @@ public class BackgroundGeofenceUtil {
 
     public static HashMap<String, Boolean> locationPermissionState(Context context){
         HashMap<String, Boolean> locationState = new HashMap<>();
+
         locationState.put("ACCESS_COARSE_LOCATION", ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED);
         locationState.put("ACCESS_FINE_LOCATION", OkHiPermissionService.isLocationPermissionGranted(context));
         locationState.put("ACCESS_BACKGROUND_LOCATION", OkHiPermissionService.isBackgroundLocationPermissionGranted(context));

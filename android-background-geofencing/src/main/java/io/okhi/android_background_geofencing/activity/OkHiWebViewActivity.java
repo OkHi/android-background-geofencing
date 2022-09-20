@@ -109,7 +109,6 @@ public class OkHiWebViewActivity extends AppCompatActivity {
             launchPayload.put("payload", payload);
             webViewUrl = launchPayload.getString("url");
             webViewLaunchPayload = launchPayload.toString().replace("\\", "");
-            Log.v("WebViewLog", webViewLaunchPayload);
         }
         catch (Exception e){
             e.printStackTrace();
@@ -139,7 +138,6 @@ public class OkHiWebViewActivity extends AppCompatActivity {
 
     public void receiveMessage(String result) {
         try {
-            Log.v("WEBVIEW", result);
             JSONObject transmission = new JSONObject(result);
             String message = transmission.optString("message");
             JSONObject payload = transmission.optJSONObject("payload");
@@ -217,7 +215,6 @@ public class OkHiWebViewActivity extends AppCompatActivity {
 
     private void handleLaunch() {
         if (webViewLaunchPayload != null) {
-            Log.v("WEB_VIEW_ME", webViewLaunchPayload);
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -250,7 +247,6 @@ public class OkHiWebViewActivity extends AppCompatActivity {
     public static Boolean canLaunchWebView(Context context) {
         try {
             String storedPayload = OkPreference.getItem("okcollect-launch-payload", context);
-            Log.v("WebViewLog", storedPayload);
             return storedPayload != null;
         } catch (Exception e) {
             return false;

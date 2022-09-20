@@ -164,33 +164,55 @@ public class OkHiWebViewActivity extends AppCompatActivity {
     }
 
     private void handleRequestEnableLocationServices(JSONObject payload) {
-        permissionService.requestBackgroundLocationPermission(new OkHiRequestHandler<Boolean>() {
+        locationService.requestEnableLocationServices(new OkHiRequestHandler<Boolean>() {
             @Override
             public void onResult(Boolean result) {
-                if (result && OkHi.isLocationServicesEnabled(getApplicationContext())) {
+                if (result) {
                     finish();
                 }
             }
             @Override
             public void onError(OkHiException exception) {
+                exception.printStackTrace();
                 finish();
             }
         });
     }
 
     private void handleRequestLocationPermission(JSONObject payload) {
-        locationService.requestEnableLocationServices(new OkHiRequestHandler<Boolean>() {
-            @Override
-            public void onResult(Boolean result) {
-                if (result && OkHi.isBackgroundLocationPermissionGranted(getApplicationContext())) {
+        String level = payload.optString("level", "always");
+        if (level.equals("always")) {
+            permissionService.requestBackgroundLocationPermission(new OkHiRequestHandler<Boolean>() {
+                @Override
+                public void onResult(Boolean result) {
+                    if (result) {
+                        finish();
+                    }
+                }
+                @Override
+                public void onError(OkHiException exception) {
+                    exception.printStackTrace();
                     finish();
                 }
-            }
-            @Override
-            public void onError(OkHiException exception) {
-                finish();
-            }
-        });
+            });
+        } else if (level.equals("whenInUse")) {
+            permissionService.requestBackgroundLocationPermission(new OkHiRequestHandler<Boolean>() {
+                @Override
+                public void onResult(Boolean result) {
+                    if (result) {
+                        finish();
+                    }
+                }
+
+                @Override
+                public void onError(OkHiException exception) {
+                    exception.printStackTrace();
+                    finish();
+                }
+            });
+        } else {
+            finish();
+        }
     }
 
     private void handleLaunch() {

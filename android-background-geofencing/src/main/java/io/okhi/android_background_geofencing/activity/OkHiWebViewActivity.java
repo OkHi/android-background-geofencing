@@ -24,10 +24,12 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.R;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.WebAppInterface;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
+import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_core.OkHi;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
@@ -184,6 +186,11 @@ public class OkHiWebViewActivity extends AppCompatActivity {
                 @Override
                 public void onResult(Boolean result) {
                     if (result) {
+                        try {
+                            BackgroundGeofencing.restartForegroundService(getApplicationContext());
+                        } catch (BackgroundGeofencingException e) {
+                            e.printStackTrace();
+                        }
                         finish();
                     }
                 }

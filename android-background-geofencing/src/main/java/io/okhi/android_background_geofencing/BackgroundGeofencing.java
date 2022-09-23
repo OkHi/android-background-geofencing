@@ -7,9 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 
 import androidx.core.content.ContextCompat;
-import androidx.work.BackoffPolicy;
-import androidx.work.ExistingWorkPolicy;
-import androidx.work.OneTimeWorkRequest;
 import androidx.work.Operation;
 import androidx.work.WorkManager;
 
@@ -30,8 +27,6 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotifica
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceForegroundService;
-import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
-import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
 
 public class BackgroundGeofencing {
 
@@ -80,7 +75,7 @@ public class BackgroundGeofencing {
   public static void restartForegroundService(Context context) throws BackgroundGeofencingException {
     if (isForegroundServiceRunning(context)) {
       Intent serviceIntent = new Intent(context, BackgroundGeofenceForegroundService.class);
-      serviceIntent.putExtra(Constant.FOREGROUND_SERVICE_ACTION, "restart");
+      serviceIntent.putExtra(Constant.FOREGROUND_SERVICE_ACTION,  Constant.FOREGROUND_SERVICE_RESTART);
       ContextCompat.startForegroundService(context, serviceIntent);
     } else {
       startForegroundService(context);

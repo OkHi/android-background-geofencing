@@ -58,16 +58,11 @@ public class BackgroundGeofencingNotificationService {
   }
 
   private static Intent getNotificationIntent(Context context, IntentSettings settings) {
-    boolean isLocationServicesEnabled = OkHi.isLocationServicesEnabled(context);
     boolean isConnected = BackgroundGeofenceUtil.isNetworkAvailable(context);
-    boolean isLocationPermissionGranted = OkHi.isLocationPermissionGranted(context);
     boolean canLaunchWebView = OkHiWebViewActivity.canLaunchWebView(context);
     Intent locationServicesSettingsIntent;
     if (isConnected && canLaunchWebView) {
-      boolean isBackgroundLocationPermissionGranted = OkHi.isBackgroundLocationPermissionGranted(context);
       locationServicesSettingsIntent = new Intent(context, OkHiWebViewActivity.class);
-      locationServicesSettingsIntent.putExtra("locationPermissionLevel", isBackgroundLocationPermissionGranted ? "always" : isLocationPermissionGranted ? "whenInUse" : "denied");
-      locationServicesSettingsIntent.putExtra("locationServicesAvailable", isLocationServicesEnabled);
     } else if (settings == IntentSettings.LOCATION_SERVICES) {
       locationServicesSettingsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
     } else {

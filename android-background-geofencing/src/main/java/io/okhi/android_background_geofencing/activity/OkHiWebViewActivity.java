@@ -8,7 +8,9 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.webkit.GeolocationPermissions;
 import android.webkit.WebChromeClient;
@@ -85,13 +87,11 @@ public class OkHiWebViewActivity extends AppCompatActivity {
 
     private void processBundle(Bundle bundle){
         try {
-            String locationPermissionLevel = bundle.getString("locationPermissionLevel", "denied");
-            boolean locationServicesAvailable = bundle.getBoolean("locationServicesAvailable", false);
             ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(getApplicationContext());
             JSONArray locationIds = new JSONArray();
             for (BackgroundGeofence geofence: geofences) {
                 JSONObject location = new JSONObject();
-                location.put("id", geofence.getId());
+                location.put("id", "52ENBRJkoW");
                 locationIds.put(location);
             }
             JSONObject launchPayload = new JSONObject(LAUNCH_PAYLOAD);
@@ -101,9 +101,10 @@ public class OkHiWebViewActivity extends AppCompatActivity {
             payload.put("locations", locationIds);
 
             JSONObject context = payload.getJSONObject("context");
-            context.put("locationServicesAvailable", locationServicesAvailable);
+            context.put("locationServicesAvailable", OkHi.isLocationServicesEnabled(getApplicationContext()));
 
             JSONObject permissions = context.getJSONObject("permissions");
+            String locationPermissionLevel = OkHi.isBackgroundLocationPermissionGranted(getApplicationContext()) ? "always" : OkHi.isLocationPermissionGranted(getApplicationContext()) ? "whenInUse" : "denied";
             permissions.put("location", locationPermissionLevel);
 
             context.put("permissions", permissions);
@@ -111,6 +112,7 @@ public class OkHiWebViewActivity extends AppCompatActivity {
             launchPayload.put("payload", payload);
             webViewUrl = launchPayload.getString("url");
             webViewLaunchPayload = launchPayload.toString().replace("\\", "");
+            Log.v("WebviewMe", webViewLaunchPayload);
         }
         catch (Exception e){
             e.printStackTrace();
@@ -134,7 +136,6 @@ public class OkHiWebViewActivity extends AppCompatActivity {
         @Override
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             super.onReceivedError(view, request, error);
-
         }
     }
 
@@ -160,7 +161,6 @@ public class OkHiWebViewActivity extends AppCompatActivity {
             e.printStackTrace();
             finish();
         }
-
     }
 
     private void handleRequestEnableLocationServices(JSONObject payload) {
@@ -180,44 +180,10 @@ public class OkHiWebViewActivity extends AppCompatActivity {
     }
 
     private void handleRequestLocationPermission(JSONObject payload) {
-        String level = payload.optString("level", "always");
-        if (level.equals("always")) {
-            permissionService.requestBackgroundLocationPermission(new OkHiRequestHandler<Boolean>() {
-                @Override
-                public void onResult(Boolean result) {
-                    if (result) {
-                        try {
-                            BackgroundGeofencing.restartForegroundService(getApplicationContext());
-                        } catch (BackgroundGeofencingException e) {
-                            e.printStackTrace();
-                        }
-                        finish();
-                    }
-                }
-                @Override
-                public void onError(OkHiException exception) {
-                    exception.printStackTrace();
-                    finish();
-                }
-            });
-        } else if (level.equals("whenInUse")) {
-            permissionService.requestBackgroundLocationPermission(new OkHiRequestHandler<Boolean>() {
-                @Override
-                public void onResult(Boolean result) {
-                    if (result) {
-                        finish();
-                    }
-                }
-
-                @Override
-                public void onError(OkHiException exception) {
-                    exception.printStackTrace();
-                    finish();
-                }
-            });
-        } else {
-            finish();
-        }
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        Uri uri = Uri.fromParts("package", context.getPackageName(), null);
+        intent.setData(uri);
+        startActivity(intent);
     }
 
     private void handleLaunch() {
@@ -257,6 +223,20 @@ public class OkHiWebViewActivity extends AppCompatActivity {
             return storedPayload != null;
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        boolean isLocationServicesEnabled = OkHi.isLocationServicesEnabled(getApplicationContext());
+        boolean isBackgroundLocationPermissionGranted = OkHi.isBackgroundLocationPermissionGranted(getApplicationContext());
+        if (isLocationServicesEnabled && isBackgroundLocationPermissionGranted) {
+            try {
+                BackgroundGeofencing.restartForegroundService(getApplicationContext());
+            } catch (BackgroundGeofencingException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

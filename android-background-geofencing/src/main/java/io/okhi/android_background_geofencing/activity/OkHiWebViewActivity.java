@@ -234,6 +234,7 @@ public class OkHiWebViewActivity extends AppCompatActivity {
         if (isLocationServicesEnabled && isBackgroundLocationPermissionGranted) {
             try {
                 BackgroundGeofencing.restartForegroundService(getApplicationContext());
+                finish();
             } catch (BackgroundGeofencingException e) {
                 e.printStackTrace();
             }

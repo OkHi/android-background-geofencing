@@ -91,7 +91,7 @@ public class OkHiWebViewActivity extends AppCompatActivity {
             JSONArray locationIds = new JSONArray();
             for (BackgroundGeofence geofence: geofences) {
                 JSONObject location = new JSONObject();
-                location.put("id", "52ENBRJkoW");
+                location.put("id", geofence.getId());
                 locationIds.put(location);
             }
             JSONObject launchPayload = new JSONObject(LAUNCH_PAYLOAD);

@@ -19,18 +19,19 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofencingExceptio
 
 public class AlarmBroadcastReceiver extends BroadcastReceiver {
 
-    public static final String TAG = "AlarmBroadcastReceiver";
-
     @Override
     public void onReceive(final Context context, Intent intent) {
         BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(context);
         if (setting != null && setting.isWithForegroundService() && !BackgroundGeofencing.isForegroundServiceRunning(context)) {
             try {
-                BackgroundGeofencing.startForegroundService(context);
+                if(BackgroundGeofencing.canStartForegroundService(context)){
+                    BackgroundGeofencing.startForegroundService(context);
+
+                    BackgroundGeofenceUtil.scheduleForegroundRestartWorker(context, 1, TimeUnit.HOURS);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            BackgroundGeofenceUtil.scheduleForegroundRestartWorker(context, 1, TimeUnit.HOURS);
         }
     }
 }

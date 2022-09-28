@@ -95,24 +95,45 @@ public class BackgroundGeofencing {
     boolean isLocationServicesEnabled = BackgroundGeofenceUtil.isLocationServicesEnabled(context);
     boolean isNotificationAvailable = BackgroundGeofencingDB.getNotification(context) != null;
 
-    scheduleServiceRestarts(context);
-
     if (isForegroundServiceRunning(context)) {
       return;
     }
     if ( !hasGeofences || !isBackgroundLocationPermissionGranted || !isGooglePlayServicesAvailable || !isLocationServicesEnabled || !isNotificationAvailable) {
       String message = !hasGeofences ? "No saved viable foreground locations" :
-          !isBackgroundLocationPermissionGranted ? "Background location permission not granted" :
-              !isGooglePlayServicesAvailable ? "Google play services are currently unavailable" :
-                  !isNotificationAvailable ? "Notification configuration unavailable" :
-                      "Location services are unavailable" ;
+              !isBackgroundLocationPermissionGranted ? "Background location permission not granted" :
+                      !isGooglePlayServicesAvailable ? "Google play services are currently unavailable" :
+                              !isNotificationAvailable ? "Notification configuration unavailable" :
+                                      "Location services are unavailable" ;
       throw new BackgroundGeofencingException(BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE, message);
     }
     BackgroundGeofencingDB.saveSetting(new BackgroundGeofenceSetting.Builder().setWithForegroundService(true).build(), context);
     Intent serviceIntent = new Intent(context, BackgroundGeofenceForegroundService.class);
     serviceIntent.putExtra(Constant.FOREGROUND_SERVICE_ACTION, Constant.FOREGROUND_SERVICE_START_STICKY);
     ContextCompat.startForegroundService(context, serviceIntent);
+
+    scheduleServiceRestarts(context);
     BackgroundGeofenceUtil.scheduleForegroundRestartWorker(context, 1, TimeUnit.HOURS);
+  }
+
+  public static Boolean canStartForegroundService (Context context) throws BackgroundGeofencingException {
+    boolean hasGeofences = !BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.FOREGROUND_PING).isEmpty() || !BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.FOREGROUND_WATCH).isEmpty();
+    boolean isBackgroundLocationPermissionGranted = BackgroundGeofenceUtil.isBackgroundLocationPermissionGranted(context);
+    boolean isGooglePlayServicesAvailable = BackgroundGeofenceUtil.isGooglePlayServicesAvailable(context);
+    boolean isLocationServicesEnabled = BackgroundGeofenceUtil.isLocationServicesEnabled(context);
+    boolean isNotificationAvailable = BackgroundGeofencingDB.getNotification(context) != null;
+
+    if (isForegroundServiceRunning(context)) {
+      return false;
+    }
+    if ( !hasGeofences || !isBackgroundLocationPermissionGranted || !isGooglePlayServicesAvailable || !isLocationServicesEnabled || !isNotificationAvailable) {
+      String message = !hasGeofences ? "No saved viable foreground locations" :
+              !isBackgroundLocationPermissionGranted ? "Background location permission not granted" :
+                      !isGooglePlayServicesAvailable ? "Google play services are currently unavailable" :
+                              !isNotificationAvailable ? "Notification configuration unavailable" :
+                                      "Location services are unavailable" ;
+      throw new BackgroundGeofencingException(BackgroundGeofencingException.SERVICE_UNAVAILABLE_CODE, message);
+    }
+    return true;
   }
 
   public static boolean isForegroundServiceRunning (Context context) {

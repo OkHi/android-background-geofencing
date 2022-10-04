@@ -28,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
-import io.okhi.android_background_geofencing.receivers.AlarmBroadcastReceiver;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceForegroundRestartWorker;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
@@ -157,64 +156,6 @@ public class BackgroundGeofenceUtil {
     public static boolean isEnter(Location location, BackgroundGeofence geofence) {
         double distance = distance(location.getLatitude(), geofence.getLat(), location.getLongitude(), geofence.getLng(), 0.0, 0.0);
         return distance < geofence.getRadius();
-    }
-
-
-    // BackgroundGeofenceUtil
-    public static void scheduleServiceRestarts(Context context){
-
-        Calendar cal = Calendar.getInstance();
-        Intent intent = new Intent(context, AlarmBroadcastReceiver.class);
-
-        AlarmManager alarmManager = (AlarmManager) context.getSystemService(AppCompatActivity.ALARM_SERVICE);
-        int[] alarmTriggers = { 1, 3, 6, 12, 15, 18, 21};
-
-        for (int alarm : alarmTriggers) {
-            // Hour
-            PendingIntent pendingIntent;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                pendingIntent = PendingIntent.getBroadcast(
-                        context,
-                        (int) cal.getTimeInMillis(),
-                        intent,
-                        PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
-                );
-
-            }else {
-                pendingIntent = PendingIntent.getBroadcast(
-                        context,
-                        (int) cal.getTimeInMillis(),
-                        intent,
-                        PendingIntent.FLAG_UPDATE_CURRENT
-                );
-            }
-            // Min
-            cal.set(Calendar.HOUR_OF_DAY, alarm);
-            cal.set(Calendar.MINUTE, 0);
-
-            if(android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ){
-                alarmManager.setExactAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        cal.getTimeInMillis(),
-                        pendingIntent
-                );
-            }else {
-               alarmManager.set(
-                       AlarmManager.RTC_WAKEUP,
-                       cal.getTimeInMillis(),
-                       pendingIntent
-               );
-            }
-        }
-
-        ComponentName receiver = new ComponentName(context, AlarmBroadcastReceiver.class);
-        PackageManager pm = context.getPackageManager();
-
-        pm.setComponentEnabledSetting(
-                receiver,
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                PackageManager.DONT_KILL_APP
-        );
     }
 
     /**

@@ -1,15 +1,10 @@
 package io.okhi.android_background_geofencing;
 
-import static io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil.scheduleServiceRestarts;
-
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 
 import androidx.core.content.ContextCompat;
-import androidx.work.BackoffPolicy;
-import androidx.work.ExistingWorkPolicy;
-import androidx.work.OneTimeWorkRequest;
 import androidx.work.Operation;
 import androidx.work.WorkManager;
 
@@ -94,8 +89,6 @@ public class BackgroundGeofencing {
     boolean isGooglePlayServicesAvailable = BackgroundGeofenceUtil.isGooglePlayServicesAvailable(context);
     boolean isLocationServicesEnabled = BackgroundGeofenceUtil.isLocationServicesEnabled(context);
     boolean isNotificationAvailable = BackgroundGeofencingDB.getNotification(context) != null;
-
-    scheduleServiceRestarts(context);
 
     if (isForegroundServiceRunning(context)) {
       return;

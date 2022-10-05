@@ -159,64 +159,6 @@ public class BackgroundGeofenceUtil {
         return distance < geofence.getRadius();
     }
 
-
-    // BackgroundGeofenceUtil
-    public static void scheduleServiceRestarts(Context context){
-
-        Calendar cal = Calendar.getInstance();
-        Intent intent = new Intent(context, AlarmBroadcastReceiver.class);
-
-        AlarmManager alarmManager = (AlarmManager) context.getSystemService(AppCompatActivity.ALARM_SERVICE);
-        int[] alarmTriggers = { 1, 3, 6, 12, 15, 18, 21};
-
-        for (int alarm : alarmTriggers) {
-            // Hour
-            PendingIntent pendingIntent;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                pendingIntent = PendingIntent.getBroadcast(
-                        context,
-                        (int) cal.getTimeInMillis(),
-                        intent,
-                        PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
-                );
-
-            }else {
-                pendingIntent = PendingIntent.getBroadcast(
-                        context,
-                        (int) cal.getTimeInMillis(),
-                        intent,
-                        PendingIntent.FLAG_UPDATE_CURRENT
-                );
-            }
-            // Min
-            cal.set(Calendar.HOUR_OF_DAY, alarm);
-            cal.set(Calendar.MINUTE, 0);
-
-            if(android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ){
-                alarmManager.setExactAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        cal.getTimeInMillis(),
-                        pendingIntent
-                );
-            }else {
-               alarmManager.set(
-                       AlarmManager.RTC_WAKEUP,
-                       cal.getTimeInMillis(),
-                       pendingIntent
-               );
-            }
-        }
-
-        ComponentName receiver = new ComponentName(context, AlarmBroadcastReceiver.class);
-        PackageManager pm = context.getPackageManager();
-
-        pm.setComponentEnabledSetting(
-                receiver,
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                PackageManager.DONT_KILL_APP
-        );
-    }
-
     /**
      * Calculate distance between two points in latitude and longitude taking
      * into account height difference. If you are not interested in height

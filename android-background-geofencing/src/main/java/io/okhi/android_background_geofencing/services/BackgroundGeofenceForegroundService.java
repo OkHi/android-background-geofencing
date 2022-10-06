@@ -91,6 +91,10 @@ public class BackgroundGeofenceForegroundService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        boolean canStartForegroundService = false;
+        try {
+            canStartForegroundService = BackgroundGeofencing.canStartForegroundService(getApplicationContext());
+        } catch (BackgroundGeofencingException e) { }
         if (webHook == null) {
             webHook = BackgroundGeofencingDB.getWebHook(getApplicationContext());
         }
@@ -109,16 +113,12 @@ public class BackgroundGeofenceForegroundService extends Service {
                     restartFailedGeofences();
                 }
             }
-            if (isWithForegroundService && !foregroundWorkStarted) {
+            if (canStartForegroundService && isWithForegroundService && !foregroundWorkStarted) {
                 foregroundWorkStarted = true;
                 startForegroundPingService();
                 startForegroundLocationWatch();
             }
         }
-        boolean canStartForegroundService = false;
-        try {
-            canStartForegroundService = BackgroundGeofencing.canStartForegroundService(getApplicationContext());
-        } catch (BackgroundGeofencingException e) { }
         return isWithForegroundService && canStartForegroundService ? START_STICKY : START_NOT_STICKY;
     }
 

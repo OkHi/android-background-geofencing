@@ -1,7 +1,5 @@
 package io.okhi.android_background_geofencing;
 
-import static io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil.scheduleServiceRestarts;
-
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
@@ -113,7 +111,6 @@ public class BackgroundGeofencing {
     serviceIntent.putExtra(Constant.FOREGROUND_SERVICE_ACTION, Constant.FOREGROUND_SERVICE_START_STICKY);
     ContextCompat.startForegroundService(context, serviceIntent);
     BackgroundGeofenceUtil.scheduleForegroundRestartWorker(context, 1, TimeUnit.HOURS);
-    scheduleServiceRestarts(context);
   }
 
   public static boolean isForegroundServiceRunning (Context context) {

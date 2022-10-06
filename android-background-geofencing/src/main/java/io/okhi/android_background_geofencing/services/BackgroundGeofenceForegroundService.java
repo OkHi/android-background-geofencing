@@ -290,6 +290,7 @@ public class BackgroundGeofenceForegroundService extends Service {
     private void stopService(boolean forceStop) {
         if (!isWithForegroundService || forceStop) {
            runCleanUp();
+           stopService(true);
            stopSelf();
         }
     }

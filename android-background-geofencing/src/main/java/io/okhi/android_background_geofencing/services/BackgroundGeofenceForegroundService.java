@@ -50,6 +50,7 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotifica
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotificationService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
+import io.okhi.android_background_geofencing.receivers.BackgroundGeofenceBroadcastReceiver;
 import io.okhi.android_background_geofencing.receivers.GPSLocationReceiver;
 import io.okhi.android_core.OkHi;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
@@ -103,7 +104,7 @@ public class BackgroundGeofenceForegroundService extends Service {
         boolean isBackgroundLocationPermissionGranted = OkHi.isBackgroundLocationPermissionGranted(getApplicationContext());
         hasRequiredServicePermissions = isBackgroundLocationPermissionGranted;
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && canStartService()) {
             startForeground(BackgroundGeofencingNotificationService.getForegroundServiceNotificationId(getApplicationContext()), BackgroundGeofencingNotificationService.getForegroundServiceNotification(getApplicationContext()));
         }
     }
@@ -121,6 +122,16 @@ public class BackgroundGeofenceForegroundService extends Service {
         }
         hasRequiredServicePermissions = true;
         return handleOnStartCommand(intent);
+    }
+
+    private boolean canStartService() {
+        if (BackgroundGeofencing.canStartForegroundService(getApplicationContext())) {
+            return true;
+        }
+        if (BackgroundGeofenceBroadcastReceiver.hasRecentGeofence()) {
+            return true;
+        }
+        return false;
     }
 
     private int handleOnStartCommand(Intent intent) {
@@ -148,7 +159,7 @@ public class BackgroundGeofenceForegroundService extends Service {
                 startForegroundLocationWatch();
             }
         }
-        return isWithForegroundService ? START_STICKY : START_NOT_STICKY;
+        return isWithForegroundService && BackgroundGeofencing.canStartForegroundService(getApplicationContext()) ? START_STICKY : START_NOT_STICKY;
     }
 
     private void manageDeviceWake(boolean wake) {
@@ -182,11 +193,13 @@ public class BackgroundGeofenceForegroundService extends Service {
         transition.asyncUpload(getApplicationContext(), webHook, new ResultHandler<Boolean>() {
             @Override
             public void onSuccess(Boolean result) {
+                BackgroundGeofenceBroadcastReceiver.setHasRecentGeofence(false);
                 handleServiceStop();
                 manageDeviceWake(false);
             }
             @Override
             public void onError(BackgroundGeofencingException exception) {
+                BackgroundGeofenceBroadcastReceiver.setHasRecentGeofence(false);
                 transition.save(getApplicationContext());
                 BackgroundGeofenceTransition.scheduleAsyncUploadTransition(getApplicationContext());
                 handleServiceStop();
@@ -331,7 +344,7 @@ public class BackgroundGeofenceForegroundService extends Service {
         super.onDestroy();
         runCleanUp();
         BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(getApplicationContext());
-        if (setting != null && setting.isWithForegroundService()) {
+        if (setting != null && setting.isWithForegroundService() && BackgroundGeofencing.canStartForegroundService(getApplicationContext())) {
             final Handler handler = new Handler();
             new Thread(new Runnable() {
                 @Override

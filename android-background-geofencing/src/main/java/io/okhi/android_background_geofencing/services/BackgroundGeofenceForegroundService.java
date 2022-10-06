@@ -115,7 +115,11 @@ public class BackgroundGeofenceForegroundService extends Service {
                 startForegroundLocationWatch();
             }
         }
-        return isWithForegroundService ? START_STICKY : START_NOT_STICKY;
+        boolean canStartForegroundService = false;
+        try {
+            canStartForegroundService = BackgroundGeofencing.canStartForegroundService(getApplicationContext());
+        } catch (BackgroundGeofencingException e) { }
+        return isWithForegroundService && canStartForegroundService ? START_STICKY : START_NOT_STICKY;
     }
 
     private void manageDeviceWake(boolean wake) {

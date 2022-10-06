@@ -1,17 +1,21 @@
 package io.okhi.android_background_geofencing.services;
 
 import android.Manifest;
+import android.app.Notification;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.provider.Settings;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -31,6 +35,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import io.okhi.android_background_geofencing.BackgroundGeofencing;
+import io.okhi.android_background_geofencing.activity.OkHiWebViewActivity;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
@@ -42,9 +47,12 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingLocationService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
+import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotificationService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
+import io.okhi.android_background_geofencing.receivers.BackgroundGeofenceBroadcastReceiver;
 import io.okhi.android_background_geofencing.receivers.GPSLocationReceiver;
+import io.okhi.android_core.OkHi;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
 import io.okhi.android_core.models.OkHiLocationService;
@@ -71,6 +79,8 @@ public class BackgroundGeofenceForegroundService extends Service {
     private BackgroundGeofencingWebHook webHook;
     private HashMap<String, BackgroundGeofenceTransition> transitionTracker = new HashMap<>();
 
+    private boolean hasRequiredServicePermissions = false;
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -80,25 +90,51 @@ public class BackgroundGeofenceForegroundService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        BackgroundGeofencingNotification backgroundGeofencingNotification = BackgroundGeofencingDB.getNotification(getApplicationContext());
-        backgroundGeofencingNotification.createNotificationChannel(getApplicationContext());
         BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(getApplicationContext());
         isWithForegroundService = setting != null && setting.isWithForegroundService();
         PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constant.FOREGROUND_SERVICE_WAKE_LOCK_TAG);
         webHook = BackgroundGeofencingDB.getWebHook(getApplicationContext());
 
-        // register GPS Receiver
-        IntentFilter intentFilter = new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION);
-        registerReceiver( new GPSLocationReceiver(), intentFilter);
+        try {
+            IntentFilter intentFilter = new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION);
+            registerReceiver( new GPSLocationReceiver(), intentFilter);
+        } catch (Exception e) { }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForeground(backgroundGeofencingNotification.getNotificationId(), backgroundGeofencingNotification.getNotification(getApplicationContext()));
+        boolean isBackgroundLocationPermissionGranted = OkHi.isBackgroundLocationPermissionGranted(getApplicationContext());
+        hasRequiredServicePermissions = isBackgroundLocationPermissionGranted;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && canStartService()) {
+            startForeground(BackgroundGeofencingNotificationService.getForegroundServiceNotificationId(getApplicationContext()), BackgroundGeofencingNotificationService.getForegroundServiceNotification(getApplicationContext()));
         }
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        boolean isBackgroundLocationPermissionGranted = OkHi.isBackgroundLocationPermissionGranted(getApplicationContext());
+        if (!isBackgroundLocationPermissionGranted) {
+            return START_STICKY;
+        }
+        if (intent != null && intent.hasExtra(Constant.FOREGROUND_SERVICE_ACTION ) && intent.getStringExtra(Constant.FOREGROUND_SERVICE_ACTION).equals("restart")) {
+            if (!hasRequiredServicePermissions) {
+                BackgroundGeofencingNotification.resetNotification(getApplicationContext());
+            }
+        }
+        hasRequiredServicePermissions = true;
+        return handleOnStartCommand(intent);
+    }
+
+    private boolean canStartService() {
+        if (BackgroundGeofencing.canStartForegroundService(getApplicationContext())) {
+            return true;
+        }
+        if (BackgroundGeofenceBroadcastReceiver.hasRecentGeofence()) {
+            return true;
+        }
+        return false;
+    }
+
+    private int handleOnStartCommand(Intent intent) {
         if (webHook == null) {
             webHook = BackgroundGeofencingDB.getWebHook(getApplicationContext());
         }
@@ -123,7 +159,7 @@ public class BackgroundGeofenceForegroundService extends Service {
                 startForegroundLocationWatch();
             }
         }
-        return isWithForegroundService ? START_STICKY : START_NOT_STICKY;
+        return isWithForegroundService && BackgroundGeofencing.canStartForegroundService(getApplicationContext()) ? START_STICKY : START_NOT_STICKY;
     }
 
     private void manageDeviceWake(boolean wake) {
@@ -157,11 +193,13 @@ public class BackgroundGeofenceForegroundService extends Service {
         transition.asyncUpload(getApplicationContext(), webHook, new ResultHandler<Boolean>() {
             @Override
             public void onSuccess(Boolean result) {
+                BackgroundGeofenceBroadcastReceiver.setHasRecentGeofence(false);
                 handleServiceStop();
                 manageDeviceWake(false);
             }
             @Override
             public void onError(BackgroundGeofencingException exception) {
+                BackgroundGeofenceBroadcastReceiver.setHasRecentGeofence(false);
                 transition.save(getApplicationContext());
                 BackgroundGeofenceTransition.scheduleAsyncUploadTransition(getApplicationContext());
                 handleServiceStop();
@@ -217,6 +255,9 @@ public class BackgroundGeofenceForegroundService extends Service {
     }
 
     private void startForegroundLocationWatch() {
+        if (!OkHi.isLocationServicesEnabled(getApplicationContext())) {
+            BackgroundGeofencingNotificationService.notifyEnableLocationServices(getApplicationContext());
+        }
         createLocationRequest();
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         watchLocationCallback = new LocationCallback() {
@@ -303,7 +344,7 @@ public class BackgroundGeofenceForegroundService extends Service {
         super.onDestroy();
         runCleanUp();
         BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(getApplicationContext());
-        if (setting != null && setting.isWithForegroundService()) {
+        if (setting != null && setting.isWithForegroundService() && BackgroundGeofencing.canStartForegroundService(getApplicationContext())) {
             final Handler handler = new Handler();
             new Thread(new Runnable() {
                 @Override

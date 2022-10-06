@@ -35,10 +35,6 @@
             android:enabled="true"
             android:exported="true" />
         <receiver
-            android:name=".receivers.AlarmBroadcastReceiver"
-            android:enabled="true"
-            android:exported="true" />
-        <receiver
             android:name=".receivers.GPSLocationReceiver"
             android:enabled="true"
             android:exported="true">

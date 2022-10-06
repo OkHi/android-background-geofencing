@@ -35,6 +35,7 @@ import io.okhi.android_background_geofencing.models.WebHookType;
 import io.okhi.android_core.OkHi;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
+import io.okhi.android_core.models.OkPreference;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -46,9 +47,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        try {
+            OkPreference.setItem("okcollect-launch-payload", "{\"message\":\"verification_status\",\"payload\":{\"style\":{\"base\":{\"color\":\"#ba0c2f\",\"logo\":\"https://cdn.okhi.co/icon.png\"}},\"user\":{\"firstName\":\"Julius\",\"lastName\":\"Kiano\",\"phone\":\"+254700110590\"},\"auth\":{\"authToken\":\"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcm9kdWN0IjoibW9iaWxlIiwiYXBwIjp7ImlkIjoiQ0Z5OGkyemRDOCIsIm5hbWUiOiJva2hpYXBwIiwiY2xpZW50S2V5IjoiYmNiNmU4ODAtNTI5NC00MDQ1LWIwYzctNTMwM2NjMWE5OTgzIiwidXNlciI6eyJpZCI6InFXT1pCVGZ0UUoiLCJ1c2VybmFtZSI6Im9raGlhcHAifSwib3JnIjp7ImlkIjoicVdPWkJUZnRRSiIsInVzZXJuYW1lIjoib2toaWFwcCJ9fSwiYnJhbmNoIjp7ImlkIjoiVUQzdHlxVnQ1MCIsIm5hbWUiOiJtb2JpbGUifSwidXNlciI6eyJpZCI6IlQyUG02Rjh5cU0iLCJhZGRyZXNzQ291bnQiOjg5NiwicGhvbmUiOiIrMjU0NzAwMTEwNTkwIn0sImRldmljZUlkIjoiMGE1Zjc0YWMtZDI3OS00NDllLWI3ZGUtYmUyNDc4MTk5Mjg2Iiwic2NvcGVzIjpbInZlcmlmeSJdLCJpYXQiOjE2NjM2NTUxNjUsImV4cCI6MjYxMDM4MzE2NX0.W-AnxGUrCF-vkPhuUHkCm60_GGNhdJOcDcvEkvAhKgh-VV8XSQvp8NLOeUON2LopALLt6FRk2rJbWRmuEi55tdJ5FtfOYyKsMIuLaRj_vJlh4mTrqPU5VCSeH_JixysqrIvJiRbRpbcob5t-GqZqSBFCsJWJNb9d0gC5cdKJpaU\"},\"context\":{\"container\":{\"name\":\"okCollectMobileAndroid\",\"version\":\"version\"},\"developer\":{\"name\":\"okhi\"},\"library\":{\"name\":\"okCollectMobileAndroid\",\"version\":\"version\"},\"platform\":{\"name\":\"android\"},\"permissions\":{\"location\":\"always\"},\"device\":{\"manufacturer\":\"OnePlus\",\"model\":\"HD1900\"},\"locationServicesAvailable\":false},\"config\":{\"streetView\":true,\"protectedApps\":false,\"addressTypes\":{\"work\":true,\"home\":true},\"appBar\":{\"visible\":true,\"color\":\"#ba0c2f\"}},\"locations\":[{\"id\":\"52ENBRJkoW\"}]},\"url\":\"https://dev-manager-v5.okhi.io\"}", getApplicationContext());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         okHi = new OkHi(this);
         context = this;
-
         BackgroundGeofencingNotification notification = new BackgroundGeofencingNotification(
                 "Yooooooo",
                 "Don't mind us",
@@ -103,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         BackgroundGeofencingWebHook geofenceWebHook = new BackgroundGeofencingWebHook(
-            "https://80ff-41-90-189-192.ngrok.io/transits",
+            "https://e8ec-41-90-187-17.ngrok.io/transits",
             10000,
             headers,
             null,
@@ -112,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
         );
         geofenceWebHook.save(this);
         BackgroundGeofencingWebHook deviceMetaWebHook = new BackgroundGeofencingWebHook(
-            "https://80ff-41-90-189-192.ngrok.io/device-meta",
+            "https://e8ec-41-90-187-17.ngrok.io/device-meta",
             10000,
             headers,
             null,
@@ -121,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
         );
         deviceMetaWebHook.save(this);
         BackgroundGeofencingWebHook stopVerificationWebHook = new BackgroundGeofencingWebHook(
-            "https://80ff-41-90-189-192.ngrok.io/stop/verification",
+            "https://e8ec-41-90-187-17.ngrok.io/stop/verification",
             10000,
             headers,
             null,
@@ -241,6 +246,14 @@ public class MainActivity extends AppCompatActivity {
     public void startService (View view) {
         try {
             BackgroundGeofencing.startForegroundService(getApplicationContext());
+        } catch (BackgroundGeofencingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void restartService (View view) {
+        try {
+            BackgroundGeofencing.restartForegroundService(getApplicationContext());
         } catch (BackgroundGeofencingException e) {
             e.printStackTrace();
         }

@@ -11,6 +11,8 @@ import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.location.GeofencingEvent;
 
+import java.io.UnsupportedEncodingException;
+
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
@@ -25,6 +27,8 @@ import io.okhi.android_background_geofencing.services.BackgroundGeofenceForegrou
 public class BackgroundGeofenceBroadcastReceiver extends BroadcastReceiver {
 
     private String TAG = "GeofenceReceiver";
+
+    private static boolean hasRecentGeofence = false;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -41,6 +45,7 @@ public class BackgroundGeofenceBroadcastReceiver extends BroadcastReceiver {
                 transition = new BackgroundGeofenceTransition.Builder(geofencingEvent).build();
                 if (!BackgroundGeofencingDB.isWithinTimeThreshold(transition, context)) return;
                 transition.save(context);
+                setHasRecentGeofence(true);
                 BackgroundGeofenceUtil.log(context, TAG, "Received a " + transition.getTransitionEvent() + " geofence event");
             }
         }
@@ -69,6 +74,14 @@ public class BackgroundGeofenceBroadcastReceiver extends BroadcastReceiver {
 
     private void scheduleBackgroundWork(Context context) {
         BackgroundGeofenceTransition.asyncUploadAllTransitions(context);
+    }
+
+    public static boolean hasRecentGeofence() {
+        return hasRecentGeofence;
+    }
+
+    public static void setHasRecentGeofence(boolean status) {
+        hasRecentGeofence = status;
     }
 
 }

@@ -48,10 +48,10 @@ public class DeviceRebootBroadcastReceiver extends BroadcastReceiver {
         if (setting != null && setting.isWithForegroundService() && !BackgroundGeofencing.isForegroundServiceRunning(context)) {
             try {
                 BackgroundGeofencing.startForegroundService(context);
+                BackgroundGeofenceUtil.scheduleForegroundRestartWorker(context, 1, TimeUnit.HOURS);
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            BackgroundGeofenceUtil.scheduleForegroundRestartWorker(context, 1, TimeUnit.HOURS);
         }
     }
 }

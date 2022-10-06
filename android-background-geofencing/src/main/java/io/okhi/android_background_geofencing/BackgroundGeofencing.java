@@ -128,4 +128,8 @@ public class BackgroundGeofencing {
     }
     return false;
   }
+
+  public static boolean canStartForegroundService(Context context) {
+    return !BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.FOREGROUND_PING).isEmpty() || !BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.FOREGROUND_WATCH).isEmpty();
+  }
 }

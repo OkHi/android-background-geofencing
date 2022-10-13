@@ -332,8 +332,10 @@ public class BackgroundGeofenceForegroundService extends Service {
     }
 
     private void handleServiceStop() {
-        boolean hasGeofences = !BackgroundGeofencingDB.getGeofences(getApplicationContext(), BackgroundGeofenceSource.FOREGROUND_PING).isEmpty() || !BackgroundGeofencingDB.getGeofences(getApplicationContext(), BackgroundGeofenceSource.FOREGROUND_WATCH).isEmpty();
-        if (hasGeofences) return;
+        if (isWithForegroundService) {
+            boolean hasGeofences = !BackgroundGeofencingDB.getGeofences(getApplicationContext(), BackgroundGeofenceSource.FOREGROUND_PING).isEmpty() || !BackgroundGeofencingDB.getGeofences(getApplicationContext(), BackgroundGeofenceSource.FOREGROUND_WATCH).isEmpty();
+            if (hasGeofences) return;
+        }
         BackgroundGeofencing.stopForegroundService(getApplicationContext());
     }
 }

@@ -111,10 +111,6 @@ public class BackgroundGeofenceForegroundService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        boolean isBackgroundLocationPermissionGranted = OkHi.isBackgroundLocationPermissionGranted(getApplicationContext());
-        if (!isBackgroundLocationPermissionGranted) {
-            return START_STICKY;
-        }
         if (intent != null && intent.hasExtra(Constant.FOREGROUND_SERVICE_ACTION ) && intent.getStringExtra(Constant.FOREGROUND_SERVICE_ACTION).equals("restart")) {
             if (!hasRequiredServicePermissions) {
                 BackgroundGeofencingNotification.resetNotification(getApplicationContext());
@@ -135,6 +131,7 @@ public class BackgroundGeofenceForegroundService extends Service {
     }
 
     private int handleOnStartCommand(Intent intent) {
+        boolean isBackgroundLocationPermissionGranted = OkHi.isBackgroundLocationPermissionGranted(getApplicationContext());
         if (webHook == null) {
             webHook = BackgroundGeofencingDB.getWebHook(getApplicationContext());
         }
@@ -159,7 +156,7 @@ public class BackgroundGeofenceForegroundService extends Service {
                 startForegroundLocationWatch();
             }
         }
-        return isWithForegroundService && BackgroundGeofencing.canStartForegroundService(getApplicationContext()) ? START_STICKY : START_NOT_STICKY;
+        return isBackgroundLocationPermissionGranted&& isWithForegroundService && BackgroundGeofencing.canStartForegroundService(getApplicationContext()) ? START_STICKY : START_NOT_STICKY;
     }
 
     private void manageDeviceWake(boolean wake) {
@@ -185,6 +182,7 @@ public class BackgroundGeofenceForegroundService extends Service {
     }
 
     private void uploadGeofenceTransition(String transitionSignature) {
+        Log.v("MeeAgain", "uploading something");
         if (transitionSignature == null) return;
         manageDeviceWake(true);
         final BackgroundGeofenceTransition transition = BackgroundGeofencingDB.getTransitionFromSignature(getApplicationContext(), transitionSignature);

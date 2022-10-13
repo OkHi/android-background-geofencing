@@ -209,7 +209,7 @@ public class BackgroundGeofence implements Serializable {
                     context,
                     0,
                     intent,
-                    PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+                    PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
             );
 
         }else {
@@ -273,6 +273,7 @@ public class BackgroundGeofence implements Serializable {
             geofencingClient.addGeofences(getGeofencingRequest(silently, geofenceList), getGeofencePendingIntent(context)).addOnSuccessListener(new OnSuccessListener<Void>() {
                 @Override
                 public void onSuccess(Void aVoid) {
+                    Log.v("MEEEEEE", "native said okay");
                     if (!silently) {
                         save(context);
                     }
@@ -287,6 +288,7 @@ public class BackgroundGeofence implements Serializable {
                 }
             });
         } else {
+            Log.v("MEEEEEE", "I said okay, lol");
             BackgroundGeofenceDeviceMeta.asyncUpload(context);
             save(context);
             requestHandler.onSuccess();

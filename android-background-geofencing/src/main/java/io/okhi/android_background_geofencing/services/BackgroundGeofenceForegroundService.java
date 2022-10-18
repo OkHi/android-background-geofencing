@@ -4,8 +4,10 @@ import android.Manifest;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -42,6 +44,8 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofencingLocation
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
+import io.okhi.android_background_geofencing.receivers.BackgroundGeofenceLocationServicesReceiver;
+import io.okhi.android_core.OkHi;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
 import io.okhi.android_core.models.OkHiLocationService;
@@ -85,8 +89,16 @@ public class BackgroundGeofenceForegroundService extends Service {
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constant.FOREGROUND_SERVICE_WAKE_LOCK_TAG);
         webHook = BackgroundGeofencingDB.getWebHook(getApplicationContext());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForeground(backgroundGeofencingNotification.getNotificationId(), backgroundGeofencingNotification.getNotification(getApplicationContext()));
+            if (isWithForegroundService) {
+                startForeground(BackgroundGeofencingNotificationService.getForegroundServiceNotificationId(getApplicationContext()), BackgroundGeofencingNotificationService.getForegroundServiceNotification(getApplicationContext()));
+            } else {
+                startForeground(backgroundGeofencingNotification.getNotificationId(), backgroundGeofencingNotification.getNotification(getApplicationContext()));
+            }
         }
+        try {
+            IntentFilter intentFilter = new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION);
+            registerReceiver(new BackgroundGeofenceLocationServicesReceiver(), intentFilter);
+        } catch (Exception e) { }
     }
 
     @Override
@@ -112,6 +124,12 @@ public class BackgroundGeofenceForegroundService extends Service {
             if (isWithForegroundService && !foregroundWorkStarted) {
                 foregroundWorkStarted = true;
                 startForegroundPingService();
+                startForegroundLocationWatch();
+            }
+        }
+        if (intent != null && intent.hasExtra(Constant.FOREGROUND_SERVICE_ACTION ) && intent.getStringExtra(Constant.FOREGROUND_SERVICE_ACTION).equals("restart")) {
+            if (OkHi.isBackgroundLocationPermissionGranted(getApplicationContext()) && isWithForegroundService) {
+                BackgroundGeofencingNotification.resetNotification(getApplicationContext());
                 startForegroundLocationWatch();
             }
         }
@@ -209,6 +227,9 @@ public class BackgroundGeofenceForegroundService extends Service {
     }
 
     private void startForegroundLocationWatch() {
+        if (fusedLocationProviderClient != null && watchLocationCallback != null) {
+            fusedLocationProviderClient.removeLocationUpdates(watchLocationCallback);
+        }
         createLocationRequest();
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         watchLocationCallback = new LocationCallback() {

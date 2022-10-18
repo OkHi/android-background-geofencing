@@ -88,6 +88,7 @@ public class BackgroundGeofencing {
     boolean isLocationServicesEnabled = BackgroundGeofenceUtil.isLocationServicesEnabled(context);
     boolean isNotificationAvailable = BackgroundGeofencingDB.getNotification(context) != null;
     if (isForegroundServiceRunning(context)) {
+      restartForegroundService(context);
       return;
     }
     if ( !hasGeofences || !isBackgroundLocationPermissionGranted || !isGooglePlayServicesAvailable || !isLocationServicesEnabled || !isNotificationAvailable) {
@@ -112,9 +113,18 @@ public class BackgroundGeofencing {
         if (service.foreground || service.started) {
           return true;
         }
-
       }
     }
     return false;
+  }
+
+  public static void restartForegroundService(Context context) throws BackgroundGeofencingException {
+    if (isForegroundServiceRunning(context)) {
+      Intent serviceIntent = new Intent(context, BackgroundGeofenceForegroundService.class);
+      serviceIntent.putExtra(Constant.FOREGROUND_SERVICE_ACTION,  Constant.FOREGROUND_SERVICE_RESTART);
+      ContextCompat.startForegroundService(context, serviceIntent);
+    } else {
+      startForegroundService(context);
+    }
   }
 }

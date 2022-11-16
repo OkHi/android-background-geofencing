@@ -104,7 +104,7 @@ public class Constant {
     public static final String FOREGROUND_NOTIFICATION_ICON_META_KEY = "io.okhi.android_background_geofencing.foreground_notification_icon";
     public static final String FOREGROUND_NOTIFICATION_COLOR_META_KEY = "io.okhi.android_background_geofencing.foreground_notification_color";
 
-    public static final int PERSISTENT_NOTIFICATION_ERROR_COLOR = Color.argb(255, 255, 0, 0);
+    public static final int PERSISTENT_NOTIFICATION_ERROR_COLOR = Color.argb(255, 211, 57, 41);
     public static final String PERSISTENT_NOTIFICATION_GENERIC_ERROR_TITLE = "Address Verification Stopped";
     public static final String PERSISTENT_NOTIFICATION_LOCATION_SERVICES_ERROR_TEXT = "Enable location services to continue with verification";
     public static final String PERSISTENT_NOTIFICATION_LOCATION_PERMISSION_ERROR_TEXT = "Enable \"Allow all the time\" location permission";

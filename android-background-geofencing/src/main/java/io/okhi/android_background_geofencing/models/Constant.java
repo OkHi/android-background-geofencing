@@ -1,5 +1,7 @@
 package io.okhi.android_background_geofencing.models;
 
+import android.graphics.Color;
+
 import androidx.work.Constraints;
 import androidx.work.NetworkType;
 
@@ -69,13 +71,13 @@ public class Constant {
 
     // work manager constraints
     public static Constraints GEOFENCE_WORK_MANAGER_CONSTRAINTS = new Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .setRequiresBatteryNotLow(true)
-            .build();
+      .setRequiredNetworkType(NetworkType.CONNECTED)
+      .setRequiresBatteryNotLow(true)
+      .build();
 
     public static Constraints GEOFENCE_WORK_MANAGER_INIT_CONSTRAINTS = new Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build();
+      .setRequiredNetworkType(NetworkType.CONNECTED)
+      .build();
 
     // location updates
     public static final long LOCATION_REQUEST_EXPIRATION_DURATION = 10000;
@@ -85,6 +87,7 @@ public class Constant {
 
     // foreground service
     public static final String FOREGROUND_SERVICE_ACTION = "action";
+    public static final String FOREGROUND_SERVICE_RESTART = "restart";
     public static final String FOREGROUND_SERVICE_TRANSITION_SIGNATURE = "FOREGROUND_SERVICE_TRANSITION_SIGNATURE";
     public static final String FOREGROUND_SERVICE_GEOFENCE_EVENT = "geofence_event";
     public static final String FOREGROUND_SERVICE_START_STICKY = "start_sticky";
@@ -100,4 +103,9 @@ public class Constant {
 
     public static final String FOREGROUND_NOTIFICATION_ICON_META_KEY = "io.okhi.android_background_geofencing.foreground_notification_icon";
     public static final String FOREGROUND_NOTIFICATION_COLOR_META_KEY = "io.okhi.android_background_geofencing.foreground_notification_color";
+
+    public static final int PERSISTENT_NOTIFICATION_ERROR_COLOR = Color.argb(255, 255, 0, 0);
+    public static final String PERSISTENT_NOTIFICATION_GENERIC_ERROR_TITLE = "Address Verification Stopped";
+    public static final String PERSISTENT_NOTIFICATION_LOCATION_SERVICES_ERROR_TEXT = "Enable location services to continue with verification";
+    public static final String PERSISTENT_NOTIFICATION_LOCATION_PERMISSION_ERROR_TEXT = "Enable \"Allow all the time\" location permission";
 }

@@ -1,6 +1,8 @@
 package io.okhi.android_background_geofencing.models;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
@@ -8,6 +10,8 @@ import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.telephony.TelephonyManager;
+
+import androidx.core.app.ActivityCompat;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -18,6 +22,7 @@ import java.util.HashMap;
 import java.util.TimeZone;
 
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
+import io.okhi.android_core.OkHi;
 import io.okhi.android_core.models.OkHiLocationService;
 import io.okhi.android_core.models.OkHiPermissionService;
 import okhttp3.Call;
@@ -34,7 +39,7 @@ public class BackgroundGeofenceDeviceMeta {
   private String deviceModel = Build.MODEL;
   private String deviceName = Build.PRODUCT;
   private double deviceBatteryLevel = -1;
-
+  private boolean locationServicesAvailable = true;
   private String deviceOsName = "Android";
   private String deviceOsVersion = Build.VERSION.RELEASE;
 
@@ -52,13 +57,13 @@ public class BackgroundGeofenceDeviceMeta {
   public BackgroundGeofenceDeviceMeta(Context context, ArrayList<BackgroundGeofence> geofences) {
     this.context = context;
     BackgroundGeofencingDB.saveDeviceId(this.context);
-
+    this.locationServicesAvailable = OkHi.isLocationServicesEnabled(context);
     boolean isBackgroundLocationPermissionGranted = OkHiPermissionService.isBackgroundLocationPermissionGranted(this.context);
     boolean isLocationPermissionGranted = OkHiPermissionService.isLocationPermissionGranted(this.context);
     boolean isLocationServicesEnabled = OkHiLocationService.isLocationServicesEnabled(this.context);
     this.deviceId = BackgroundGeofencingDB.getDeviceId(this.context);
     BatteryManager bm = (BatteryManager) this.context.getSystemService(Context.BATTERY_SERVICE);
-    TelephonyManager manager = (TelephonyManager)this.context.getSystemService(Context.TELEPHONY_SERVICE);
+    TelephonyManager manager = (TelephonyManager) this.context.getSystemService(Context.TELEPHONY_SERVICE);
     this.networkCarrierName = manager.getNetworkOperatorName();
     this.networkSimOperatorName = manager.getSimOperatorName();
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -68,7 +73,11 @@ public class BackgroundGeofenceDeviceMeta {
     NetworkInfo wifiNetworkInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
     this.networkWifi = wifiNetworkInfo.isConnected();
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      this.networkCellular = manager.isDataEnabled();
+      if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+        this.networkCellular = false;
+      } else {
+        this.networkCellular = manager.isDataEnabled();
+      }
     }
     if (isLocationServicesEnabled && isLocationPermissionGranted && this.networkWifi) {
       WifiManager wifiManager = (WifiManager) this.context.getSystemService(Context.WIFI_SERVICE);
@@ -100,6 +109,7 @@ public class BackgroundGeofenceDeviceMeta {
       deviceInformation.put("model", this.deviceModel);
       deviceInformation.put("name", this.deviceName);
       deviceInformation.put("batteryLevel", this.deviceBatteryLevel);
+      deviceInformation.put("locationServicesAvailable", this.locationServicesAvailable);
 
       osInformation.put("name", this.deviceOsName);
       osInformation.put("version", this.deviceOsVersion);

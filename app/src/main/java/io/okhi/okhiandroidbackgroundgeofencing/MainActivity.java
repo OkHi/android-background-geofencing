@@ -87,12 +87,12 @@ public class MainActivity extends AppCompatActivity {
                         NotificationManager.IMPORTANCE_HIGH,
                         456
                 );
-                try {
+                /**try {
                     BackgroundGeofencingNotification.launchLocalNotification(notification, Color.RED,MainActivity.this);
 
                 } catch (OkHiException e) {
                     e.printStackTrace();
-                }
+                } */
             }
         });
 

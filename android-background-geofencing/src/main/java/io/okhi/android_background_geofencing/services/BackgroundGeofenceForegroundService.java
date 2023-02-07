@@ -87,13 +87,15 @@ public class BackgroundGeofenceForegroundService extends Service {
         PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constant.FOREGROUND_SERVICE_WAKE_LOCK_TAG);
         webHook = BackgroundGeofencingDB.getWebHook(getApplicationContext());
+        startForeground(backgroundGeofencingNotification.getNotificationId(), backgroundGeofencingNotification.getNotification(getApplicationContext()));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForeground(backgroundGeofencingNotification.getNotificationId(), backgroundGeofencingNotification.getNotification(getApplicationContext()));
+            try {
+                IntentFilter intentFilter = new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION);
+                registerReceiver(new BackgroundGeofenceLocationServicesReceiver(), intentFilter);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-        try {
-            IntentFilter intentFilter = new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION);
-            registerReceiver(new BackgroundGeofenceLocationServicesReceiver(), intentFilter);
-        } catch (Exception e) { }
     }
 
     @Override

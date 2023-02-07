@@ -89,11 +89,11 @@ public class BackgroundGeofenceForegroundService extends Service {
         webHook = BackgroundGeofencingDB.getWebHook(getApplicationContext());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForeground(backgroundGeofencingNotification.getNotificationId(), backgroundGeofencingNotification.getNotification(getApplicationContext()));
+            try {
+                IntentFilter intentFilter = new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION);
+                registerReceiver(new BackgroundGeofenceLocationServicesReceiver(), intentFilter);
+            } catch (Exception e) { }
         }
-        try {
-            IntentFilter intentFilter = new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION);
-            registerReceiver(new BackgroundGeofenceLocationServicesReceiver(), intentFilter);
-        } catch (Exception e) { }
     }
 
     @Override

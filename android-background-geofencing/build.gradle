@@ -2,12 +2,12 @@ apply plugin: 'com.android.library'
 group='OkHi'
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion 31
     buildToolsVersion "30.0.3"
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 33
+        targetSdkVersion 31
         versionCode 1
         versionName "1.9.11"
 
@@ -30,12 +30,8 @@ android {
 }
 
 dependencies {
+    implementation 'androidx.appcompat:appcompat:1.4.1'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-
-    implementation 'androidx.appcompat:appcompat:1.6.0'
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     implementation 'com.snappydb:snappydb-lib:0.5.2'
     api 'com.esotericsoftware.kryo:kryo:2.24.0'
     implementation 'com.google.android.gms:play-services-location:21.0.1'
@@ -43,5 +39,5 @@ dependencies {
         force = true //API 19 support
     }
     implementation "androidx.work:work-runtime:2.7.1"
-    implementation 'com.github.OkHi:android-core:v1.7.3'
+    implementation 'com.github.OkHi:android-core:v1.7.3-sdk31'
 }

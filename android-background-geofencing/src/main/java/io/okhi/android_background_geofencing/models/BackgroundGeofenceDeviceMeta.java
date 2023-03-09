@@ -108,6 +108,7 @@ public class BackgroundGeofenceDeviceMeta {
       deviceInformation.put("manufacturer", this.deviceManufacturer);
       deviceInformation.put("model", this.deviceModel);
       deviceInformation.put("name", this.deviceName);
+      deviceInformation.put("firebaseToken", OkHi.getFirebaseToken(context.getApplicationContext()));
       deviceInformation.put("batteryLevel", this.deviceBatteryLevel);
       deviceInformation.put("locationServicesAvailable", this.locationServicesAvailable);
 

@@ -138,7 +138,7 @@ public class BackgroundGeofencingNotification implements Serializable {
                 .setAutoCancel(false)
                 .setOngoing(true);
 
-        builder.addAction(0, "Enable location", builder.build().contentIntent);
+        builder.addAction(0, "Turn On Location", builder.build().contentIntent);
 
         try {
             ApplicationInfo app = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);

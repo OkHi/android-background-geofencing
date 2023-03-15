@@ -132,6 +132,14 @@ public class BackgroundGeofencingNotification implements Serializable {
 
         builder.setColor(customNotificationColor).setColorized(true);
 
+
+        builder.setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setAutoCancel(false)
+                .setOngoing(true);
+
+        builder.addAction(0, "Enable location", builder.build().contentIntent);
+
         try {
             ApplicationInfo app = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
             Bundle bundle = app.metaData;

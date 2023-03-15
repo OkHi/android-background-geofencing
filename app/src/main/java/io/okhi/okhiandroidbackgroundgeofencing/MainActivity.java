@@ -1,5 +1,8 @@
 package io.okhi.okhiandroidbackgroundgeofencing;
 
+import static io.okhi.android_background_geofencing.models.Constant.NOTIFICATION_CHANNEL_ID;
+import static io.okhi.android_background_geofencing.models.Constant.NOTIFICATION_CHANNEL_NAME;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -48,14 +51,13 @@ public class MainActivity extends AppCompatActivity {
         BackgroundGeofencingNotification notification = new BackgroundGeofencingNotification(
                 "Yooooooo",
                 "Don't mind us",
-                "OkHi_Channel_id",
-                "OkHi Channel",
+                NOTIFICATION_CHANNEL_ID,
+                NOTIFICATION_CHANNEL_NAME,
                 "My channel description",
                 NotificationManager.IMPORTANCE_HIGH,
             123,
             456
         );
-
         BackgroundGeofencing.init(this, notification);
 
         final Button button = findViewById(R.id.button1);

@@ -42,7 +42,6 @@ public class BackgroundGeofencing {
     operation.getResult().addListener(new Runnable() {
       @Override
       public void run() {
-        createNotificationChannel(context);
         BackgroundGeofencing.startUpSequence(context, notification);
       }
     }, new Executor() {
@@ -51,24 +50,6 @@ public class BackgroundGeofencing {
         command.run();
       }
     });
-  }
-
-  private static void createNotificationChannel(Context context) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      AudioAttributes attributes = new AudioAttributes.Builder()
-              .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
-              .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-              .build();
-      String description = "OkHi Smart addressing channel";
-      int importance = NotificationManager.IMPORTANCE_HIGH;
-
-      NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, NOTIFICATION_CHANNEL_NAME, importance);
-      channel.setDescription(description);
-      Uri sound = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.getPackageName() + "/raw/okhi_notify");
-      channel.setSound(sound, attributes);
-      NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
-      notificationManager.createNotificationChannel(channel);
-    }
   }
 
   private static void startUpSequence(final Context context, BackgroundGeofencingNotification notification) {

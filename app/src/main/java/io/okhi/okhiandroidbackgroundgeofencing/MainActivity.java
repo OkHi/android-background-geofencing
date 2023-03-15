@@ -51,8 +51,8 @@ public class MainActivity extends AppCompatActivity {
         BackgroundGeofencingNotification notification = new BackgroundGeofencingNotification(
                 "Yooooooo",
                 "Don't mind us",
-                NOTIFICATION_CHANNEL_ID,
-                NOTIFICATION_CHANNEL_NAME,
+                NOTIFICATION_CHANNEL_ID, //# Must be different from the Clients Apps Notification Channel ID to avoid Sound override I'd suggest hiding this field
+                "Channel_name",
                 "My channel description",
                 NotificationManager.IMPORTANCE_HIGH,
             123,

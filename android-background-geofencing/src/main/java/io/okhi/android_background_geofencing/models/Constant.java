@@ -101,8 +101,8 @@ public class Constant {
     public static final long FOREGROUND_SERVICE_LOCATION_UPDATE_INTERVAL = BackgroundGeofenceUtil.isChineseDevice() ? 300000 :  30 * 60 * 1000 ;
     public static final float FOREGROUND_SERVICE_LOCATION_DISPLACEMENT = BackgroundGeofenceUtil.isChineseDevice() ? 25 : 100;
 
-    public static final String NOTIFICATION_CHANNEL_NAME = "OkHi Smart addressing";
-    public static final String NOTIFICATION_CHANNEL_ID = "okhi_smart_addressing";
+    public static final String NOTIFICATION_CHANNEL_NAME = " OkHi Smart addressing Channel";
+    public static final String NOTIFICATION_CHANNEL_ID = "addressing_channel_id";
     public static final String FOREGROUND_NOTIFICATION_ICON_META_KEY = "io.okhi.android_background_geofencing.foreground_notification_icon";
     public static final String FOREGROUND_NOTIFICATION_COLOR_META_KEY = "io.okhi.android_background_geofencing.foreground_notification_color";
 

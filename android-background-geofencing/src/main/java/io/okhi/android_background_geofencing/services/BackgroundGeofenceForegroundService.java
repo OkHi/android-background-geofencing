@@ -69,6 +69,7 @@ public class BackgroundGeofenceForegroundService extends Service {
     private static Lock lock = new ReentrantLock();
     private static Condition condition = lock.newCondition();
     private BackgroundGeofencingWebHook webHook;
+    private BackgroundGeofenceLocationServicesReceiver receiver;
     private HashMap<String, BackgroundGeofenceTransition> transitionTracker = new HashMap<>();
 
     @Nullable
@@ -91,7 +92,8 @@ public class BackgroundGeofenceForegroundService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             try {
                 IntentFilter intentFilter = new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION);
-                registerReceiver(new BackgroundGeofenceLocationServicesReceiver(), intentFilter);
+                receiver = new BackgroundGeofenceLocationServicesReceiver();
+                registerReceiver(receiver, intentFilter);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -304,6 +306,7 @@ public class BackgroundGeofenceForegroundService extends Service {
         super.onDestroy();
         runCleanUp();
         BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(getApplicationContext());
+        unregisterReceiver(receiver);
         if (setting != null && setting.isWithForegroundService()) {
             final Handler handler = new Handler();
             new Thread(new Runnable() {

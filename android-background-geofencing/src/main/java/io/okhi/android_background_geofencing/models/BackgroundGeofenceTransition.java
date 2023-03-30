@@ -402,6 +402,10 @@ public class BackgroundGeofenceTransition implements Serializable {
     }
 
     public void asyncUpload (final Context context, BackgroundGeofencingWebHook webHook, final ResultHandler<Boolean> handler) {
+        asyncUpload(context, webHook, true, handler);
+    }
+
+    public void asyncUpload (final Context context, BackgroundGeofencingWebHook webHook, boolean processResponse, final ResultHandler<Boolean> handler) {
         try {
             if (webHook == null) {
                 handler.onSuccess(true);
@@ -420,7 +424,9 @@ public class BackgroundGeofenceTransition implements Serializable {
                 }
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
-                    BackgroundGeofenceTransition.processTransitResponse(context, response);
+                    if (processResponse) {
+                        BackgroundGeofenceTransition.processTransitResponse(context, response);
+                    }
                     handler.onSuccess(true);
                     response.close();
                 }

@@ -9,7 +9,7 @@ android {
         minSdkVersion 19
         targetSdkVersion 33
         versionCode 1
-        versionName "1.9.12"
+        versionName "1.9.15"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'
@@ -43,5 +43,5 @@ dependencies {
         force = true //API 19 support
     }
     implementation "androidx.work:work-runtime:2.7.1"
-    implementation 'com.github.OkHi:android-core:v1.7.3'
+    implementation 'com.github.OkHi:android-core:v1.7.6'
 }

@@ -2,7 +2,6 @@
   "name": "android-background-geofencing",
   "version": "1.0.0",
   "main": "index.js",
-  "repository": "https://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@github.com/OkHi/android-background-geofencing",
   "author": "Julius Kiano <jgkiano@gmail.com>",
   "license": "MIT",
   "scripts": {

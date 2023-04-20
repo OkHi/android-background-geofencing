@@ -1,0 +1,10 @@
+{
+  "name": "android-background-geofencing",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Julius Kiano <jgkiano@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "pub": "./gradlew clean && ./gradlew assembleRelease && ./gradlew artifactoryPublish"
+  }
+}

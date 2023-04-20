@@ -3,6 +3,7 @@ package io.okhi.android_background_geofencing;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
 
 import androidx.core.content.ContextCompat;
 import androidx.work.Operation;
@@ -13,6 +14,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
+import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceAppOpen;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceDeviceMeta;
@@ -21,6 +23,7 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofenceSource;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofenceUtil;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
+import io.okhi.android_background_geofencing.models.BackgroundGeofencingLocationService;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
@@ -116,5 +119,40 @@ public class BackgroundGeofencing {
       }
     }
     return false;
+  }
+
+  public static void triggerGeofenceEvents(Context context) {
+    BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(context);
+    if (webHook == null) return;
+    BackgroundGeofencingLocationService service = new BackgroundGeofencingLocationService();
+    service.fetchCurrentLocation(context, new ResultHandler<Location>() {
+      @Override
+      public void onSuccess(Location location) {
+        ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(context);
+        ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofenceTransition.generateTransitions(
+          Constant.FOREGROUND_SERVICE_PING_GEOFENCE_SOURCE,
+          location,
+          geofences,
+          false,
+          context
+        );
+        for(BackgroundGeofenceTransition transition: transitions) {
+          transition.asyncUpload(context, webHook, false, new ResultHandler<Boolean>() {
+            @Override
+            public void onSuccess(Boolean result) {
+
+            }
+            @Override
+            public void onError(BackgroundGeofencingException exception) {
+              exception.printStackTrace();
+            }
+          });
+        }
+      }
+      @Override
+      public void onError(BackgroundGeofencingException exception) {
+        exception.printStackTrace();
+      }
+    });
   }
 }

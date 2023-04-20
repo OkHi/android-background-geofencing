@@ -71,6 +71,7 @@ public class BackgroundGeofenceForegroundService extends Service {
     private BackgroundGeofencingWebHook webHook;
     private BackgroundGeofenceLocationServicesReceiver receiver;
     private HashMap<String, BackgroundGeofenceTransition> transitionTracker = new HashMap<>();
+    private BackgroundGeofencingLocationService backgroundGeofencingLocationService;
 
     @Nullable
     @Override
@@ -200,7 +201,8 @@ public class BackgroundGeofenceForegroundService extends Service {
                 /* do what you need to do */
                 manageDeviceWake(true);
                 BackgroundGeofenceDeviceMeta.asyncUpload(getApplicationContext());
-                new BackgroundGeofencingLocationService().fetchCurrentLocation(getApplicationContext(), new ResultHandler<Location>() {
+                backgroundGeofencingLocationService = new BackgroundGeofencingLocationService();
+                backgroundGeofencingLocationService.fetchCurrentLocation(getApplicationContext(), new ResultHandler<Location>() {
                     @Override
                     public void onSuccess(Location result) {
                         generateUploadGeofenceTransitions(result, Constant.FOREGROUND_SERVICE_PING_GEOFENCE_SOURCE);
@@ -269,7 +271,6 @@ public class BackgroundGeofenceForegroundService extends Service {
                 false,
                 getApplicationContext()
         );
-        boolean hasError = false;
         for (final BackgroundGeofenceTransition transition: transitions) {
             if (!BackgroundGeofencingDB.isWithinTimeThreshold(transition, getApplicationContext())) {
                 BackgroundGeofencingDB.removeGeofenceTransition(transition, getApplicationContext());

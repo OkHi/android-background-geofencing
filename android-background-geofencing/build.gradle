@@ -4,12 +4,12 @@ apply plugin: 'maven-publish'
 group='OkHi'
 
 def libraryGroupId = 'io.okhi.android'
-def libraryArtifactId = 'background-geofencing-dev'
+def libraryArtifactId = 'background-geofencing'
 def libraryCompileSdk = 33
 def libraryTargetSdk = 33
 def libraryMinSdk = 19
 def libraryVersionCode = 1
-def libraryVersion = '1.9.22'
+def libraryVersion = '1.9.23'
 
 android {
     compileSdkVersion libraryCompileSdk

@@ -4,12 +4,12 @@ apply plugin: 'maven-publish'
 group='OkHi'
 
 def libraryGroupId = 'io.okhi.android'
-def libraryArtifactId = 'background-geofencing-dev'
+def libraryArtifactId = 'background-geofencing'
 def libraryCompileSdk = 33
 def libraryTargetSdk = 33
 def libraryMinSdk = 19
 def libraryVersionCode = 1
-def libraryVersion = '1.9.24'
+def libraryVersion = '1.9.25'
 
 android {
     compileSdkVersion libraryCompileSdk
@@ -52,7 +52,7 @@ dependencies {
         force = true //API 19 support
     }
     implementation "androidx.work:work-runtime:2.7.1"
-    implementation 'io.okhi.android:core:1.7.12'
+    implementation 'io.okhi.android:core:1.7.13'
 }
 
 publishing {

@@ -10,7 +10,7 @@ android {
         targetSdkVersion 33
         versionCode 1
         versionName "1.9.23"
-
+        multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 

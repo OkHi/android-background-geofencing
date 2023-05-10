@@ -37,5 +37,5 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     implementation project(path: ':android-background-geofencing')
-    implementation 'io.okhi.android:core:1.7.12'
+    implementation 'io.okhi.android:core:1.7.13'
 }

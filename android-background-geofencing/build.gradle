@@ -9,7 +9,7 @@ def libraryCompileSdk = 33
 def libraryTargetSdk = 33
 def libraryMinSdk = 19
 def libraryVersionCode = 1
-def libraryVersion = '1.9.23'
+def libraryVersion = '1.9.24'
 
 android {
     compileSdkVersion libraryCompileSdk

@@ -276,6 +276,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void handleTriggerEvents(View v) {
-        BackgroundGeofencing.triggerGeofenceEvents(getApplicationContext());
+        BackgroundGeofencing.triggerGeofenceEvents(getApplicationContext(), null);
     }
 }

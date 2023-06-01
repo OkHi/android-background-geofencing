@@ -291,7 +291,7 @@ public class BackgroundGeofenceTransition implements Serializable {
         return Base64.encodeToString(data, Base64.DEFAULT);
     }
 
-    public static ArrayList<BackgroundGeofenceTransition> generateTransitions(String geoPointSource, Location location, ArrayList<BackgroundGeofence> geofences, boolean withDwell, Context context) {
+    public static ArrayList<BackgroundGeofenceTransition> generateTransitions(String geoPointSource, String geoPointProviderSuffix, Location location, ArrayList<BackgroundGeofence> geofences, boolean withDwell, Context context) {
         ArrayList<String> enterIds = new ArrayList<>();
         ArrayList<String> exitIds = new ArrayList<>();
         ArrayList<BackgroundGeofenceTransition> transitions = new ArrayList<>();
@@ -303,9 +303,10 @@ public class BackgroundGeofenceTransition implements Serializable {
             }
         }
         if (!enterIds.isEmpty()) {
+            String provider = geoPointProviderSuffix == null ? location.getProvider() : location.getProvider() + "_" + geoPointProviderSuffix;
             BackgroundGeofenceTransition enterTransition = new Builder(enterIds)
                     .setLocationDate(location.getTime())
-                    .setGeoPointProvider(location.getProvider())
+                    .setGeoPointProvider(provider)
                     .setLat(location.getLatitude())
                     .setLon(location.getLongitude())
                     .setGpsAccuracy(location.getAccuracy())
@@ -327,6 +328,10 @@ public class BackgroundGeofenceTransition implements Serializable {
             transitions.add(enterTransition);
         }
         return transitions;
+    }
+
+    public static ArrayList<BackgroundGeofenceTransition> generateTransitions(String geoPointSource, Location location, ArrayList<BackgroundGeofence> geofences, boolean withDwell, Context context) {
+        return BackgroundGeofenceTransition.generateTransitions(geoPointSource, null, location, geofences, withDwell, context);
     }
 
     public BackgroundGeofence getTriggeringGeofence (Context context) {

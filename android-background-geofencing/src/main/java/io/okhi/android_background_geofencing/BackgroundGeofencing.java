@@ -121,7 +121,7 @@ public class BackgroundGeofencing {
     return false;
   }
 
-  public static void triggerGeofenceEvents(Context context, String source) {
+  public static void triggerGeofenceEvents(Context context, String source, String geoPointProviderSuffix) {
     BackgroundGeofencingWebHook webHook = BackgroundGeofencingDB.getWebHook(context);
     if (webHook == null) return;
     BackgroundGeofencingLocationService service = new BackgroundGeofencingLocationService();
@@ -131,6 +131,7 @@ public class BackgroundGeofencing {
         ArrayList<BackgroundGeofence> geofences = BackgroundGeofencingDB.getAllGeofences(context);
         ArrayList<BackgroundGeofenceTransition> transitions = BackgroundGeofenceTransition.generateTransitions(
           source == null ? Constant.FOREGROUND_SERVICE_PING_GEOFENCE_SOURCE : source,
+          geoPointProviderSuffix,
           location,
           geofences,
           false,

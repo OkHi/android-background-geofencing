@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.okhi.android_background_geofencing.BackgroundGeofencing;
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
+import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
@@ -372,37 +373,48 @@ public class BackgroundGeofenceTransition implements Serializable {
     }
 
     private static void processTransitResponse (Context context, Response response) {
-        if (isProcessingTransitResponse || response.code() != 312) return;
-        isProcessingTransitResponse = true;
-        try {
-            JSONArray jsonArrayResponse = new JSONArray(response.body().string());
-            for (int i = 0; i < jsonArrayResponse.length(); i++) {
-                JSONObject item = jsonArrayResponse.getJSONObject(i);
-                String locationId = item.optString("location_id", null);
-                if (locationId == null) return;
-                JSONObject stop = item.has("stop") ? item.getJSONObject("stop") : null;
-                if (stop == null) return;
-                BackgroundGeofence geofence = BackgroundGeofencingDB.getBackgroundGeofence(locationId, context);
-                if (geofence == null) return;
-                Boolean stopForegroundWatch = stop.has("foregroundWatch") && stop.getBoolean("foregroundWatch");
-                Boolean stopForegroundPing = stop.has("foregroundPing") && stop.getBoolean("foregroundPing");
-                Boolean stopGeofence = stop.has("geofence") && stop.getBoolean("geofence");
-                Boolean stopAppOpen = stop.has("appOpen") && stop.getBoolean("appOpen");
-                if (geofence.isWithForegroundWatchTracking() == !stopForegroundWatch && geofence.isWithForegroundPingTracking() == !stopForegroundPing && geofence.isWithNativeGeofenceTracking() == !stopGeofence && geofence.isWithAppOpenTracking() == !stopAppOpen) {
-                    // nothing has changed following previous stop
-                    return;
+        // if (isProcessingTransitResponse || response.code() != 312) return;
+
+        if (isProcessingTransitResponse) return;
+        switch (response.code()){
+            case 312:
+                isProcessingTransitResponse = true;
+                try {
+                    JSONArray jsonArrayResponse = new JSONArray(response.body().string());
+                    for (int i = 0; i < jsonArrayResponse.length(); i++) {
+                        JSONObject item = jsonArrayResponse.getJSONObject(i);
+                        String locationId = item.optString("location_id", null);
+                        if (locationId == null) return;
+                        JSONObject stop = item.has("stop") ? item.getJSONObject("stop") : null;
+                        if (stop == null) return;
+                        BackgroundGeofence geofence = BackgroundGeofencingDB.getBackgroundGeofence(locationId, context);
+                        if (geofence == null) return;
+                        Boolean stopForegroundWatch = stop.has("foregroundWatch") && stop.getBoolean("foregroundWatch");
+                        Boolean stopForegroundPing = stop.has("foregroundPing") && stop.getBoolean("foregroundPing");
+                        Boolean stopGeofence = stop.has("geofence") && stop.getBoolean("geofence");
+                        Boolean stopAppOpen = stop.has("appOpen") && stop.getBoolean("appOpen");
+                        if (geofence.isWithForegroundWatchTracking() == !stopForegroundWatch && geofence.isWithForegroundPingTracking() == !stopForegroundPing && geofence.isWithNativeGeofenceTracking() == !stopGeofence && geofence.isWithAppOpenTracking() == !stopAppOpen) {
+                            // nothing has changed following previous stop
+                            return;
+                        }
+                        geofence.setWithAppOpenTracking(!stopAppOpen);
+                        geofence.setWithNativeGeofenceTracking(!stopGeofence);
+                        geofence.setWithForegroundPingTracking(!stopForegroundPing);
+                        geofence.setWithForegroundWatchTracking(!stopForegroundWatch);
+                        geofence.save(context);
+                        BackgroundGeofence.stop(context, geofence);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    isProcessingTransitResponse = false;
                 }
-                geofence.setWithAppOpenTracking(!stopAppOpen);
-                geofence.setWithNativeGeofenceTracking(!stopGeofence);
-                geofence.setWithForegroundPingTracking(!stopForegroundPing);
-                geofence.setWithForegroundWatchTracking(!stopForegroundWatch);
-                geofence.save(context);
-                BackgroundGeofence.stop(context, geofence);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            isProcessingTransitResponse = false;
+
+            case 313:
+                // Reverification flow
+                reVerifyUserAddress(context, response);
+
+            default:
         }
     }
 
@@ -505,5 +517,73 @@ public class BackgroundGeofenceTransition implements Serializable {
             )
             .build();
         WorkManager.getInstance(context).beginUniqueWork(Constant.GEOFENCE_ASYNC_TRANSITION_UPLOAD_WORK_NAME, ExistingWorkPolicy.KEEP, failedGeofencesRestartWork).enqueue();
+    }
+
+    public static void reVerifyUserAddress(Context context, Response response){
+        try {
+            JSONArray jsonArrayResponse = new JSONArray(response.body().string());
+            for (int i = 0; i < jsonArrayResponse.length(); i++) {
+                JSONObject item = jsonArrayResponse.getJSONObject(i);
+                String locationId = item.optString("location_id", null);
+                if (locationId == null) return;
+                // No re-verification without location id
+
+                BackgroundGeofence geofence = BackgroundGeofencingDB.getBackgroundGeofence(locationId, context);
+                if (geofence == null) {
+                    // Re-register removed geofence
+                    Double longitude = item.getDouble("location_longitude"); // Fetched from response
+                    Double latitude = item.getDouble("location_latitude"); // Fetched from response
+                    BackgroundGeofence reVerifyGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder(locationId, latitude, longitude)
+                            .setNotificationResponsiveness(5)
+                            .setLoiteringDelay(60000)
+                            .setInitialTriggerTransitionTypes(0)
+                            .build();
+                    BackgroundGeofencingDB.saveBackgroundGeofence(reVerifyGeofence, context);
+                    reVerifyGeofence.start(context, new RequestHandler() {
+                        @Override
+                        public void onSuccess() {
+                            BackgroundGeofenceUtil.log(context, TAG, "Successfully restarted: " + geofence.getId());
+                            BackgroundGeofence.setIsFailing(geofence.getId(), false, context);
+                        }
+
+                        @Override
+                        public void onError(BackgroundGeofencingException e) {
+                            BackgroundGeofenceUtil.log(context, TAG, "Failed to start: " + geofence.getId());
+                            BackgroundGeofence.setIsFailing(geofence.getId(), true, context);
+                        }
+                    });
+                } else {
+                    geofence.restart(context, new RequestHandler() {
+                        @Override
+                        public void onSuccess() {
+                            BackgroundGeofenceUtil.log(context, TAG, "Successfully restarted: " + geofence.getId());
+                            BackgroundGeofence.setIsFailing(geofence.getId(), false, context);
+                        }
+
+                        @Override
+                        public void onError(BackgroundGeofencingException e) {
+                            BackgroundGeofenceUtil.log(context, TAG, "Failed to start: " + geofence.getId());
+                            BackgroundGeofence.setIsFailing(geofence.getId(), true, context);
+                        }
+                    });
+                }
+            }
+
+            BackgroundGeofencing.performBackgroundWork(context);
+            BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(context);
+            if (setting != null && setting.isWithForegroundService() && !BackgroundGeofencing.isForegroundServiceRunning(context)) {
+                try {
+                    BackgroundGeofencing.startForegroundService(context);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                BackgroundGeofenceUtil.scheduleForegroundRestartWorker(context, 1, TimeUnit.HOURS);
+            }
+        } catch (Exception e) {
+            isProcessingTransitResponse = false;
+            e.printStackTrace();
+        } finally {
+            isProcessingTransitResponse = false;
+        }
     }
 }

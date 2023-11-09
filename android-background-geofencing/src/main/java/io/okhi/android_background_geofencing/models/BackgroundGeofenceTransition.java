@@ -527,9 +527,11 @@ public class BackgroundGeofenceTransition implements Serializable {
                 String locationId = item.optString("location_id", null);
                 if (locationId == null) return;
                 // No re-verification without location id
+                Log.e("Reverification flow", "Location ID " + locationId);
 
                 BackgroundGeofence geofence = BackgroundGeofencingDB.getBackgroundGeofence(locationId, context);
                 if (geofence == null) {
+                    Log.e("Reverification flow", "not available Location registration " + locationId);
                     // Re-register removed geofence
                     Double longitude = item.getDouble("location_longitude"); // Fetched from response
                     Double latitude = item.getDouble("location_latitude"); // Fetched from response
@@ -542,17 +544,20 @@ public class BackgroundGeofenceTransition implements Serializable {
                     reVerifyGeofence.start(context, new RequestHandler() {
                         @Override
                         public void onSuccess() {
-                            BackgroundGeofenceUtil.log(context, TAG, "Successfully restarted: " + geofence.getId());
-                            BackgroundGeofence.setIsFailing(geofence.getId(), false, context);
+                            Log.e("Reverification flow", "Successfully restarted " + locationId);
+                            BackgroundGeofenceUtil.log(context, TAG, "Successfully restarted: " + reVerifyGeofence.getId());
+                            BackgroundGeofence.setIsFailing(reVerifyGeofence.getId(), false, context);
                         }
 
                         @Override
                         public void onError(BackgroundGeofencingException e) {
-                            BackgroundGeofenceUtil.log(context, TAG, "Failed to start: " + geofence.getId());
-                            BackgroundGeofence.setIsFailing(geofence.getId(), true, context);
+                            Log.e("Reverification flow", "Failed to start " + locationId);
+                            BackgroundGeofenceUtil.log(context, TAG, "Failed to start: " + reVerifyGeofence.getId());
+                            BackgroundGeofence.setIsFailing(reVerifyGeofence.getId(), true, context);
                         }
                     });
                 } else {
+                    Log.e("Reverification flow", "Available Location, restarting " + locationId);
                     geofence.restart(context, new RequestHandler() {
                         @Override
                         public void onSuccess() {
@@ -570,15 +575,17 @@ public class BackgroundGeofenceTransition implements Serializable {
             }
 
             BackgroundGeofencing.performBackgroundWork(context);
-            BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(context);
-            if (setting != null && setting.isWithForegroundService() && !BackgroundGeofencing.isForegroundServiceRunning(context)) {
-                try {
-                    BackgroundGeofencing.startForegroundService(context);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                BackgroundGeofenceUtil.scheduleForegroundRestartWorker(context, 1, TimeUnit.HOURS);
+            if (BackgroundGeofencing.isForegroundServiceRunning(context)) {
+                BackgroundGeofencing.stopForegroundService(context);
             }
+
+            try {
+                BackgroundGeofencing.startForegroundService(context);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            BackgroundGeofenceUtil.scheduleForegroundRestartWorker(context, 1, TimeUnit.HOURS);
+
         } catch (Exception e) {
             isProcessingTransitResponse = false;
             e.printStackTrace();

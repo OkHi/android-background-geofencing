@@ -15,6 +15,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -25,6 +26,7 @@ import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.models.BackgroundGeofence;
+import io.okhi.android_background_geofencing.models.BackgroundGeofenceTransition;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingException;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotification;
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
@@ -33,6 +35,10 @@ import io.okhi.android_background_geofencing.models.WebHookType;
 import io.okhi.android_core.OkHi;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
+import okhttp3.Protocol;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -278,4 +284,21 @@ public class MainActivity extends AppCompatActivity {
     public void handleTriggerEvents(View v) {
         BackgroundGeofencing.triggerGeofenceEvents(getApplicationContext(), null, null);
     }
+
+    public void handleReverification(View v) throws JSONException {
+        JSONArray jsonArrayResponse = new JSONArray();
+        JSONObject obj = new JSONObject("{\"location_id\":\"ytvghv7\",\"location_longitude\":-36.192092,\"location_latitude\":0.36728162}");
+        jsonArrayResponse.put(obj);
+
+        ResponseBody body = ResponseBody.create(null, jsonArrayResponse.toString());
+
+        Request req = new Request.Builder().url("https://okhi.com").build();
+        Protocol proto = Protocol.HTTP_1_0;
+
+        Response response = new Response.Builder().request(req).protocol(proto).message("message").body(body).code(313).build();
+
+        BackgroundGeofenceTransition.reVerifyUserAddress(getApplicationContext(), response);
+    }
+
+
 }

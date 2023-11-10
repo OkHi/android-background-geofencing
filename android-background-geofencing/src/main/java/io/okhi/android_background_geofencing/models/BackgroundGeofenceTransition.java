@@ -378,37 +378,7 @@ public class BackgroundGeofenceTransition implements Serializable {
         if (isProcessingTransitResponse) return;
         switch (response.code()){
             case 312:
-                isProcessingTransitResponse = true;
-                try {
-                    JSONArray jsonArrayResponse = new JSONArray(response.body().string());
-                    for (int i = 0; i < jsonArrayResponse.length(); i++) {
-                        JSONObject item = jsonArrayResponse.getJSONObject(i);
-                        String locationId = item.optString("location_id", null);
-                        if (locationId == null) return;
-                        JSONObject stop = item.has("stop") ? item.getJSONObject("stop") : null;
-                        if (stop == null) return;
-                        BackgroundGeofence geofence = BackgroundGeofencingDB.getBackgroundGeofence(locationId, context);
-                        if (geofence == null) return;
-                        Boolean stopForegroundWatch = stop.has("foregroundWatch") && stop.getBoolean("foregroundWatch");
-                        Boolean stopForegroundPing = stop.has("foregroundPing") && stop.getBoolean("foregroundPing");
-                        Boolean stopGeofence = stop.has("geofence") && stop.getBoolean("geofence");
-                        Boolean stopAppOpen = stop.has("appOpen") && stop.getBoolean("appOpen");
-                        if (geofence.isWithForegroundWatchTracking() == !stopForegroundWatch && geofence.isWithForegroundPingTracking() == !stopForegroundPing && geofence.isWithNativeGeofenceTracking() == !stopGeofence && geofence.isWithAppOpenTracking() == !stopAppOpen) {
-                            // nothing has changed following previous stop
-                            return;
-                        }
-                        geofence.setWithAppOpenTracking(!stopAppOpen);
-                        geofence.setWithNativeGeofenceTracking(!stopGeofence);
-                        geofence.setWithForegroundPingTracking(!stopForegroundPing);
-                        geofence.setWithForegroundWatchTracking(!stopForegroundWatch);
-                        geofence.save(context);
-                        BackgroundGeofence.stop(context, geofence);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    isProcessingTransitResponse = false;
-                }
+                throttleDownAddressVerification(context, response);
 
             case 313:
                 // Reverification flow
@@ -593,4 +563,40 @@ public class BackgroundGeofenceTransition implements Serializable {
             isProcessingTransitResponse = false;
         }
     }
+
+    private static void throttleDownAddressVerification(Context context, Response response){
+        isProcessingTransitResponse = true;
+        try {
+            JSONArray jsonArrayResponse = new JSONArray(response.body().string());
+            for (int i = 0; i < jsonArrayResponse.length(); i++) {
+                JSONObject item = jsonArrayResponse.getJSONObject(i);
+                String locationId = item.optString("location_id", null);
+                if (locationId == null) return;
+                JSONObject stop = item.has("stop") ? item.getJSONObject("stop") : null;
+                if (stop == null) return;
+                BackgroundGeofence geofence = BackgroundGeofencingDB.getBackgroundGeofence(locationId, context);
+                if (geofence == null) return;
+                Boolean stopForegroundWatch = stop.has("foregroundWatch") && stop.getBoolean("foregroundWatch");
+                Boolean stopForegroundPing = stop.has("foregroundPing") && stop.getBoolean("foregroundPing");
+                Boolean stopGeofence = stop.has("geofence") && stop.getBoolean("geofence");
+                Boolean stopAppOpen = stop.has("appOpen") && stop.getBoolean("appOpen");
+                if (geofence.isWithForegroundWatchTracking() == !stopForegroundWatch && geofence.isWithForegroundPingTracking() == !stopForegroundPing && geofence.isWithNativeGeofenceTracking() == !stopGeofence && geofence.isWithAppOpenTracking() == !stopAppOpen) {
+                    // nothing has changed following previous stop
+                    return;
+                }
+                geofence.setWithAppOpenTracking(!stopAppOpen);
+                geofence.setWithNativeGeofenceTracking(!stopGeofence);
+                geofence.setWithForegroundPingTracking(!stopForegroundPing);
+                geofence.setWithForegroundWatchTracking(!stopForegroundWatch);
+                geofence.save(context);
+                BackgroundGeofence.stop(context, geofence);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            isProcessingTransitResponse = false;
+        }
+    }
+
+
 }

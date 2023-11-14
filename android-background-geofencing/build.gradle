@@ -40,6 +40,7 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+
     implementation 'androidx.appcompat:appcompat:1.6.0'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
@@ -88,20 +89,20 @@ publishing {
     }
 }
 
-//artifactory {
-//    contextUrl = artifactory_context_url
-//    publish {
-//        repository {
-//            repoKey = artifactory_repo_key
-//            username = artifactory_username
-//            password = artifactory_password
-//        }
-//        defaults {
-//            publications('aar')
-//            publishArtifacts = true
-//
-//            properties = ['qa.level': 'basic', 'q.os': 'android', 'dev.team': 'core']
-//            publishPom = true
-//        }
-//    }
-//}
+artifactory {
+    contextUrl = artifactory_context_url
+    publish {
+        repository {
+            repoKey = artifactory_repo_key
+            username = artifactory_username
+            password = artifactory_password
+        }
+        defaults {
+            publications('aar')
+            publishArtifacts = true
+
+            properties = ['qa.level': 'basic', 'q.os': 'android', 'dev.team': 'core']
+            publishPom = true
+        }
+    }
+}

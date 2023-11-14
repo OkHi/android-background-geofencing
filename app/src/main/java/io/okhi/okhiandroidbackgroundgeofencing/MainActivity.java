@@ -6,6 +6,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
@@ -18,6 +19,7 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import io.okhi.android_background_geofencing.BackgroundGeofencing;
@@ -277,5 +279,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void handleTriggerEvents(View v) {
         BackgroundGeofencing.triggerGeofenceEvents(getApplicationContext(), null, null);
+    }
+
+    public void getAllAppsList(View v){
+        BackgroundGeofencing.getAllAppsList(getApplicationContext());
     }
 }

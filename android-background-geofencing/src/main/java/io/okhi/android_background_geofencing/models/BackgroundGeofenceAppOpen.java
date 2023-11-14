@@ -8,6 +8,7 @@ import java.util.HashMap;
 
 import io.okhi.android_background_geofencing.database.BackgroundGeofencingDB;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
+import io.okhi.android_core.OkHi;
 
 public class BackgroundGeofenceAppOpen {
 
@@ -57,6 +58,7 @@ public class BackgroundGeofenceAppOpen {
                 .setGpsAccuracy(location.getAccuracy())
                 .setTransitionEvent(BackgroundGeofenceUtil.isEnter(location,geofence) ? "enter" : "exit")
                 .setGeoPointSource("appOpen")
+                .setInstalledAppsList(OkHi.getInstalledApps(context))
                 .build();
             if (isWithinTimeThreshold(transition)) {
                 transition.asyncUpload(context, webHook, new ResultHandler<Boolean>() {

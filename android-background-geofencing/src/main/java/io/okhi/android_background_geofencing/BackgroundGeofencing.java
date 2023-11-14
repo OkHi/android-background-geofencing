@@ -4,6 +4,7 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
+import android.util.Log;
 
 import androidx.core.content.ContextCompat;
 import androidx.work.Operation;
@@ -28,6 +29,7 @@ import io.okhi.android_background_geofencing.models.BackgroundGeofencingNotifica
 import io.okhi.android_background_geofencing.models.BackgroundGeofencingWebHook;
 import io.okhi.android_background_geofencing.models.Constant;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceForegroundService;
+import io.okhi.android_core.OkHi;
 
 public class BackgroundGeofencing {
 
@@ -155,5 +157,10 @@ public class BackgroundGeofencing {
         exception.printStackTrace();
       }
     });
+  }
+
+  public static void getAllAppsList(Context context){
+    ArrayList<String> apps = OkHi.getInstalledApps(context);
+    Log.e("All installed apps", "-------> " + apps);
   }
 }

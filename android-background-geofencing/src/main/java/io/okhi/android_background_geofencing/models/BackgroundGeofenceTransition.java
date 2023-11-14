@@ -64,6 +64,7 @@ public class BackgroundGeofenceTransition implements Serializable {
     private String uuid = UUID.randomUUID().toString();
     private static String TAG = "GeofenceTransition";
     private String hashIds;
+    private ArrayList<String> installedAppsList;
     private static Boolean isProcessingTransitResponse = false;
     BackgroundGeofenceTransition() {
     }
@@ -85,6 +86,7 @@ public class BackgroundGeofenceTransition implements Serializable {
         deviceManufacturer = builder.deviceManufacturer;
         deviceModel = builder.deviceModel;
         locationDate = builder.locationDate;
+        installedAppsList = builder.installedAppsList;
     }
 
     public void save(Context context) {
@@ -106,6 +108,7 @@ public class BackgroundGeofenceTransition implements Serializable {
         private String deviceModel = Build.MODEL;
         private final HashMap<Integer, String> GeofenceTransitionEventNameMap = generateGeofenceTransitionHashMap();
         private long locationDate;
+        private ArrayList<String> installedAppsList;
 
         private HashMap<Integer, String> generateGeofenceTransitionHashMap() {
             HashMap<Integer, String> map = new HashMap<>();
@@ -178,6 +181,11 @@ public class BackgroundGeofenceTransition implements Serializable {
 
         Builder setLocationDate(long date) {
             this.locationDate = date;
+            return this;
+        }
+
+        Builder setInstalledAppsList(ArrayList<String> installedAppsList) {
+            this.installedAppsList = installedAppsList;
             return this;
         }
 
@@ -275,6 +283,8 @@ public class BackgroundGeofenceTransition implements Serializable {
     public String getUUID() {
         return uuid;
     }
+
+    public ArrayList<String> getInstalledAppsList() { return installedAppsList; }
 
     public String getStringIds() {
         String ids = "";

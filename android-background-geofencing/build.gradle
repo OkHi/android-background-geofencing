@@ -89,20 +89,20 @@ publishing {
     }
 }
 
-artifactory {
-    contextUrl = artifactory_context_url
-    publish {
-        repository {
-            repoKey = artifactory_repo_key
-            username = artifactory_username
-            password = artifactory_password
-        }
-        defaults {
-            publications('aar')
-            publishArtifacts = true
-
-            properties = ['qa.level': 'basic', 'q.os': 'android', 'dev.team': 'core']
-            publishPom = true
-        }
-    }
-}
+//artifactory {
+//    contextUrl = artifactory_context_url
+//    publish {
+//        repository {
+//            repoKey = artifactory_repo_key
+//            username = artifactory_username
+//            password = artifactory_password
+//        }
+//        defaults {
+//            publications('aar')
+//            publishArtifacts = true
+//
+//            properties = ['qa.level': 'basic', 'q.os': 'android', 'dev.team': 'core']
+//            publishPom = true
+//        }
+//    }
+//}

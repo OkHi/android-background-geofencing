@@ -9,7 +9,7 @@ def libraryCompileSdk = 33
 def libraryTargetSdk = 33
 def libraryMinSdk = 19
 def libraryVersionCode = 1
-def libraryVersion = '1.9.30'
+def libraryVersion = '1.9.31'
 
 android {
     compileSdkVersion libraryCompileSdk
@@ -52,7 +52,7 @@ dependencies {
         force = true //API 19 support
     }
     implementation "androidx.work:work-runtime:2.7.1"
-    implementation 'io.okhi.android:core:1.7.15'
+    implementation 'io.okhi.android:core:1.7.16'
 }
 
 publishing {

@@ -12,7 +12,7 @@ def libraryVersionCode = 1
 def libraryVersion = '1.9.31'
 
 android {
-    compileSdkVersion libraryCompileSdk
+    compileSdk libraryCompileSdk
     buildToolsVersion "30.0.3"
 
     defaultConfig {
@@ -22,6 +22,7 @@ android {
         versionName libraryVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'
+        multiDexEnabled true
     }
 
     compileOptions {
@@ -39,6 +40,7 @@ android {
 }
 
 dependencies {
+    implementation "androidx.multidex:multidex:2.0.1"
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation 'androidx.appcompat:appcompat:1.6.0'

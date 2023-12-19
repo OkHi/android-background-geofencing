@@ -1,6 +1,8 @@
 package io.okhi.android_background_geofencing.services;
 
 import android.Manifest;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -24,6 +26,7 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.concurrent.locks.Condition;
@@ -305,6 +308,7 @@ public class BackgroundGeofenceForegroundService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.e("onDestroy", "Called ------------------------------------------------ onDestroy");
         runCleanUp();
         BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(getApplicationContext());
         unregisterReceiver(receiver);
@@ -318,8 +322,21 @@ public class BackgroundGeofenceForegroundService extends Service {
                         public void run() {
                             BackgroundGeofenceUtil.log(getApplicationContext(), TAG, "Attempting to restart foreground service");
                             try {
-                                BackgroundGeofencing.startForegroundService(getApplicationContext());
-                            } catch (BackgroundGeofencingException e) {
+                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                                    BackgroundGeofencing.startForegroundService(getApplicationContext());
+                                } else {
+                                    Context context = getApplicationContext();
+                                    Calendar calendar = Calendar.getInstance();
+                                    AlarmManager alarmManager = (AlarmManager)context.getSystemService(ALARM_SERVICE);
+
+                                    Intent myIntent = new Intent(context, BackgroundGeofenceForegroundService.class);
+                                    PendingIntent pendingIntent = PendingIntent.getService(context, 0, myIntent, PendingIntent.FLAG_IMMUTABLE);
+                                    calendar.setTimeInMillis(System.currentTimeMillis());
+                                    calendar.add(Calendar.SECOND, 3);
+                                    alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+                                }
+                            } catch (Exception e) {
+                                Log.e("onDestroy", "Called ------------------------------------------------ onDestroy " + e);
                                 e.printStackTrace();
                             }
                             handler.removeCallbacks(this);

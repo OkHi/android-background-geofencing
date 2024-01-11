@@ -59,7 +59,7 @@ public class BackgroundGeofencing {
       if (setting != null && setting.isWithForegroundService()) {
         try {
           startForegroundService(context);
-        } catch (BackgroundGeofencingException e) {
+        } catch (Exception e) {
           e.printStackTrace();
         }
       }
@@ -84,7 +84,7 @@ public class BackgroundGeofencing {
     BackgroundGeofenceUtil.cancelForegroundRestartWorker(context);
   }
 
-  public static void startForegroundService (Context context) throws BackgroundGeofencingException {
+  public static void startForegroundService (Context context) throws Exception {
     boolean hasGeofences = !BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.FOREGROUND_PING).isEmpty() || !BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.FOREGROUND_WATCH).isEmpty();
     boolean isBackgroundLocationPermissionGranted = BackgroundGeofenceUtil.isBackgroundLocationPermissionGranted(context);
     boolean isGooglePlayServicesAvailable = BackgroundGeofenceUtil.isGooglePlayServicesAvailable(context);
@@ -104,8 +104,16 @@ public class BackgroundGeofencing {
     BackgroundGeofencingDB.saveSetting(new BackgroundGeofenceSetting.Builder().setWithForegroundService(true).build(), context);
     Intent serviceIntent = new Intent(context, BackgroundGeofenceForegroundService.class);
     serviceIntent.putExtra(Constant.FOREGROUND_SERVICE_ACTION, Constant.FOREGROUND_SERVICE_START_STICKY);
-    ContextCompat.startForegroundService(context, serviceIntent);
-    BackgroundGeofenceUtil.scheduleForegroundRestartWorker(context, 1, TimeUnit.HOURS);
+
+    try {
+      ContextCompat.startForegroundService(context, serviceIntent);
+      BackgroundGeofenceUtil.scheduleForegroundRestartWorker(context, 1, TimeUnit.HOURS);
+    } catch (Exception e) {
+      throw new BackgroundGeofencingException(
+              BackgroundGeofencingException.UNKNOWN_EXCEPTION,
+             e.getMessage()
+      );
+    }
   }
 
   public static boolean isForegroundServiceRunning (Context context) {

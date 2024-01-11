@@ -308,7 +308,6 @@ public class BackgroundGeofenceForegroundService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.e("onDestroy", "Called ------------------------------------------------ onDestroy");
         runCleanUp();
         BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(getApplicationContext());
         unregisterReceiver(receiver);
@@ -336,7 +335,6 @@ public class BackgroundGeofenceForegroundService extends Service {
                                     alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
                                 }
                             } catch (Exception e) {
-                                Log.e("onDestroy", "Called ------------------------------------------------ onDestroy " + e);
                                 e.printStackTrace();
                             }
                             handler.removeCallbacks(this);

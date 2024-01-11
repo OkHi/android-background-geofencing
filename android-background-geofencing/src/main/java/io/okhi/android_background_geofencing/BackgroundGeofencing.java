@@ -84,7 +84,7 @@ public class BackgroundGeofencing {
     BackgroundGeofenceUtil.cancelForegroundRestartWorker(context);
   }
 
-  public static void startForegroundService (Context context) throws Exception {
+  public static void startForegroundService (Context context) throws BackgroundGeofencingException {
     boolean hasGeofences = !BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.FOREGROUND_PING).isEmpty() || !BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.FOREGROUND_WATCH).isEmpty();
     boolean isBackgroundLocationPermissionGranted = BackgroundGeofenceUtil.isBackgroundLocationPermissionGranted(context);
     boolean isGooglePlayServicesAvailable = BackgroundGeofenceUtil.isGooglePlayServicesAvailable(context);

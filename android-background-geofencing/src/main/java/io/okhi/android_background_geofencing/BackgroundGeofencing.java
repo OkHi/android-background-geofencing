@@ -111,7 +111,7 @@ public class BackgroundGeofencing {
     } catch (Exception e) {
       throw new BackgroundGeofencingException(
               BackgroundGeofencingException.UNKNOWN_EXCEPTION,
-              "Could not start background service"
+             e.getMessage()
       );
     }
   }

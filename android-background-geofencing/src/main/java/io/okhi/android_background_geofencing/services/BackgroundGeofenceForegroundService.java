@@ -309,42 +309,7 @@ public class BackgroundGeofenceForegroundService extends Service {
     public void onDestroy() {
         super.onDestroy();
         runCleanUp();
-        BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(getApplicationContext());
         unregisterReceiver(receiver);
-        if (setting != null && setting.isWithForegroundService()) {
-            final Handler handler = new Handler();
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    Runnable runnable = new Runnable() {
-                        @Override
-                        public void run() {
-                            BackgroundGeofenceUtil.log(getApplicationContext(), TAG, "Attempting to restart foreground service");
-                            try {
-                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                                    BackgroundGeofencing.startForegroundService(getApplicationContext());
-                                } else {
-                                    Context context = getApplicationContext();
-                                    Calendar calendar = Calendar.getInstance();
-                                    AlarmManager alarmManager = (AlarmManager)context.getSystemService(ALARM_SERVICE);
-
-                                    Intent myIntent = new Intent(context, BackgroundGeofenceForegroundService.class);
-                                    PendingIntent pendingIntent = PendingIntent.getService(context, 0, myIntent, PendingIntent.FLAG_IMMUTABLE);
-                                    calendar.setTimeInMillis(System.currentTimeMillis());
-                                    calendar.add(Calendar.SECOND, 3);
-                                    alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-                                }
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                            handler.removeCallbacks(this);
-                        }
-                    };
-                    handler.postDelayed(runnable, 60000);
-                    BackgroundGeofenceUtil.log(getApplicationContext(), TAG, "Restart scheduled in the next 1min");
-                }
-            }).start();
-        }
     }
 
     private void runCleanUp() {

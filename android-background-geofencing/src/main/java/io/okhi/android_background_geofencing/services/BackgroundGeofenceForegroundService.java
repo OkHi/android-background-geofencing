@@ -306,30 +306,7 @@ public class BackgroundGeofenceForegroundService extends Service {
     public void onDestroy() {
         super.onDestroy();
         runCleanUp();
-        BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(getApplicationContext());
         unregisterReceiver(receiver);
-        if (setting != null && setting.isWithForegroundService()) {
-            final Handler handler = new Handler();
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    Runnable runnable = new Runnable() {
-                        @Override
-                        public void run() {
-                            BackgroundGeofenceUtil.log(getApplicationContext(), TAG, "Attempting to restart foreground service");
-                            try {
-                                BackgroundGeofencing.startForegroundService(getApplicationContext());
-                            } catch (BackgroundGeofencingException e) {
-                                e.printStackTrace();
-                            }
-                            handler.removeCallbacks(this);
-                        }
-                    };
-                    handler.postDelayed(runnable, 60000);
-                    BackgroundGeofenceUtil.log(getApplicationContext(), TAG, "Restart scheduled in the next 1min");
-                }
-            }).start();
-        }
     }
 
     private void runCleanUp() {

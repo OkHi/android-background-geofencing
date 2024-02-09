@@ -5,8 +5,8 @@ group='OkHi'
 
 def libraryGroupId = 'io.okhi.android'
 def libraryArtifactId = 'background-geofencing'
-def libraryCompileSdk = 33
-def libraryTargetSdk = 33
+def libraryCompileSdk = 34
+def libraryTargetSdk = 34
 def libraryMinSdk = 19
 def libraryVersionCode = 1
 def libraryVersion = '1.9.35'

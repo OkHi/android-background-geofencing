@@ -105,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         BackgroundGeofencingWebHook geofenceWebHook = new BackgroundGeofencingWebHook(
-            "https://bd1c-41-90-184-23.ngrok.io/transits",
+            "https://jsondataserver.okhi.io/data",
             10000,
             headers,
             null,
@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
         );
         geofenceWebHook.save(this);
         BackgroundGeofencingWebHook deviceMetaWebHook = new BackgroundGeofencingWebHook(
-            "https://bd1c-41-90-184-23.ngrok.io/device-meta",
+            "https://jsondataserver.okhi.io/data",
             10000,
             headers,
             null,
@@ -123,12 +123,12 @@ public class MainActivity extends AppCompatActivity {
         );
         deviceMetaWebHook.save(this);
         BackgroundGeofencingWebHook stopVerificationWebHook = new BackgroundGeofencingWebHook(
-            "https://bd1c-41-90-184-23.ngrok.io/stop/verification",
+            "https://jsondataserver.okhi.io/data",
             10000,
             headers,
             null,
             WebHookType.STOP,
-            WebHookRequest.PATCH
+            WebHookRequest.POST
         );
         stopVerificationWebHook.save(this);
     }

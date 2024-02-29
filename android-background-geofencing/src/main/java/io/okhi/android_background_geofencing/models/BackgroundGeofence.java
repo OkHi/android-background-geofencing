@@ -44,6 +44,7 @@ import io.okhi.android_core.models.OkHiCoreUtil;
 import io.okhi.android_core.models.OkHiException;
 import io.okhi.android_core.models.OkHiLocationService;
 import io.okhi.android_core.models.OkHiPermissionService;
+import io.okhi.android_core.models.OkPreference;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -225,6 +226,19 @@ public class BackgroundGeofence implements Serializable {
 
     public void save(Context context) {
         BackgroundGeofencingDB.saveBackgroundGeofence(this, context);
+        try {
+            String registeredGeofences = OkPreference.getItem("registered_geofences", context);
+            JSONArray jsonArray;
+            if (registeredGeofences == null) {
+                jsonArray = new JSONArray();
+            } else {
+                jsonArray = new JSONArray(registeredGeofences);
+            }
+            jsonArray.put(this.toJSON());
+            OkPreference.setItem("registered_geofences", jsonArray.toString(), context);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -499,5 +513,14 @@ public class BackgroundGeofence implements Serializable {
 
     public static ArrayList<BackgroundGeofence> getAllGeofences(Context context) {
         return BackgroundGeofencingDB.getAllGeofences(context);
+    }
+
+    public JSONObject toJSON() throws JSONException {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("id", this.id);
+        jsonObject.put("lat", this.lat);
+        jsonObject.put("lng", this.lng);
+        jsonObject.put("radius", this.radius);
+        return jsonObject;
     }
 }

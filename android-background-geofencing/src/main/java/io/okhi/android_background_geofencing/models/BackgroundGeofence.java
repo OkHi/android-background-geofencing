@@ -241,6 +241,28 @@ public class BackgroundGeofence implements Serializable {
         }
     }
 
+    public static void delete(Context context, String id) {
+        try {
+            String registeredGeofences = OkPreference.getItem("registered_geofences", context);
+            JSONArray jsonArray;
+            JSONArray updatedArray = new JSONArray();;
+            if (registeredGeofences == null) {
+                jsonArray = new JSONArray();
+            } else {
+                jsonArray = new JSONArray(registeredGeofences);
+            }
+
+            for (int i = 0; i< jsonArray.length(); i++){
+                if(!jsonArray.getJSONObject(i).get("id").toString().equals(id)){
+                    updatedArray.put(jsonArray.getJSONObject(i));
+                }
+            }
+            OkPreference.setItem("registered_geofences", updatedArray.toString(), context);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     @SuppressLint("MissingPermission")
     private void start(final boolean silently, final Context context, final RequestHandler requestHandler) {
         boolean isLocationServicesEnabled = BackgroundGeofenceUtil.isLocationServicesEnabled(context);
@@ -434,6 +456,7 @@ public class BackgroundGeofence implements Serializable {
         geofencingClient.removeGeofences(ids);
         BackgroundGeofencingDB.removeBackgroundGeofence(id, context);
         BackgroundGeofencingDB.removeGeofenceEnterTimestamp(id, context);
+        delete(context, id);
         ArrayList<BackgroundGeofence> foregroundWatchGeofences = BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.FOREGROUND_WATCH);
         ArrayList<BackgroundGeofence> foregroundPingGeofences = BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.FOREGROUND_PING);
         if (foregroundWatchGeofences.isEmpty() && foregroundPingGeofences.isEmpty()) {

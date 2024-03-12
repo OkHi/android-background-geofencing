@@ -33,6 +33,7 @@ import io.okhi.android_background_geofencing.models.WebHookType;
 import io.okhi.android_core.OkHi;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
+import io.okhi.android_core.models.OkPreference;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -262,45 +263,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void addAddressIds(View v){
-        BackgroundGeofence workGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("work2", -1.313339237582541, 36.842414181487776)
-                .setNotificationResponsiveness(5)
-                .setLoiteringDelay(60000)
-                .setInitialTriggerTransitionTypes(0)
-                .build();
-        workGeofence.save(this);
-
-        BackgroundGeofence homeGeofence1 = new BackgroundGeofence.BackgroundGeofenceBuilder("home3", -1.3148501, 36.8363831)
-                .setNotificationResponsiveness(5)
-                .setLoiteringDelay(60000)
-                .setInitialTriggerTransitionTypes(0)
-                .build();
-        homeGeofence1.save(this);
-
-        BackgroundGeofence workGeofence2 = new BackgroundGeofence.BackgroundGeofenceBuilder("work4", -1.313339237582541, 36.842414181487776)
-                .setNotificationResponsiveness(5)
-                .setLoiteringDelay(60000)
-                .setInitialTriggerTransitionTypes(0)
-                .build();
-        workGeofence2.save(this);
-
-        BackgroundGeofence homeGeofence3 = new BackgroundGeofence.BackgroundGeofenceBuilder("home5", -1.3148501, 36.8363831)
-                .setNotificationResponsiveness(5)
-                .setLoiteringDelay(60000)
-                .setInitialTriggerTransitionTypes(0)
-                .build();
-        homeGeofence3.save(this);
-
-        BackgroundGeofence homeGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("home1", -1.314611, 36.836299)
-                .setNotificationResponsiveness(5)
-                .setLoiteringDelay(60000)
-                .setInitialTriggerTransitionTypes(0)
-                .build();
-        homeGeofence.save(this);
+    public void fetchIds(View v){
+        
     }
 
     public void deleteAddressIds(View v){
-        BackgroundGeofence.delete(this, "home3");
+//        BackgroundGeofence.delete(this, "home3");
     }
 
     public void stopService (View v) {

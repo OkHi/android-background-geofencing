@@ -33,6 +33,7 @@ import io.okhi.android_background_geofencing.models.WebHookType;
 import io.okhi.android_core.OkHi;
 import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiException;
+import io.okhi.android_core.models.OkPreference;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -260,6 +261,14 @@ public class MainActivity extends AppCompatActivity {
                 showMessage("Something went wrong: " + exception.getCode() + "\n" + exception.getMessage());
             }
         });
+    }
+
+    public void fetchIds(View v){
+        
+    }
+
+    public void deleteAddressIds(View v){
+//        BackgroundGeofence.delete(this, "home3");
     }
 
     public void stopService (View v) {

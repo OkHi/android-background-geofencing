@@ -224,8 +224,7 @@ public class BackgroundGeofence implements Serializable {
         return pendingIntent;
     }
 
-    public void save(Context context) {
-        BackgroundGeofencingDB.saveBackgroundGeofence(this, context);
+    private static void saveRegisteredGeofence(Context context, BackgroundGeofence geofence) {
         try {
             String registeredGeofences = OkPreference.getItem("registered_geofences", context);
             JSONArray jsonArray;
@@ -234,14 +233,14 @@ public class BackgroundGeofence implements Serializable {
             } else {
                 jsonArray = new JSONArray(registeredGeofences);
             }
-            jsonArray.put(this.toJSON());
+            jsonArray.put(geofence.toJSON());
             OkPreference.setItem("registered_geofences", jsonArray.toString(), context);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public static void delete(Context context, String id) {
+    private static void removeRegisteredGeofence(Context context, String id) {
         try {
             String registeredGeofences = OkPreference.getItem("registered_geofences", context);
             JSONArray jsonArray;
@@ -251,9 +250,8 @@ public class BackgroundGeofence implements Serializable {
             } else {
                 jsonArray = new JSONArray(registeredGeofences);
             }
-
             for (int i = 0; i< jsonArray.length(); i++){
-                if(!jsonArray.getJSONObject(i).get("id").toString().equals(id)){
+                if (!jsonArray.getJSONObject(i).get("id").toString().equals(id)) {
                     updatedArray.put(jsonArray.getJSONObject(i));
                 }
             }
@@ -261,6 +259,10 @@ public class BackgroundGeofence implements Serializable {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void save(Context context) {
+        BackgroundGeofencingDB.saveBackgroundGeofence(this, context);
     }
 
     @SuppressLint("MissingPermission")
@@ -306,11 +308,13 @@ public class BackgroundGeofence implements Serializable {
                 .setNotificationResponsiveness(notificationResponsiveness)
                 .build();
             geofenceList.add(geofence);
+            BackgroundGeofence registeredGeofence = this;
             geofencingClient.addGeofences(getGeofencingRequest(silently, geofenceList), getGeofencePendingIntent(context)).addOnSuccessListener(new OnSuccessListener<Void>() {
                 @Override
                 public void onSuccess(Void aVoid) {
                     if (!silently) {
                         save(context);
+                        saveRegisteredGeofence(context, registeredGeofence);
                     }
                     BackgroundGeofenceDeviceMeta.asyncUpload(context);
                     requestHandler.onSuccess();
@@ -432,6 +436,7 @@ public class BackgroundGeofence implements Serializable {
                     public void onResponse(Call call, Response response) throws IOException {
                         if (response.isSuccessful()) {
                             stopGeofences(context, id);
+                            removeRegisteredGeofence(context, id);
                             handler.onSuccess(id);
                         } else {
                             OkHiException exception = OkHiCoreUtil.generateOkHiException(response);
@@ -456,7 +461,6 @@ public class BackgroundGeofence implements Serializable {
         geofencingClient.removeGeofences(ids);
         BackgroundGeofencingDB.removeBackgroundGeofence(id, context);
         BackgroundGeofencingDB.removeGeofenceEnterTimestamp(id, context);
-        delete(context, id);
         ArrayList<BackgroundGeofence> foregroundWatchGeofences = BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.FOREGROUND_WATCH);
         ArrayList<BackgroundGeofence> foregroundPingGeofences = BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.FOREGROUND_PING);
         if (foregroundWatchGeofences.isEmpty() && foregroundPingGeofences.isEmpty()) {

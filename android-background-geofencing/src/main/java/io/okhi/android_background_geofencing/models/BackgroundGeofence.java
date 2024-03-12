@@ -44,6 +44,7 @@ import io.okhi.android_core.models.OkHiCoreUtil;
 import io.okhi.android_core.models.OkHiException;
 import io.okhi.android_core.models.OkHiLocationService;
 import io.okhi.android_core.models.OkHiPermissionService;
+import io.okhi.android_core.models.OkPreference;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -223,6 +224,43 @@ public class BackgroundGeofence implements Serializable {
         return pendingIntent;
     }
 
+    private static void saveRegisteredGeofence(Context context, BackgroundGeofence geofence) {
+        try {
+            String registeredGeofences = OkPreference.getItem("registered_geofences", context);
+            JSONArray jsonArray;
+            if (registeredGeofences == null) {
+                jsonArray = new JSONArray();
+            } else {
+                jsonArray = new JSONArray(registeredGeofences);
+            }
+            jsonArray.put(geofence.toJSON());
+            OkPreference.setItem("registered_geofences", jsonArray.toString(), context);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void removeRegisteredGeofence(Context context, String id) {
+        try {
+            String registeredGeofences = OkPreference.getItem("registered_geofences", context);
+            JSONArray jsonArray;
+            JSONArray updatedArray = new JSONArray();;
+            if (registeredGeofences == null) {
+                jsonArray = new JSONArray();
+            } else {
+                jsonArray = new JSONArray(registeredGeofences);
+            }
+            for (int i = 0; i< jsonArray.length(); i++){
+                if (!jsonArray.getJSONObject(i).get("id").toString().equals(id)) {
+                    updatedArray.put(jsonArray.getJSONObject(i));
+                }
+            }
+            OkPreference.setItem("registered_geofences", updatedArray.toString(), context);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public void save(Context context) {
         BackgroundGeofencingDB.saveBackgroundGeofence(this, context);
     }
@@ -270,11 +308,13 @@ public class BackgroundGeofence implements Serializable {
                 .setNotificationResponsiveness(notificationResponsiveness)
                 .build();
             geofenceList.add(geofence);
+            BackgroundGeofence registeredGeofence = this;
             geofencingClient.addGeofences(getGeofencingRequest(silently, geofenceList), getGeofencePendingIntent(context)).addOnSuccessListener(new OnSuccessListener<Void>() {
                 @Override
                 public void onSuccess(Void aVoid) {
                     if (!silently) {
                         save(context);
+                        saveRegisteredGeofence(context, registeredGeofence);
                     }
                     BackgroundGeofenceDeviceMeta.asyncUpload(context);
                     requestHandler.onSuccess();
@@ -396,6 +436,7 @@ public class BackgroundGeofence implements Serializable {
                     public void onResponse(Call call, Response response) throws IOException {
                         if (response.isSuccessful()) {
                             stopGeofences(context, id);
+                            removeRegisteredGeofence(context, id);
                             handler.onSuccess(id);
                         } else {
                             OkHiException exception = OkHiCoreUtil.generateOkHiException(response);
@@ -499,5 +540,14 @@ public class BackgroundGeofence implements Serializable {
 
     public static ArrayList<BackgroundGeofence> getAllGeofences(Context context) {
         return BackgroundGeofencingDB.getAllGeofences(context);
+    }
+
+    public JSONObject toJSON() throws JSONException {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("id", this.id);
+        jsonObject.put("lat", this.lat);
+        jsonObject.put("lng", this.lng);
+        jsonObject.put("radius", this.radius);
+        return jsonObject;
     }
 }

@@ -314,7 +314,9 @@ public class BackgroundGeofenceForegroundService extends Service {
     public void onDestroy() {
         super.onDestroy();
         runCleanUp();
-        if(receiver != null) {unregisterReceiver(receiver);}
+        if(receiver != null) {
+            unregisterReceiver(receiver);
+        }
     }
 
     private void runCleanUp() {

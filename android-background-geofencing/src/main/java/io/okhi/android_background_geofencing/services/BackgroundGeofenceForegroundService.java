@@ -86,26 +86,26 @@ public class BackgroundGeofenceForegroundService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        BackgroundGeofencingNotification backgroundGeofencingNotification = BackgroundGeofencingDB.getNotification(getApplicationContext());
-        backgroundGeofencingNotification.createNotificationChannel(getApplicationContext());
-        BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(getApplicationContext());
-        isWithForegroundService = setting != null && setting.isWithForegroundService();
-        PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constant.FOREGROUND_SERVICE_WAKE_LOCK_TAG);
-        webHook = BackgroundGeofencingDB.getWebHook(getApplicationContext());
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU) {
-            startForeground(backgroundGeofencingNotification.getNotificationId(), backgroundGeofencingNotification.getNotification(getApplicationContext()), ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
-        } else {
-            startForeground(backgroundGeofencingNotification.getNotificationId(), backgroundGeofencingNotification.getNotification(getApplicationContext()));
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            try {
+        try {
+            BackgroundGeofencingNotification backgroundGeofencingNotification = BackgroundGeofencingDB.getNotification(getApplicationContext());
+            backgroundGeofencingNotification.createNotificationChannel(getApplicationContext());
+            BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(getApplicationContext());
+            isWithForegroundService = setting != null && setting.isWithForegroundService();
+            PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constant.FOREGROUND_SERVICE_WAKE_LOCK_TAG);
+            webHook = BackgroundGeofencingDB.getWebHook(getApplicationContext());
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU) {
+                startForeground(backgroundGeofencingNotification.getNotificationId(), backgroundGeofencingNotification.getNotification(getApplicationContext()), ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
+            } else {
+                startForeground(backgroundGeofencingNotification.getNotificationId(), backgroundGeofencingNotification.getNotification(getApplicationContext()));
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 IntentFilter intentFilter = new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION);
                 receiver = new BackgroundGeofenceLocationServicesReceiver();
                 registerReceiver(receiver, intentFilter);
-            } catch (Exception e) {
-                e.printStackTrace();
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

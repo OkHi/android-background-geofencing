@@ -74,14 +74,18 @@ public class BackgroundGeofencing {
   }
 
   public static void stopForegroundService (Context context) {
-    if (!isForegroundServiceRunning(context)) {
-      return;
+    try {
+      if (!isForegroundServiceRunning(context)) {
+        return;
+      }
+      BackgroundGeofencingDB.saveSetting(new BackgroundGeofenceSetting.Builder().setWithForegroundService(false).build(), context);
+      Intent serviceIntent = new Intent(context, BackgroundGeofenceForegroundService.class);
+      serviceIntent.putExtra(Constant.FOREGROUND_SERVICE_ACTION, Constant.FOREGROUND_SERVICE_STOP);
+      BackgroundGeofenceUtil.cancelForegroundRestartWorker(context);
+      ContextCompat.startForegroundService(context, serviceIntent);
+    } catch (Exception e) {
+      e.printStackTrace();
     }
-    BackgroundGeofencingDB.saveSetting(new BackgroundGeofenceSetting.Builder().setWithForegroundService(false).build(), context);
-    Intent serviceIntent = new Intent(context, BackgroundGeofenceForegroundService.class);
-    serviceIntent.putExtra(Constant.FOREGROUND_SERVICE_ACTION, Constant.FOREGROUND_SERVICE_STOP);
-    ContextCompat.startForegroundService(context, serviceIntent);
-    BackgroundGeofenceUtil.cancelForegroundRestartWorker(context);
   }
 
   public static void startForegroundService (Context context) throws BackgroundGeofencingException {

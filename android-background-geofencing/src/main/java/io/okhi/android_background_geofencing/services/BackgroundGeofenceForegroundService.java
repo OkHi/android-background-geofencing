@@ -313,9 +313,13 @@ public class BackgroundGeofenceForegroundService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        runCleanUp();
-        if(receiver != null) {
-            unregisterReceiver(receiver);
+        try {
+            runCleanUp();
+            if(receiver != null) {
+                unregisterReceiver(receiver);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

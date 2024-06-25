@@ -62,7 +62,6 @@ public class BackgroundGeofenceAppOpen {
                 transition.asyncUpload(context, webHook, new ResultHandler<Boolean>() {
                     @Override
                     public void onSuccess(Boolean result) {
-
                     }
                     @Override
                     public void onError(BackgroundGeofencingException exception) {

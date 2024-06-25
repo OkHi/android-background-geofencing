@@ -1,7 +1,6 @@
 package io.okhi.android_background_geofencing.services;
 
 import android.content.Context;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.work.Worker;

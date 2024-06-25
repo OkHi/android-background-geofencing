@@ -4,9 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.location.Location;
 import android.os.Build;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.work.BackoffPolicy;
@@ -38,12 +36,8 @@ import io.okhi.android_background_geofencing.interfaces.RequestHandler;
 import io.okhi.android_background_geofencing.interfaces.ResultHandler;
 import io.okhi.android_background_geofencing.receivers.BackgroundGeofenceBroadcastReceiver;
 import io.okhi.android_background_geofencing.services.BackgroundGeofenceRestartWorker;
-import io.okhi.android_background_geofencing.services.BackgroundGeofenceTransitionUploadWorker;
-import io.okhi.android_core.interfaces.OkHiRequestHandler;
 import io.okhi.android_core.models.OkHiCoreUtil;
 import io.okhi.android_core.models.OkHiException;
-import io.okhi.android_core.models.OkHiLocationService;
-import io.okhi.android_core.models.OkHiPermissionService;
 import io.okhi.android_core.models.OkPreference;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -271,6 +265,10 @@ public class BackgroundGeofence implements Serializable {
         boolean isBackgroundLocationPermissionGranted = BackgroundGeofenceUtil.isBackgroundLocationPermissionGranted(context);
         boolean isGooglePlayServicesAvailable = BackgroundGeofenceUtil.isGooglePlayServicesAvailable(context);
         boolean isExistingGeofence = BackgroundGeofencingDB.getBackgroundGeofence(id, context) != null;
+
+        BackgroundGeofenceSetting setting = BackgroundGeofencingDB.getBackgroundGeofenceSetting(context);
+        boolean withBackground = setting.isWithForegroundService();
+
         if (isExistingGeofence && !silently) {
             requestHandler.onError(new BackgroundGeofencingException(ALREADY_EXISTS_CODE, "Geofence already tracking"));
         }
@@ -284,7 +282,7 @@ public class BackgroundGeofence implements Serializable {
             return;
         }
 
-        if (!isBackgroundLocationPermissionGranted) {
+        if (!isBackgroundLocationPermissionGranted && withBackground) {
             requestHandler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.PERMISSION_DENIED_CODE, "Location permissions aren't granted"));
             return;
         }
@@ -296,7 +294,7 @@ public class BackgroundGeofence implements Serializable {
             }
         }
 
-        if (this.isWithNativeGeofenceTracking()) {
+        if (this.isWithNativeGeofenceTracking() && withBackground) {
             GeofencingClient geofencingClient = LocationServices.getGeofencingClient(context);
             ArrayList<Geofence> geofenceList = new ArrayList<>();
             Geofence geofence = new Geofence.Builder()
@@ -333,7 +331,11 @@ public class BackgroundGeofence implements Serializable {
         }
     }
 
-    public void start(Context context, final RequestHandler requestHandler) {
+    public void start(Context context, Boolean withBackground, final RequestHandler requestHandler) {
+        BackgroundGeofencingDB.saveSetting(
+                new BackgroundGeofenceSetting.Builder().setWithForegroundService(withBackground).build(), context
+        );
+
         start(false, context, requestHandler);
     }
 

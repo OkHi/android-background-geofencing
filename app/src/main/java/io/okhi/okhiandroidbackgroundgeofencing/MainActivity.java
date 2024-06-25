@@ -38,6 +38,7 @@ import io.okhi.android_core.models.OkPreference;
 public class MainActivity extends AppCompatActivity {
 
     OkHi okHi;
+    Boolean withBackground = false;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -63,16 +64,20 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                okHi.requestBackgroundLocationPermission("We need permission", "Pretty please", new OkHiRequestHandler<Boolean>() {
-                    @Override
-                    public void onResult(Boolean result) {
-                        if (result) startGeofence();
-                    }
+                if(withBackground){
+                    okHi.requestBackgroundLocationPermission("We need permission", "Pretty please", new OkHiRequestHandler<Boolean>() {
+                        @Override
+                        public void onResult(Boolean result) {
+                            if (result) startGeofence();
+                        }
 
-                    @Override
-                    public void onError(OkHiException e) {
-                    }
-                });
+                        @Override
+                        public void onError(OkHiException e) {
+                        }
+                    });
+                } else {
+                    startGeofence();
+                }
             }
         });
         final Button local_notification = findViewById(R.id.local_notification);
@@ -135,35 +140,31 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startGeofence() {
-        okHi.requestBackgroundLocationPermission("Hi", "There", new OkHiRequestHandler<Boolean>() {
+        okHi.requestLocationPermission(new OkHiRequestHandler<Boolean>(){
             @Override
-            public void onResult(Boolean result) {
-                BackgroundGeofence homeGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("home1", -1.314611, 36.836299)
-                    .setNotificationResponsiveness(5)
-                    .setLoiteringDelay(60000)
-                    .setInitialTriggerTransitionTypes(0)
-                    .build();
-                final BackgroundGeofence[] geofences = {homeGeofence};
-                for (BackgroundGeofence geofence: geofences) {
-                    geofence.start(getApplicationContext(), new RequestHandler() {
+            public void onResult(Boolean aBoolean) {
+                if(withBackground){
+                    okHi.requestBackgroundLocationPermission("Hi", "There", new OkHiRequestHandler<Boolean>() {
                         @Override
-                        public void onSuccess() {
-                            Log.v("MainActivity", "Work geofence started");
-//                            BackgroundGeofencing.startForegroundService(getApplicationContext());
+                        public void onResult(Boolean result) {
+                            createGeofence();
                         }
 
                         @Override
-                        public void onError(BackgroundGeofencingException exception) {
-                            exception.printStackTrace();
-                            Log.v("MainActivity", exception.getMessage());
+                        public void onError(OkHiException e) {
+                            assert e.getMessage() != null;
+                            Log.v("MainActivity", e.getMessage());
                         }
                     });
+                } else {
+                    createGeofence();
                 }
             }
 
             @Override
-            public void onError(OkHiException exception) {
-
+            public void onError(OkHiException e) {
+                assert e.getMessage() != null;
+                Log.v("MainActivity", e.getMessage());
             }
         });
 
@@ -223,6 +224,31 @@ public class MainActivity extends AppCompatActivity {
                 Log.v("Thread", "gotten access");
             }
         }).start();
+    }
+
+    private void createGeofence(){
+        BackgroundGeofence homeGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("home1", -1.314611, 36.836299)
+                .setNotificationResponsiveness(5)
+                .setLoiteringDelay(60000)
+                .setInitialTriggerTransitionTypes(0)
+                .build();
+        final BackgroundGeofence[] geofences = {homeGeofence};
+        for (BackgroundGeofence geofence: geofences) {
+            geofence.start(getApplicationContext(), withBackground, new RequestHandler() {
+                @Override
+                public void onSuccess() {
+                    Log.v("MainActivity", "Work geofence started");
+//                            BackgroundGeofencing.startForegroundService(getApplicationContext());
+                }
+
+                @Override
+                public void onError(BackgroundGeofencingException exception) {
+                    exception.printStackTrace();
+                    assert exception.getMessage() != null;
+                    Log.v("MainActivity", exception.getMessage());
+                }
+            });
+        }
     }
 
     @Override

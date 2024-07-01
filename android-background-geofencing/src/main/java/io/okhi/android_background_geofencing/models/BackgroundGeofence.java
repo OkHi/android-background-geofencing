@@ -269,6 +269,7 @@ public class BackgroundGeofence implements Serializable {
     private void start(final boolean silently, final Context context, final RequestHandler requestHandler) {
         boolean isLocationServicesEnabled = BackgroundGeofenceUtil.isLocationServicesEnabled(context);
         boolean isBackgroundLocationPermissionGranted = BackgroundGeofenceUtil.isBackgroundLocationPermissionGranted(context);
+        boolean isLocationPermissionGranted = BackgroundGeofenceUtil.isLocationPermissionGranted(context);
         boolean isGooglePlayServicesAvailable = BackgroundGeofenceUtil.isGooglePlayServicesAvailable(context);
         boolean isExistingGeofence = BackgroundGeofencingDB.getBackgroundGeofence(id, context) != null;
         if (isExistingGeofence && !silently) {
@@ -284,8 +285,13 @@ public class BackgroundGeofence implements Serializable {
             return;
         }
 
-        if (!isBackgroundLocationPermissionGranted) {
+        if (!isLocationPermissionGranted) {
             requestHandler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.PERMISSION_DENIED_CODE, "Location permissions aren't granted"));
+            return;
+        }
+
+        if (this.isWithNativeGeofenceTracking() && !isBackgroundLocationPermissionGranted) {
+            requestHandler.onError(new BackgroundGeofencingException(BackgroundGeofencingException.PERMISSION_DENIED_CODE, "Always location permissions aren't granted"));
             return;
         }
 

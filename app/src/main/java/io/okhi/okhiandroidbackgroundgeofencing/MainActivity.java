@@ -63,16 +63,7 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                okHi.requestBackgroundLocationPermission("We need permission", "Pretty please", new OkHiRequestHandler<Boolean>() {
-                    @Override
-                    public void onResult(Boolean result) {
-                        if (result) startGeofence();
-                    }
-
-                    @Override
-                    public void onError(OkHiException e) {
-                    }
-                });
+                startGeofence();
             }
         });
         final Button local_notification = findViewById(R.id.local_notification);
@@ -135,14 +126,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startGeofence() {
-        okHi.requestBackgroundLocationPermission("Hi", "There", new OkHiRequestHandler<Boolean>() {
+        okHi.requestLocationPermission(new OkHiRequestHandler<Boolean>() {
             @Override
-            public void onResult(Boolean result) {
+            public void onResult(Boolean aBoolean) {
                 BackgroundGeofence homeGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("home1", -1.314611, 36.836299)
-                    .setNotificationResponsiveness(5)
-                    .setLoiteringDelay(60000)
-                    .setInitialTriggerTransitionTypes(0)
-                    .build();
+                  .setNotificationResponsiveness(5)
+                  .setLoiteringDelay(60000)
+                  .setInitialTriggerTransitionTypes(0)
+                  .setWithNativeGeofenceTracking(false)
+                  .build();
                 final BackgroundGeofence[] geofences = {homeGeofence};
                 for (BackgroundGeofence geofence: geofences) {
                     geofence.start(getApplicationContext(), new RequestHandler() {
@@ -162,10 +154,22 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onError(OkHiException exception) {
+            public void onError(OkHiException e) {
 
             }
         });
+
+//        okHi.requestBackgroundLocationPermission("Hi", "There", new OkHiRequestHandler<Boolean>() {
+//            @Override
+//            public void onResult(Boolean result) {
+//
+//            }
+//
+//            @Override
+//            public void onError(OkHiException exception) {
+//
+//            }
+//        });
 
 //        BackgroundGeofence workGeofence = new BackgroundGeofence.BackgroundGeofenceBuilder("work2", -1.313339237582541, 36.842414181487776)
 //                .setNotificationResponsiveness(5)

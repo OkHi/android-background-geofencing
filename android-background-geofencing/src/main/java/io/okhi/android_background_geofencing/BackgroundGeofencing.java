@@ -90,16 +90,16 @@ public class BackgroundGeofencing {
 
   public static void startForegroundService (Context context) throws BackgroundGeofencingException {
     boolean hasGeofences = !BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.FOREGROUND_PING).isEmpty() || !BackgroundGeofencingDB.getGeofences(context, BackgroundGeofenceSource.FOREGROUND_WATCH).isEmpty();
-    boolean isBackgroundLocationPermissionGranted = BackgroundGeofenceUtil.isBackgroundLocationPermissionGranted(context);
+    boolean isLocationPermissionGranted = BackgroundGeofenceUtil.isLocationPermissionGranted(context);
     boolean isGooglePlayServicesAvailable = BackgroundGeofenceUtil.isGooglePlayServicesAvailable(context);
     boolean isLocationServicesEnabled = BackgroundGeofenceUtil.isLocationServicesEnabled(context);
     boolean isNotificationAvailable = BackgroundGeofencingDB.getNotification(context) != null;
     if (isForegroundServiceRunning(context)) {
       return;
     }
-    if ( !hasGeofences || !isBackgroundLocationPermissionGranted || !isGooglePlayServicesAvailable || !isLocationServicesEnabled || !isNotificationAvailable) {
+    if ( !hasGeofences || !isLocationPermissionGranted || !isGooglePlayServicesAvailable || !isLocationServicesEnabled || !isNotificationAvailable) {
       String message = !hasGeofences ? "No saved viable foreground locations" :
-          !isBackgroundLocationPermissionGranted ? "Background location permission not granted" :
+          !isLocationPermissionGranted ? "Location permission not granted" :
               !isGooglePlayServicesAvailable ? "Google play services are currently unavailable" :
                   !isNotificationAvailable ? "Notification configuration unavailable" :
                       "Location services are unavailable" ;
